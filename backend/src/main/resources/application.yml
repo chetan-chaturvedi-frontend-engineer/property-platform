@@ -136,6 +136,9 @@ app:
     faq-write-user: { max-requests: 120, window: 1h }
     # Page create, update and delete.
     page-write-user: { max-requests: 120, window: 1h }
+    # Lead creation, and every other lead/schedule/interaction write (update, assign, delete, ...).
+    lead-create-user: { max-requests: 120, window: 1h }
+    lead-write-user: { max-requests: 600, window: 1h }
   banner:
     # Accepted banner types and placements; adding one needs no migration (lowercase snake_case).
     types: promotion, announcement, offer

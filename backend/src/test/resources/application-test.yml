@@ -31,3 +31,5 @@ app:
     otp-send-global: { max-requests: 10000, window: 1h }
     refresh-ip: { max-requests: 10000, window: 15m }
     admin-login-ip: { max-requests: 10000, window: 15m }
+    # Small, so LeadValidationTests can reach it quickly.
+    lead-create-user: { max-requests: 25, window: 1h }

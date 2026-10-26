@@ -1,0 +1,215 @@
+{
+  "info": {
+    "name": "Property Platform - Leads CRM",
+    "description": "Lead, schedule and interaction endpoints (see docs/api/leads.md). Run 'App login' or 'Admin login' first; it stores the access token. Create requests store the new ids.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{accessToken}}", "type": "string" }]
+  },
+  "variable": [
+    { "key": "baseUrl", "value": "http://localhost:8080/api/v1" },
+    { "key": "identifier", "value": "user@example.com" },
+    { "key": "password", "value": "" },
+    { "key": "accessToken", "value": "" },
+    { "key": "leadId", "value": "" },
+    { "key": "scheduleId", "value": "" },
+    { "key": "interactionId", "value": "" },
+    { "key": "assigneeId", "value": "" }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "App login",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.collectionVariables.set('accessToken', pm.response.json().accessToken);"] } }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/auth/login",
+            "body": { "mode": "raw", "raw": "{\"identifier\": \"{{identifier}}\", \"password\": \"{{password}}\"}" }
+          }
+        },
+        {
+          "name": "Admin login",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.collectionVariables.set('accessToken', pm.response.json().accessToken);"] } }],
+          "request": {
+            "auth": { "type": "noauth" },
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/admin/login",
+            "body": { "mode": "raw", "raw": "{\"identifier\": \"{{identifier}}\", \"password\": \"{{password}}\"}" }
+          }
+        }
+      ]
+    },
+    {
+      "name": "Leads",
+      "item": [
+        {
+          "name": "Create lead",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.test('201', () => pm.response.to.have.status(201));", "pm.collectionVariables.set('leadId', pm.response.json().id);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/leads",
+            "body": { "mode": "raw", "raw": "{\n  \"leadName\": \"Ravi Kumar\",\n  \"phone\": \"98765 43210\",\n  \"email\": \"ravi@example.com\",\n  \"purpose\": \"buy\",\n  \"source\": \"walk_in\",\n  \"priority\": \"high\",\n  \"propertyType\": \"apartment\",\n  \"bhk\": \"2\",\n  \"budgetMin\": 5000000,\n  \"budgetMax\": 7500000,\n  \"area\": 1100,\n  \"areaUnit\": \"sq_ft\",\n  \"preferredLocation\": \"Whitefield, Marathahalli\",\n  \"location\": \"Pune\",\n  \"possession\": \"within_6_months\",\n  \"furnishing\": \"semi_furnished\",\n  \"amenities\": [\"gymnasium\", \"swimming-pool\"],\n  \"loanRequired\": true,\n  \"nextFollowUpAt\": \"2026-11-01T10:00:00+05:30\"\n}" }
+          }
+        },
+        {
+          "name": "List leads",
+          "request": {
+            "method": "GET",
+            "url": {
+              "raw": "{{baseUrl}}/leads?page=0&size=20&sort=createdAt,desc&search=ravi&status=new",
+              "host": ["{{baseUrl}}"],
+              "path": ["leads"],
+              "query": [
+                { "key": "page", "value": "0" },
+                { "key": "size", "value": "20" },
+                { "key": "sort", "value": "createdAt,desc" },
+                { "key": "search", "value": "ravi" },
+                { "key": "status", "value": "new" },
+                { "key": "budgetMin", "value": "4000000", "disabled": true },
+                { "key": "createdFrom", "value": "2026-10-01T00:00:00Z", "disabled": true }
+              ]
+            }
+          }
+        },
+        {
+          "name": "Admin: list all leads",
+          "request": { "method": "GET", "url": "{{baseUrl}}/admin/leads?page=0&size=20" }
+        },
+        {
+          "name": "Get lead",
+          "request": { "method": "GET", "url": "{{baseUrl}}/leads/{{leadId}}" }
+        },
+        {
+          "name": "Update lead",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/leads/{{leadId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"contacted\",\n  \"priority\": \"urgent\",\n  \"email\": null\n}" }
+          }
+        },
+        {
+          "name": "Mark lead lost",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/leads/{{leadId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"lost\",\n  \"lostReason\": \"Bought elsewhere\"\n}" }
+          }
+        },
+        {
+          "name": "Assign lead (LEAD_ASSIGN)",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/leads/{{leadId}}/assign",
+            "body": { "mode": "raw", "raw": "{\n  \"assignedTo\": {{assigneeId}}\n}" }
+          }
+        },
+        {
+          "name": "Delete lead (soft)",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/leads/{{leadId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Schedules",
+      "item": [
+        {
+          "name": "Create schedule",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.collectionVariables.set('scheduleId', pm.response.json().id);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/leads/{{leadId}}/schedules",
+            "body": { "mode": "raw", "raw": "{\n  \"scheduleType\": \"site_visit\",\n  \"title\": \"Visit tower A\",\n  \"description\": \"Bring floor plans\",\n  \"scheduledAt\": \"2026-11-05T10:30:00+05:30\",\n  \"durationMinutes\": 60,\n  \"location\": \"Site office\",\n  \"reminderAt\": \"2026-11-05T04:00:00Z\"\n}" }
+          }
+        },
+        {
+          "name": "List schedules",
+          "request": { "method": "GET", "url": "{{baseUrl}}/leads/{{leadId}}/schedules?status=pending&sort=scheduledAt,asc" }
+        },
+        {
+          "name": "Get schedule",
+          "request": { "method": "GET", "url": "{{baseUrl}}/leads/{{leadId}}/schedules/{{scheduleId}}" }
+        },
+        {
+          "name": "Update schedule",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/leads/{{leadId}}/schedules/{{scheduleId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"title\": \"Visit tower B\",\n  \"durationMinutes\": 90\n}" }
+          }
+        },
+        {
+          "name": "Reschedule",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.collectionVariables.set('scheduleId', pm.response.json().id);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/leads/{{leadId}}/schedules/{{scheduleId}}/reschedule",
+            "body": { "mode": "raw", "raw": "{\n  \"scheduledAt\": \"2026-11-08T10:30:00+05:30\",\n  \"reason\": \"Customer travelling\"\n}" }
+          }
+        },
+        {
+          "name": "Complete schedule",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/leads/{{leadId}}/schedules/{{scheduleId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"status\": \"completed\",\n  \"completionNote\": \"Liked tower A\"\n}" }
+          }
+        },
+        {
+          "name": "Delete schedule (soft)",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/leads/{{leadId}}/schedules/{{scheduleId}}" }
+        }
+      ]
+    },
+    {
+      "name": "Interactions",
+      "item": [
+        {
+          "name": "Record interaction",
+          "event": [{ "listen": "test", "script": { "exec": ["pm.collectionVariables.set('interactionId', pm.response.json().id);"] } }],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/leads/{{leadId}}/interactions",
+            "body": { "mode": "raw", "raw": "{\n  \"type\": \"call\",\n  \"note\": \"Discussed budget and locations\",\n  \"interactionAt\": \"2026-10-27T10:00:00+05:30\",\n  \"outcome\": \"follow_up_required\",\n  \"nextFollowUpAt\": \"2026-10-30T10:00:00+05:30\",\n  \"durationSeconds\": 240\n}" }
+          }
+        },
+        {
+          "name": "Interaction history",
+          "request": { "method": "GET", "url": "{{baseUrl}}/leads/{{leadId}}/interactions?sort=interactionAt,desc" }
+        },
+        {
+          "name": "Get interaction",
+          "request": { "method": "GET", "url": "{{baseUrl}}/leads/{{leadId}}/interactions/{{interactionId}}" }
+        },
+        {
+          "name": "Update interaction",
+          "request": {
+            "method": "PATCH",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "url": "{{baseUrl}}/leads/{{leadId}}/interactions/{{interactionId}}",
+            "body": { "mode": "raw", "raw": "{\n  \"outcome\": \"interested\"\n}" }
+          }
+        },
+        {
+          "name": "Delete interaction (soft)",
+          "request": { "method": "DELETE", "url": "{{baseUrl}}/leads/{{leadId}}/interactions/{{interactionId}}" }
+        }
+      ]
+    }
+  ]
+}

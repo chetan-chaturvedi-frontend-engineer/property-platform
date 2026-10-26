@@ -43,11 +43,20 @@ import static com.propertypro.property_platform.security.Permissions.PAGE_DELETE
 import static com.propertypro.property_platform.security.Permissions.PAGE_PUBLISH;
 import static com.propertypro.property_platform.security.Permissions.PAGE_UPDATE;
 import static com.propertypro.property_platform.security.Permissions.PAGE_VIEW;
+import static com.propertypro.property_platform.security.Permissions.LEAD_ASSIGN;
 import static com.propertypro.property_platform.security.Permissions.LEAD_CREATE;
 import static com.propertypro.property_platform.security.Permissions.LEAD_DELETE;
 import static com.propertypro.property_platform.security.Permissions.LEAD_DELETE_ANY;
+import static com.propertypro.property_platform.security.Permissions.LEAD_INTERACTION_CREATE;
+import static com.propertypro.property_platform.security.Permissions.LEAD_INTERACTION_DELETE;
+import static com.propertypro.property_platform.security.Permissions.LEAD_INTERACTION_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.LEAD_INTERACTION_VIEW;
 import static com.propertypro.property_platform.security.Permissions.LEAD_LIST;
 import static com.propertypro.property_platform.security.Permissions.LEAD_LIST_ANY;
+import static com.propertypro.property_platform.security.Permissions.LEAD_SCHEDULE_CREATE;
+import static com.propertypro.property_platform.security.Permissions.LEAD_SCHEDULE_DELETE;
+import static com.propertypro.property_platform.security.Permissions.LEAD_SCHEDULE_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.LEAD_SCHEDULE_VIEW;
 import static com.propertypro.property_platform.security.Permissions.LEAD_UPDATE;
 import static com.propertypro.property_platform.security.Permissions.LEAD_UPDATE_ANY;
 import static com.propertypro.property_platform.security.Permissions.LEAD_VIEW;
@@ -107,6 +116,12 @@ class RolePermissionUpdateTests {
 			FAQ_DELETE);
 	private static final Set<String> ADMIN_PAGE_PERMISSIONS = Set.of(PAGE_VIEW, PAGE_CREATE, PAGE_UPDATE,
 			PAGE_PUBLISH, PAGE_DELETE);
+	/** Added to the user and admin roles later by V202610261430. */
+	private static final Set<String> LEAD_CHILD_PERMISSIONS = Set.of(LEAD_SCHEDULE_VIEW, LEAD_SCHEDULE_CREATE,
+			LEAD_SCHEDULE_UPDATE, LEAD_SCHEDULE_DELETE, LEAD_INTERACTION_VIEW, LEAD_INTERACTION_CREATE,
+			LEAD_INTERACTION_UPDATE, LEAD_INTERACTION_DELETE);
+	/** Added to the admin role (only) later by V202610261430. */
+	private static final Set<String> ADMIN_LEAD_PERMISSIONS = Set.of(LEAD_CREATE, LEAD_ASSIGN);
 	private static final Set<String> ADMIN_PERMISSIONS = Set.of(ADMIN_PANEL_ACCESS, SUBSCRIPTION_PLAN_VIEW,
 			SUBSCRIPTION_PLAN_CREATE, SUBSCRIPTION_PLAN_UPDATE, ROLE_VIEW, ROLE_CREATE, ROLE_UPDATE, ROLE_DELETE,
 			LEAD_LIST_ANY, LEAD_VIEW_ANY, LEAD_UPDATE_ANY, LEAD_DELETE_ANY);
@@ -130,6 +145,7 @@ class RolePermissionUpdateTests {
 				Map.of("list", true, "view", true, "create", true, "update", true, "delete", true));
 		Set<String> afterAllMigrations = new HashSet<>(USER_PERMISSIONS);
 		afterAllMigrations.addAll(USER_PROPERTY_PERMISSIONS);
+		afterAllMigrations.addAll(LEAD_CHILD_PERMISSIONS);
 		assertThat(user.grantedPermissions()).containsExactlyInAnyOrderElementsOf(afterAllMigrations);
 		assertThat(user.isGranted("lead", "view_any")).isFalse();
 		assertThat(user.isGranted("admin_panel", "access")).isFalse();
@@ -141,7 +157,7 @@ class RolePermissionUpdateTests {
 		Role admin = roleRepository.findBySlug("admin").orElseThrow();
 		// V202610251400 later derives the split plan permissions from view and update; V202610251500 adds
 		// properties, V202610251710 banners, V202610251900 blog categories, V202610252000 blogs,
-		// V202610261100 FAQs and V202610261300 pages.
+		// V202610261100 FAQs, V202610261300 pages and V202610261430 lead create/assign, schedules and interactions.
 		Set<String> afterAllMigrations = new HashSet<>(ADMIN_PERMISSIONS);
 		afterAllMigrations.addAll(Set.of(SUBSCRIPTION_PLAN_LIST, SUBSCRIPTION_PLAN_CHANGE_STATUS));
 		afterAllMigrations.addAll(ADMIN_PROPERTY_PERMISSIONS);
@@ -150,6 +166,8 @@ class RolePermissionUpdateTests {
 		afterAllMigrations.addAll(ADMIN_BLOG_PERMISSIONS);
 		afterAllMigrations.addAll(ADMIN_FAQ_PERMISSIONS);
 		afterAllMigrations.addAll(ADMIN_PAGE_PERMISSIONS);
+		afterAllMigrations.addAll(LEAD_CHILD_PERMISSIONS);
+		afterAllMigrations.addAll(ADMIN_LEAD_PERMISSIONS);
 
 		assertThat(admin.getName()).isEqualTo("Admin");
 		assertThat(admin.getStatus()).isEqualTo(RoleStatus.ACTIVE);
