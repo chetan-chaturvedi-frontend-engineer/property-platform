@@ -32,5 +32,9 @@ public record RateLimitProperties(
 		/** FAQ writes: create, update and delete. */
 		RateLimit faqWriteUser,
 		/** Page writes: create, update and delete. */
-		RateLimit pageWriteUser) {
+		RateLimit pageWriteUser,
+		/** Lead creation; separate so a flood of new leads cannot use up the write budget. */
+		RateLimit leadCreateUser,
+		/** Lead, schedule and interaction writes other than lead creation. */
+		RateLimit leadWriteUser) {
 }

@@ -17,17 +17,35 @@ public final class Permissions {
 	public static final String ROLE_UPDATE = "ROLE_UPDATE";
 	public static final String ROLE_DELETE = "ROLE_DELETE";
 
-	// Leads. No module yet. App users get the owner-scoped codes, so the lead service must restrict
-	// them to the current user's leads (404 otherwise); _ANY codes cover every lead (admin).
+	// Leads. Owner-scoped codes cover only the caller's own leads (created by them, or assigned to them
+	// with LEAD_ACCESS_ASSIGNED; 404 for others); _ANY codes cover every lead (admin).
 	public static final String LEAD_LIST = "LEAD_LIST";
 	public static final String LEAD_VIEW = "LEAD_VIEW";
 	public static final String LEAD_CREATE = "LEAD_CREATE";
 	public static final String LEAD_UPDATE = "LEAD_UPDATE";
+	/** Soft delete; owner-scoped like the others, but never for leads that are only assigned. */
 	public static final String LEAD_DELETE = "LEAD_DELETE";
 	public static final String LEAD_LIST_ANY = "LEAD_LIST_ANY";
 	public static final String LEAD_VIEW_ANY = "LEAD_VIEW_ANY";
 	public static final String LEAD_UPDATE_ANY = "LEAD_UPDATE_ANY";
 	public static final String LEAD_DELETE_ANY = "LEAD_DELETE_ANY";
+	/** Set or change the assignee of any lead the caller can see, including on create. */
+	public static final String LEAD_ASSIGN = "LEAD_ASSIGN";
+	/** Leads assigned to the caller count as their own for list, view, update and nested resources. */
+	public static final String LEAD_ACCESS_ASSIGNED = "LEAD_ACCESS_ASSIGNED";
+
+	// Lead schedules and interactions: allowed on the leads the caller can see (see the lead codes above).
+	public static final String LEAD_SCHEDULE_VIEW = "LEAD_SCHEDULE_VIEW";
+	public static final String LEAD_SCHEDULE_CREATE = "LEAD_SCHEDULE_CREATE";
+	/** Editing, completing, cancelling and rescheduling. */
+	public static final String LEAD_SCHEDULE_UPDATE = "LEAD_SCHEDULE_UPDATE";
+	/** Soft delete. */
+	public static final String LEAD_SCHEDULE_DELETE = "LEAD_SCHEDULE_DELETE";
+	public static final String LEAD_INTERACTION_VIEW = "LEAD_INTERACTION_VIEW";
+	public static final String LEAD_INTERACTION_CREATE = "LEAD_INTERACTION_CREATE";
+	public static final String LEAD_INTERACTION_UPDATE = "LEAD_INTERACTION_UPDATE";
+	/** Soft delete. */
+	public static final String LEAD_INTERACTION_DELETE = "LEAD_INTERACTION_DELETE";
 
 	// Subscription plan catalog (admin dashboard). Plans have no owner, so there is no _ANY variant.
 	public static final String SUBSCRIPTION_PLAN_LIST = "SUBSCRIPTION_PLAN_LIST";

@@ -16,7 +16,15 @@ import java.util.Map;
 
 import static com.propertypro.property_platform.security.Permissions.LEAD_CREATE;
 import static com.propertypro.property_platform.security.Permissions.LEAD_DELETE;
+import static com.propertypro.property_platform.security.Permissions.LEAD_INTERACTION_CREATE;
+import static com.propertypro.property_platform.security.Permissions.LEAD_INTERACTION_DELETE;
+import static com.propertypro.property_platform.security.Permissions.LEAD_INTERACTION_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.LEAD_INTERACTION_VIEW;
 import static com.propertypro.property_platform.security.Permissions.LEAD_LIST;
+import static com.propertypro.property_platform.security.Permissions.LEAD_SCHEDULE_CREATE;
+import static com.propertypro.property_platform.security.Permissions.LEAD_SCHEDULE_DELETE;
+import static com.propertypro.property_platform.security.Permissions.LEAD_SCHEDULE_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.LEAD_SCHEDULE_VIEW;
 import static com.propertypro.property_platform.security.Permissions.LEAD_UPDATE;
 import static com.propertypro.property_platform.security.Permissions.LEAD_VIEW;
 import static com.propertypro.property_platform.security.Permissions.PROPERTY_CREATE;
@@ -67,7 +75,9 @@ class RoleAuthorizationTests extends AbstractIntegrationTest {
 		Long userId = jdbc.queryForObject("SELECT id FROM users WHERE email = ?", Long.class, EMAIL);
 		assertThat(rolePermissionService.permissionsOfUser(userId))
 			.containsExactlyInAnyOrder(LEAD_LIST, LEAD_VIEW, LEAD_CREATE, LEAD_UPDATE, LEAD_DELETE, PROPERTY_CREATE,
-					PROPERTY_LIST, PROPERTY_VIEW, PROPERTY_UPDATE, PROPERTY_DELETE);
+					PROPERTY_LIST, PROPERTY_VIEW, PROPERTY_UPDATE, PROPERTY_DELETE, LEAD_SCHEDULE_VIEW,
+					LEAD_SCHEDULE_CREATE, LEAD_SCHEDULE_UPDATE, LEAD_SCHEDULE_DELETE, LEAD_INTERACTION_VIEW,
+					LEAD_INTERACTION_CREATE, LEAD_INTERACTION_UPDATE, LEAD_INTERACTION_DELETE);
 
 		getWithToken(ADMIN_PLANS, accessToken).andExpect(status().isForbidden());
 	}
