@@ -70,9 +70,9 @@ app:
     default-region: IN
   http:
     max-json-body-size: 64KB
-    # Admin blog edits carry up to 100,000 characters of HTML (up to 4 bytes each in UTF-8, plus JSON
-    # escaping); every other JSON endpoint keeps the small limit.
-    large-json-body-paths: /api/v1/admin/blogs/
+    # Admin blog and page writes carry up to 100,000 characters of HTML (up to 4 bytes each in UTF-8,
+    # plus JSON escaping); every other JSON endpoint keeps the small limit.
+    large-json-body-paths: /api/v1/admin/blogs/, /api/v1/admin/pages
     max-large-json-body-size: 1MB
   security:
     jwt:
@@ -134,6 +134,8 @@ app:
     blog-write-user: { max-requests: 300, window: 1h }
     # FAQ create, update and delete.
     faq-write-user: { max-requests: 120, window: 1h }
+    # Page create, update and delete.
+    page-write-user: { max-requests: 120, window: 1h }
   banner:
     # Accepted banner types and placements; adding one needs no migration (lowercase snake_case).
     types: promotion, announcement, offer
