@@ -66,6 +66,18 @@ public final class Permissions {
 	/** Soft delete only. */
 	public static final String BLOG_DELETE = "BLOG_DELETE";
 
+	// FAQs (admin dashboard). Public FAQ endpoints need no permission and show published FAQs only.
+	/** Admin list and detail, drafts included. */
+	public static final String FAQ_VIEW = "FAQ_VIEW";
+	/** Creating drafts; creating a published FAQ also needs {@link #FAQ_PUBLISH}. */
+	public static final String FAQ_CREATE = "FAQ_CREATE";
+	/** Editing question, answer, category and sort order; changing status also needs {@link #FAQ_PUBLISH}. */
+	public static final String FAQ_UPDATE = "FAQ_UPDATE";
+	/** Additionally required to publish or unpublish (any status change, on create or update). */
+	public static final String FAQ_PUBLISH = "FAQ_PUBLISH";
+	/** Permanent delete. */
+	public static final String FAQ_DELETE = "FAQ_DELETE";
+
 	// Property projects. Owner-scoped codes cover only the current user's properties (404 for others);
 	// _ANY codes cover every owner's properties (admin).
 	public static final String PROPERTY_CREATE = "PROPERTY_CREATE";
