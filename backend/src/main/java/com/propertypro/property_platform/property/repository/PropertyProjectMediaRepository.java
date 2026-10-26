@@ -1,0 +1,28 @@
+package com.propertypro.property_platform.property.repository;
+
+import com.propertypro.property_platform.property.domain.ProjectMediaType;
+import com.propertypro.property_platform.property.domain.PropertyProjectMedia;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+
+import java.util.List;
+import java.util.Optional;
+
+public interface PropertyProjectMediaRepository extends JpaRepository<PropertyProjectMedia, Long> {
+
+	List<PropertyProjectMedia> findByPropertyProjectIdOrderBySortOrderAscIdAsc(Long propertyProjectId);
+
+	/** Scoped to the parent, so a media id of another property is never found. */
+	Optional<PropertyProjectMedia> findByIdAndPropertyProjectId(Long id, Long propertyProjectId);
+
+	long countByPropertyProjectIdAndMediaType(Long propertyProjectId, ProjectMediaType mediaType);
+
+	Optional<PropertyProjectMedia> findFirstByPropertyProjectIdAndPrimaryTrue(Long propertyProjectId);
+
+	Optional<PropertyProjectMedia> findFirstByPropertyProjectIdAndMediaTypeOrderBySortOrderAscIdAsc(
+			Long propertyProjectId, ProjectMediaType mediaType);
+
+	@Query("select coalesce(max(m.sortOrder), -1) from PropertyProjectMedia m where m.propertyProjectId = :projectId")
+	int maxSortOrder(Long projectId);
+
+}

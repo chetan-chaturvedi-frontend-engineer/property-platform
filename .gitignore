@@ -1,0 +1,33 @@
+# Each app has its own .gitignore; this file covers repo-wide noise.
+
+### OS ###
+.DS_Store
+Thumbs.db
+
+### Editors ###
+.idea/
+.vscode/
+*.iml
+*.swp
+
+### Secrets ###
+.env
+.env.*
+!.env.example
+
+### Node (admin-web, mobile) ###
+node_modules/
+npm-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+coverage/
+
+### React Native / Expo ###
+.expo/
+web-build/
+*.jks
+*.keystore
+!debug.keystore
+*.p8
+*.p12
+*.mobileprovision

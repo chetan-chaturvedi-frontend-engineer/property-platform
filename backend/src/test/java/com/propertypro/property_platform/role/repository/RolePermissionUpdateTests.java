@@ -1,0 +1,207 @@
+package com.propertypro.property_platform.role.repository;
+
+import com.propertypro.property_platform.role.domain.Role;
+import com.propertypro.property_platform.role.domain.RoleStatus;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.data.jpa.test.autoconfigure.DataJpaTest;
+import org.springframework.boot.jdbc.test.autoconfigure.AutoConfigureTestDatabase;
+import org.springframework.boot.jpa.test.autoconfigure.TestEntityManager;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.test.context.ActiveProfiles;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static com.propertypro.property_platform.security.Permissions.ADMIN_PANEL_ACCESS;
+import static com.propertypro.property_platform.security.Permissions.BANNER_CHANGE_STATUS;
+import static com.propertypro.property_platform.security.Permissions.BANNER_CREATE;
+import static com.propertypro.property_platform.security.Permissions.BANNER_DELETE;
+import static com.propertypro.property_platform.security.Permissions.BANNER_LIST;
+import static com.propertypro.property_platform.security.Permissions.BANNER_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.BANNER_VIEW;
+import static com.propertypro.property_platform.security.Permissions.BLOG_CATEGORY_CREATE;
+import static com.propertypro.property_platform.security.Permissions.BLOG_CATEGORY_DELETE;
+import static com.propertypro.property_platform.security.Permissions.BLOG_CATEGORY_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.BLOG_CATEGORY_VIEW;
+import static com.propertypro.property_platform.security.Permissions.BLOG_CREATE;
+import static com.propertypro.property_platform.security.Permissions.BLOG_DELETE;
+import static com.propertypro.property_platform.security.Permissions.BLOG_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.BLOG_VIEW;
+import static com.propertypro.property_platform.security.Permissions.LEAD_CREATE;
+import static com.propertypro.property_platform.security.Permissions.LEAD_DELETE;
+import static com.propertypro.property_platform.security.Permissions.LEAD_DELETE_ANY;
+import static com.propertypro.property_platform.security.Permissions.LEAD_LIST;
+import static com.propertypro.property_platform.security.Permissions.LEAD_LIST_ANY;
+import static com.propertypro.property_platform.security.Permissions.LEAD_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.LEAD_UPDATE_ANY;
+import static com.propertypro.property_platform.security.Permissions.LEAD_VIEW;
+import static com.propertypro.property_platform.security.Permissions.LEAD_VIEW_ANY;
+import static com.propertypro.property_platform.security.Permissions.PROPERTY_CREATE;
+import static com.propertypro.property_platform.security.Permissions.PROPERTY_CREATE_WITHOUT_SUBSCRIPTION;
+import static com.propertypro.property_platform.security.Permissions.PROPERTY_DELETE;
+import static com.propertypro.property_platform.security.Permissions.PROPERTY_DELETE_ANY;
+import static com.propertypro.property_platform.security.Permissions.PROPERTY_LEGAL_REVIEW;
+import static com.propertypro.property_platform.security.Permissions.PROPERTY_LIST;
+import static com.propertypro.property_platform.security.Permissions.PROPERTY_LIST_ANY;
+import static com.propertypro.property_platform.security.Permissions.PROPERTY_PUBLISH;
+import static com.propertypro.property_platform.security.Permissions.PROPERTY_RESTORE_ANY;
+import static com.propertypro.property_platform.security.Permissions.PROPERTY_REVIEW;
+import static com.propertypro.property_platform.security.Permissions.PROPERTY_SUSPEND;
+import static com.propertypro.property_platform.security.Permissions.PROPERTY_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.PROPERTY_UPDATE_ANY;
+import static com.propertypro.property_platform.security.Permissions.PROPERTY_VIEW;
+import static com.propertypro.property_platform.security.Permissions.PROPERTY_VIEW_ANY;
+import static com.propertypro.property_platform.security.Permissions.ROLE_CREATE;
+import static com.propertypro.property_platform.security.Permissions.ROLE_DELETE;
+import static com.propertypro.property_platform.security.Permissions.ROLE_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.ROLE_VIEW;
+import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_PLAN_CHANGE_STATUS;
+import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_PLAN_CREATE;
+import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_PLAN_LIST;
+import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_PLAN_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_PLAN_VIEW;
+import static org.assertj.core.api.Assertions.assertThat;
+
+/** V202610251300: user and admin role permissions. Each test is rolled back. */
+@DataJpaTest
+@AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@ActiveProfiles("test")
+class RolePermissionUpdateTests {
+
+	private static final String MIGRATION = "db/migration/V202610251300__update_user_admin_role_permissions.sql";
+	private static final Set<String> USER_PERMISSIONS = Set.of(LEAD_LIST, LEAD_VIEW, LEAD_CREATE, LEAD_UPDATE,
+			LEAD_DELETE);
+	/** Added to the user role later by V202610251500. */
+	private static final Set<String> USER_PROPERTY_PERMISSIONS = Set.of(PROPERTY_CREATE, PROPERTY_LIST, PROPERTY_VIEW,
+			PROPERTY_UPDATE, PROPERTY_DELETE);
+	/** Added to the admin role later by V202610251500. */
+	private static final Set<String> ADMIN_PROPERTY_PERMISSIONS = Set.of(PROPERTY_CREATE,
+			PROPERTY_CREATE_WITHOUT_SUBSCRIPTION, PROPERTY_LIST_ANY, PROPERTY_VIEW_ANY, PROPERTY_UPDATE_ANY,
+			PROPERTY_DELETE_ANY, PROPERTY_RESTORE_ANY, PROPERTY_REVIEW, PROPERTY_PUBLISH, PROPERTY_SUSPEND,
+			PROPERTY_LEGAL_REVIEW);
+	/** Added to the admin role (only) later by V202610251710. */
+	private static final Set<String> ADMIN_BANNER_PERMISSIONS = Set.of(BANNER_LIST, BANNER_VIEW, BANNER_CREATE,
+			BANNER_UPDATE, BANNER_CHANGE_STATUS, BANNER_DELETE);
+	/** Added to the admin role (only) later by V202610251900. */
+	private static final Set<String> ADMIN_BLOG_CATEGORY_PERMISSIONS = Set.of(BLOG_CATEGORY_VIEW, BLOG_CATEGORY_CREATE,
+			BLOG_CATEGORY_UPDATE, BLOG_CATEGORY_DELETE);
+	/** Added to the admin role (only) later by V202610252000. */
+	private static final Set<String> ADMIN_BLOG_PERMISSIONS = Set.of(BLOG_VIEW, BLOG_CREATE, BLOG_UPDATE, BLOG_DELETE);
+	private static final Set<String> ADMIN_PERMISSIONS = Set.of(ADMIN_PANEL_ACCESS, SUBSCRIPTION_PLAN_VIEW,
+			SUBSCRIPTION_PLAN_CREATE, SUBSCRIPTION_PLAN_UPDATE, ROLE_VIEW, ROLE_CREATE, ROLE_UPDATE, ROLE_DELETE,
+			LEAD_LIST_ANY, LEAD_VIEW_ANY, LEAD_UPDATE_ANY, LEAD_DELETE_ANY);
+
+	@Autowired
+	private RoleRepository roleRepository;
+
+	@Autowired
+	private TestEntityManager entityManager;
+
+	@Autowired
+	private JdbcTemplate jdbc;
+
+	@Test
+	void userRoleGrantsExactlyItsOwnLeadPermissions() {
+		Role user = roleRepository.findBySlug("user").orElseThrow();
+
+		assertThat(user.getName()).isEqualTo("User");
+		assertThat(user.getStatus()).isEqualTo(RoleStatus.ACTIVE);
+		assertThat(user.getPermissions()).containsEntry("lead",
+				Map.of("list", true, "view", true, "create", true, "update", true, "delete", true));
+		Set<String> afterAllMigrations = new HashSet<>(USER_PERMISSIONS);
+		afterAllMigrations.addAll(USER_PROPERTY_PERMISSIONS);
+		assertThat(user.grantedPermissions()).containsExactlyInAnyOrderElementsOf(afterAllMigrations);
+		assertThat(user.isGranted("lead", "view_any")).isFalse();
+		assertThat(user.isGranted("admin_panel", "access")).isFalse();
+		assertThat(user.isGranted("subscription_plan", "view")).isFalse();
+	}
+
+	@Test
+	void adminRoleGrantsEveryExistingAdministrativePermission() {
+		Role admin = roleRepository.findBySlug("admin").orElseThrow();
+		// V202610251400 later derives the split plan permissions from view and update; V202610251500 adds
+		// properties, V202610251710 banners, V202610251900 blog categories and V202610252000 blogs.
+		Set<String> afterAllMigrations = new HashSet<>(ADMIN_PERMISSIONS);
+		afterAllMigrations.addAll(Set.of(SUBSCRIPTION_PLAN_LIST, SUBSCRIPTION_PLAN_CHANGE_STATUS));
+		afterAllMigrations.addAll(ADMIN_PROPERTY_PERMISSIONS);
+		afterAllMigrations.addAll(ADMIN_BANNER_PERMISSIONS);
+		afterAllMigrations.addAll(ADMIN_BLOG_CATEGORY_PERMISSIONS);
+		afterAllMigrations.addAll(ADMIN_BLOG_PERMISSIONS);
+
+		assertThat(admin.getName()).isEqualTo("Admin");
+		assertThat(admin.getStatus()).isEqualTo(RoleStatus.ACTIVE);
+		assertThat(admin.grantedPermissions()).containsExactlyInAnyOrderElementsOf(afterAllMigrations);
+		assertThat(jdbc.queryForObject("SELECT count(*) FROM roles WHERE slug IN ('user', 'admin') AND deleted_at IS NULL",
+				Integer.class)).isEqualTo(2);
+	}
+
+	@Test
+	void rerunningChangesNothing() {
+		// Back to this migration's own result first: newer migrations also change these roles.
+		jdbc.execute(script(MIGRATION));
+		List<Map<String, Object>> before = snapshot();
+
+		jdbc.execute(script(MIGRATION));
+		jdbc.execute(script(MIGRATION));
+
+		assertThat(snapshot()).isEqualTo(before);
+	}
+
+	@Test
+	void replacesCustomizedRolesAndLeavesEverythingElseAlone() {
+		Long userId = jdbc.queryForObject("""
+				INSERT INTO users (email, password_hash, full_name, user_type) VALUES ('keep@example.com', 'h', 'K', 'admin')
+				RETURNING id""", Long.class);
+		jdbc.update("INSERT INTO roles (name, slug, permissions) VALUES ('Ops', 'ops', '{\"lead\": {\"list_any\": true}}')");
+		jdbc.update("UPDATE roles SET name = 'Staff', status = 'inactive', deleted_at = now(), "
+				+ "permissions = '{\"stale\": {\"export\": true}}' WHERE slug = 'admin'");
+		jdbc.update("UPDATE roles SET permissions = '{\"admin_panel\": {\"access\": true}}' WHERE slug = 'user'");
+		List<Long> ids = jdbc.queryForList("SELECT id FROM roles WHERE slug IN ('user', 'admin') ORDER BY slug", Long.class);
+		Map<String, Object> superAdmin = row("super-admin");
+		Map<String, Object> ops = row("ops");
+
+		jdbc.execute(script(MIGRATION));
+		entityManager.clear();
+
+		Role admin = roleRepository.findBySlug("admin").orElseThrow();
+		assertThat(admin.getName()).isEqualTo("Admin");
+		assertThat(admin.grantedPermissions()).containsExactlyInAnyOrderElementsOf(ADMIN_PERMISSIONS);
+		assertThat(admin.getPermissions()).doesNotContainKey("stale");
+		assertThat(roleRepository.findBySlug("user").orElseThrow().grantedPermissions())
+			.containsExactlyInAnyOrderElementsOf(USER_PERMISSIONS);
+		assertThat(jdbc.queryForList("SELECT id FROM roles WHERE slug IN ('user', 'admin') ORDER BY slug", Long.class))
+			.isEqualTo(ids);
+		assertThat(row("super-admin")).isEqualTo(superAdmin);
+		assertThat(row("ops")).isEqualTo(ops);
+		assertThat(jdbc.queryForObject("SELECT user_type FROM users WHERE id = ?", String.class, userId))
+			.isEqualTo("admin");
+	}
+
+	private List<Map<String, Object>> snapshot() {
+		return jdbc.queryForList("""
+				SELECT id, name, slug, permissions::text AS permissions, status, created_at, updated_at, deleted_at
+				FROM roles ORDER BY id""");
+	}
+
+	private Map<String, Object> row(String slug) {
+		return jdbc.queryForMap("""
+				SELECT id, name, permissions::text AS permissions, status, updated_at, deleted_at
+				FROM roles WHERE slug = ?""", slug);
+	}
+
+	private static String script(String path) {
+		try {
+			return new ClassPathResource(path).getContentAsString(StandardCharsets.UTF_8);
+		}
+		catch (IOException ex) {
+			throw new IllegalStateException(ex);
+		}
+	}
+
+}

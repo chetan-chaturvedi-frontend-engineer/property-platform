@@ -1,0 +1,33 @@
+# Automated tests: separate database, fake OTP providers (see FakeOtpOutbox), fast retries.
+spring:
+  datasource:
+    url: ${TEST_DB_URL:jdbc:postgresql://localhost:5432/property_app_test}
+
+app:
+  media:
+    storage-root: ${java.io.tmpdir}/property-platform-test-media
+    # Small limits keep size tests fast.
+    max-image-size: 1MB
+    limits:
+      project-photos: 3
+      project-videos: 2
+      project-brochures: 1
+      apartment-floor-plans: 3
+      apartment-plan-pdfs: 1
+      apartment-photos: 3
+  security:
+    jwt:
+      secret: test-only-jwt-secret-0123456789abcdefghijklmnop
+  otp:
+    hmac-secret: test-only-otp-secret-0123456789abcdefghijklmnop
+    delivery:
+      retry-delay: 10ms
+  rate-limit:
+    # High IP limits so tests share 127.0.0.1 without interfering; identifier limits stay realistic.
+    login-ip: { max-requests: 10000, window: 15m }
+    register-ip: { max-requests: 10000, window: 1h }
+    otp-verify-ip: { max-requests: 10000, window: 15m }
+    otp-send-ip: { max-requests: 10000, window: 1h }
+    otp-send-global: { max-requests: 10000, window: 1h }
+    refresh-ip: { max-requests: 10000, window: 15m }
+    admin-login-ip: { max-requests: 10000, window: 15m }

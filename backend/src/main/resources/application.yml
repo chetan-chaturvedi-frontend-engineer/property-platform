@@ -1,0 +1,155 @@
+spring:
+  application:
+    name: property-platform
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/property_app}
+    username: ${DB_USERNAME:property_user}
+    password: ${DB_PASSWORD:}
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    enabled: true
+  # List endpoints: larger requested page sizes are capped at 100.
+  data:
+    web:
+      pageable:
+        max-page-size: 100
+  # Uploads: one file per request; per-type limits in app.media. Must allow app.media.max-video-size.
+  servlet:
+    multipart:
+      max-file-size: 50MB
+      max-request-size: 51MB
+  # Only used when app.otp.delivery.email-provider=smtp.
+  mail:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail.smtp.auth: true
+      mail.smtp.starttls.enable: true
+      mail.smtp.starttls.required: true
+      mail.smtp.connectiontimeout: 5000
+      mail.smtp.timeout: 5000
+      mail.smtp.writetimeout: 5000
+  task:
+    execution:
+      pool:
+        core-size: 4
+        max-size: 16
+        queue-capacity: 1000
+      shutdown:
+        await-termination: true
+        await-termination-period: 30s
+
+server:
+  # Trust X-Forwarded-* only from internal proxies (Tomcat RemoteIpValve), so client IPs used for
+  # rate limiting cannot be spoofed. Terminate HTTPS at the load balancer / reverse proxy.
+  forward-headers-strategy: native
+  error:
+    include-stacktrace: never
+    include-message: never
+
+# API docs expose every endpoint; enabled only in the dev profile.
+springdoc:
+  api-docs:
+    enabled: false
+  swagger-ui:
+    enabled: false
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+
+app:
+  phone:
+    default-region: IN
+  http:
+    max-json-body-size: 64KB
+    # Admin blog edits carry up to 100,000 characters of HTML (up to 4 bytes each in UTF-8, plus JSON
+    # escaping); every other JSON endpoint keeps the small limit.
+    large-json-body-paths: /api/v1/admin/blogs/
+    max-large-json-body-size: 1MB
+  security:
+    jwt:
+      # Required, at least 32 bytes. Generate with: openssl rand -base64 48
+      secret: ${JWT_SECRET:}
+      issuer: ${JWT_ISSUER:property-platform}
+      audience: ${JWT_AUDIENCE:property-platform-app}
+      access-token-ttl: 15m
+      refresh-token-ttl: 30d
+    cors:
+      # Comma-separated origins, e.g. https://admin.example.com
+      allowed-origins: ${CORS_ALLOWED_ORIGINS:}
+  otp:
+    # Required, at least 32 bytes. Generate with: openssl rand -base64 48
+    hmac-secret: ${OTP_HMAC_SECRET:}
+    length: 6
+    ttl: 5m
+    max-attempts: 5
+    resend-cooldown: 60s
+    destination-limit:
+      max-requests: 5
+      window: 1h
+    delivery:
+      email-provider: ${OTP_EMAIL_PROVIDER:none}
+      sms-provider: ${OTP_SMS_PROVIDER:none}
+      email-from: ${OTP_EMAIL_FROM:no-reply@example.com}
+      max-attempts: 3
+      retry-delay: 2s
+  auth:
+    password:
+      min-length: 8
+      require-uppercase: true
+      require-lowercase: true
+      require-digit: true
+      require-special: true
+    pending-registration-retention: 7d
+  rate-limit:
+    login-ip: { max-requests: 20, window: 15m }
+    login-identifier: { max-requests: 5, window: 15m }
+    register-ip: { max-requests: 10, window: 1h }
+    otp-verify-ip: { max-requests: 30, window: 15m }
+    otp-verify-identifier: { max-requests: 10, window: 15m }
+    otp-send-ip: { max-requests: 10, window: 1h }
+    otp-send-global: { max-requests: 1000, window: 1h }
+    refresh-ip: { max-requests: 60, window: 15m }
+    # Admin login: stricter than the app login and counted separately.
+    admin-login-ip: { max-requests: 10, window: 15m }
+    admin-login-identifier: { max-requests: 5, window: 15m }
+    # Per authenticated user.
+    property-create-user: { max-requests: 20, window: 1h }
+    property-upload-user: { max-requests: 120, window: 1h }
+    property-status-user: { max-requests: 60, window: 1h }
+    property-preview-user: { max-requests: 120, window: 15m }
+    # Banner create, update, image replacement and delete.
+    banner-write-user: { max-requests: 120, window: 1h }
+    # Blog category create, update, image replacement/removal and delete.
+    blog-category-write-user: { max-requests: 120, window: 1h }
+    # Blog create, update, feature image replacement/removal and delete.
+    blog-write-user: { max-requests: 300, window: 1h }
+  banner:
+    # Accepted banner types and placements; adding one needs no migration (lowercase snake_case).
+    types: promotion, announcement, offer
+    placements: home_top, home_middle, property_list, property_detail
+    # Routes internal banner links may open: the route or any path below it ("/" = home page only).
+    internal-link-prefixes: /, /properties, /projects, /offers, /blogs, /pages, /faqs, /subscription-plans
+  media:
+    # Private directory outside the application; files are served only through authorized endpoints.
+    storage-root: ${MEDIA_STORAGE_ROOT:./var/media}
+    max-image-size: 10MB
+    max-pdf-size: 20MB
+    max-video-size: 50MB
+    allowed-video-hosts: youtube.com, youtu.be, vimeo.com
+    allowed-tour-hosts: matterport.com, kuula.co, momento360.com
+    limits:
+      project-photos: 50
+      project-videos: 10
+      project-brochures: 1
+      apartment-floor-plans: 10
+      apartment-plan-pdfs: 1
+      apartment-photos: 20
