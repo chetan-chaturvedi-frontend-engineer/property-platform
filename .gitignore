@@ -1,33 +1,132 @@
-# Each app has its own .gitignore; this file covers repo-wide noise.
+# Repo-wide rules. App-specific build output lives in each app's own .gitignore.
 
-### OS ###
-.DS_Store
-Thumbs.db
-
-### Editors ###
-.idea/
-.vscode/
-*.iml
-*.swp
-
-### Secrets ###
+### Secrets & environment ###
+# Real values come from env vars / a secret manager; only *.example templates are committed.
 .env
 .env.*
+*.env
 !.env.example
+!*.env.example
+.envrc
+secrets/
+*.secret
+*.secrets
+credentials.json
+client_secret*.json
+service-account*.json
+*-service-account.json
 
-### Node (admin-web, mobile) ###
-node_modules/
-npm-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-coverage/
-
-### React Native / Expo ###
-.expo/
-web-build/
+# Private keys & certificates
+*.pem
+*.key
+*.crt
+*.cer
+*.der
+*.p8
+*.p12
+*.pfx
 *.jks
 *.keystore
 !debug.keystore
-*.p8
-*.p12
 *.mobileprovision
+id_rsa*
+id_ed25519*
+*.gpg
+*.asc
+
+# Cloud / infra state that may embed secrets
+.aws/
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+
+### Database dumps & local data ###
+*.dump
+*.backup
+*.sql.gz
+*.sql.zip
+*.sqlite
+*.sqlite3
+*.db
+
+### Logs ###
+logs/
+*.log
+hs_err_pid*
+replay_pid*
+
+### OS ###
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+### Editors & IDEs ###
+.idea/
+*.iml
+*.iws
+*.ipr
+out/
+.vscode/
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+.factorypath
+
+### Node (admin-web, mobile) ###
+node_modules/
+.npm/
+.pnpm-store/
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.eslintcache
+.cache/
+coverage/
+*.tsbuildinfo
+
+### React web build (admin-web) ###
+admin-web/dist/
+admin-web/build/
+admin-web/.vite/
+
+### React Native / Expo (mobile) ###
+.expo/
+.expo-shared/
+web-build/
+expo-env.d.ts
+.metro-health-check*
+mobile/ios/Pods/
+mobile/ios/build/
+mobile/android/.gradle/
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/local.properties
+mobile/android/app/release/
+*.xcuserstate
+xcuserdata/
+DerivedData/
+*.ipa
+*.apk
+*.aab
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots
+fastlane/test_output
+
+### Claude Code personal settings ###
+.claude/settings.local.json

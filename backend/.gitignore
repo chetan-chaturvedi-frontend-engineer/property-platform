@@ -1,39 +1,37 @@
-HELP.md
+# Backend-specific rules; secrets, OS and IDE files are covered by the root .gitignore.
+
+### Maven ###
 target/
-.mvn/wrapper/maven-wrapper.jar
 !**/src/main/**/target/
 !**/src/test/**/target/
+.mvn/wrapper/maven-wrapper.jar
+.flattened-pom.xml
+dependency-reduced-pom.xml
 
-### STS ###
+### Gradle (in case of migration) ###
+.gradle/
+build/
+!**/src/main/**/build/
+!**/src/test/**/build/
+
+### Spring ###
+HELP.md
+# Personal overrides with real credentials: keep them out of git.
+src/main/resources/application-local.yml
+src/main/resources/application-local.yaml
+src/main/resources/application-local.properties
+config/application*.yml
+config/application*.properties
+
+### STS / NetBeans ###
 .apt_generated
-.classpath
-.factorypath
-.project
-.settings
 .springBeans
 .sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
 /nbproject/private/
 /nbbuild/
 /dist/
 /nbdist/
 /.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
-.vscode/
-
-### Local secrets ###
-.env
 
 ### Local media uploads (app.media.storage-root) ###
 /var/
