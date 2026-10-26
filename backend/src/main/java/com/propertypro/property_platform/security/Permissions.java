@@ -78,6 +78,18 @@ public final class Permissions {
 	/** Permanent delete. */
 	public static final String FAQ_DELETE = "FAQ_DELETE";
 
+	// Content pages (admin dashboard). Public page endpoints need no permission and show published pages only.
+	/** Admin list and detail, drafts included. */
+	public static final String PAGE_VIEW = "PAGE_VIEW";
+	/** Creating drafts; creating a published page also needs {@link #PAGE_PUBLISH}. */
+	public static final String PAGE_CREATE = "PAGE_CREATE";
+	/** Editing every field except status; changing status also needs {@link #PAGE_PUBLISH}. */
+	public static final String PAGE_UPDATE = "PAGE_UPDATE";
+	/** Additionally required to publish or unpublish (any status change, on create or update). */
+	public static final String PAGE_PUBLISH = "PAGE_PUBLISH";
+	/** Permanent delete. */
+	public static final String PAGE_DELETE = "PAGE_DELETE";
+
 	// Property projects. Owner-scoped codes cover only the current user's properties (404 for others);
 	// _ANY codes cover every owner's properties (admin).
 	public static final String PROPERTY_CREATE = "PROPERTY_CREATE";
