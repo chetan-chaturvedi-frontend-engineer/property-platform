@@ -28,5 +28,7 @@ public record RateLimitProperties(
 		/** Blog category writes: create, update, image replacement or removal and delete. */
 		RateLimit blogCategoryWriteUser,
 		/** Blog writes: create, update, feature image replacement or removal and delete. */
-		RateLimit blogWriteUser) {
+		RateLimit blogWriteUser,
+		/** FAQ writes: create, update and delete. */
+		RateLimit faqWriteUser) {
 }

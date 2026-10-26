@@ -132,12 +132,22 @@ app:
     blog-category-write-user: { max-requests: 120, window: 1h }
     # Blog create, update, feature image replacement/removal and delete.
     blog-write-user: { max-requests: 300, window: 1h }
+    # FAQ create, update and delete.
+    faq-write-user: { max-requests: 120, window: 1h }
   banner:
     # Accepted banner types and placements; adding one needs no migration (lowercase snake_case).
     types: promotion, announcement, offer
     placements: home_top, home_middle, property_list, property_detail
     # Routes internal banner links may open: the route or any path below it ("/" = home page only).
     internal-link-prefixes: /, /properties, /projects, /offers, /blogs, /pages, /faqs, /subscription-plans
+  faq:
+    # FAQ categories (key: label), in display order; there is no categories table. Keys are stored in
+    # faqs.category (lowercase snake_case), so change a label freely but never rename a key in use.
+    # FAQs of a removed key are kept but hidden from public pages until moved to a configured category.
+    categories:
+      general: General
+      billing: Billing & Payments
+      technical: Technical Support
   media:
     # Private directory outside the application; files are served only through authorized endpoints.
     storage-root: ${MEDIA_STORAGE_ROOT:./var/media}

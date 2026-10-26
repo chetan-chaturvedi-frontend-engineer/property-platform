@@ -33,6 +33,11 @@ import static com.propertypro.property_platform.security.Permissions.BLOG_CREATE
 import static com.propertypro.property_platform.security.Permissions.BLOG_DELETE;
 import static com.propertypro.property_platform.security.Permissions.BLOG_UPDATE;
 import static com.propertypro.property_platform.security.Permissions.BLOG_VIEW;
+import static com.propertypro.property_platform.security.Permissions.FAQ_CREATE;
+import static com.propertypro.property_platform.security.Permissions.FAQ_DELETE;
+import static com.propertypro.property_platform.security.Permissions.FAQ_PUBLISH;
+import static com.propertypro.property_platform.security.Permissions.FAQ_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.FAQ_VIEW;
 import static com.propertypro.property_platform.security.Permissions.LEAD_CREATE;
 import static com.propertypro.property_platform.security.Permissions.LEAD_DELETE;
 import static com.propertypro.property_platform.security.Permissions.LEAD_DELETE_ANY;
@@ -93,6 +98,8 @@ class RolePermissionUpdateTests {
 			BLOG_CATEGORY_UPDATE, BLOG_CATEGORY_DELETE);
 	/** Added to the admin role (only) later by V202610252000. */
 	private static final Set<String> ADMIN_BLOG_PERMISSIONS = Set.of(BLOG_VIEW, BLOG_CREATE, BLOG_UPDATE, BLOG_DELETE);
+	private static final Set<String> ADMIN_FAQ_PERMISSIONS = Set.of(FAQ_VIEW, FAQ_CREATE, FAQ_UPDATE, FAQ_PUBLISH,
+			FAQ_DELETE);
 	private static final Set<String> ADMIN_PERMISSIONS = Set.of(ADMIN_PANEL_ACCESS, SUBSCRIPTION_PLAN_VIEW,
 			SUBSCRIPTION_PLAN_CREATE, SUBSCRIPTION_PLAN_UPDATE, ROLE_VIEW, ROLE_CREATE, ROLE_UPDATE, ROLE_DELETE,
 			LEAD_LIST_ANY, LEAD_VIEW_ANY, LEAD_UPDATE_ANY, LEAD_DELETE_ANY);
@@ -126,13 +133,15 @@ class RolePermissionUpdateTests {
 	void adminRoleGrantsEveryExistingAdministrativePermission() {
 		Role admin = roleRepository.findBySlug("admin").orElseThrow();
 		// V202610251400 later derives the split plan permissions from view and update; V202610251500 adds
-		// properties, V202610251710 banners, V202610251900 blog categories and V202610252000 blogs.
+		// properties, V202610251710 banners, V202610251900 blog categories, V202610252000 blogs and
+		// V202610261100 FAQs.
 		Set<String> afterAllMigrations = new HashSet<>(ADMIN_PERMISSIONS);
 		afterAllMigrations.addAll(Set.of(SUBSCRIPTION_PLAN_LIST, SUBSCRIPTION_PLAN_CHANGE_STATUS));
 		afterAllMigrations.addAll(ADMIN_PROPERTY_PERMISSIONS);
 		afterAllMigrations.addAll(ADMIN_BANNER_PERMISSIONS);
 		afterAllMigrations.addAll(ADMIN_BLOG_CATEGORY_PERMISSIONS);
 		afterAllMigrations.addAll(ADMIN_BLOG_PERMISSIONS);
+		afterAllMigrations.addAll(ADMIN_FAQ_PERMISSIONS);
 
 		assertThat(admin.getName()).isEqualTo("Admin");
 		assertThat(admin.getStatus()).isEqualTo(RoleStatus.ACTIVE);
