@@ -80,6 +80,21 @@ import static com.propertypro.property_platform.security.Permissions.ROLE_CREATE
 import static com.propertypro.property_platform.security.Permissions.ROLE_DELETE;
 import static com.propertypro.property_platform.security.Permissions.ROLE_UPDATE;
 import static com.propertypro.property_platform.security.Permissions.ROLE_VIEW;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_ASSIGN;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_ASSIGN_ANY;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_CREATE;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_CREATE_ANY;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_DELETE_ANY;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_LIST;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_LIST_ANY;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_SUBMIT_REPORT;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_SUBMIT_REPORT_ANY;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_UPDATE_ANY;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_UPDATE_STATUS;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_UPDATE_STATUS_ANY;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_VIEW;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_VIEW_ANY;
 import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_PLAN_CHANGE_STATUS;
 import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_PLAN_CREATE;
 import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_PLAN_LIST;
@@ -122,6 +137,13 @@ class RolePermissionUpdateTests {
 			LEAD_INTERACTION_UPDATE, LEAD_INTERACTION_DELETE);
 	/** Added to the admin role (only) later by V202610261430. */
 	private static final Set<String> ADMIN_LEAD_PERMISSIONS = Set.of(LEAD_CREATE, LEAD_ASSIGN);
+	/** Added to the user role later by V202610271110. */
+	private static final Set<String> USER_SITE_VISIT_PERMISSIONS = Set.of(SITE_VISIT_LIST, SITE_VISIT_VIEW,
+			SITE_VISIT_CREATE, SITE_VISIT_UPDATE, SITE_VISIT_UPDATE_STATUS, SITE_VISIT_SUBMIT_REPORT, SITE_VISIT_ASSIGN);
+	/** Added to the admin role later by V202610271110. */
+	private static final Set<String> ADMIN_SITE_VISIT_PERMISSIONS = Set.of(SITE_VISIT_LIST_ANY, SITE_VISIT_VIEW_ANY,
+			SITE_VISIT_CREATE_ANY, SITE_VISIT_UPDATE_ANY, SITE_VISIT_DELETE_ANY, SITE_VISIT_ASSIGN_ANY,
+			SITE_VISIT_UPDATE_STATUS_ANY, SITE_VISIT_SUBMIT_REPORT_ANY);
 	private static final Set<String> ADMIN_PERMISSIONS = Set.of(ADMIN_PANEL_ACCESS, SUBSCRIPTION_PLAN_VIEW,
 			SUBSCRIPTION_PLAN_CREATE, SUBSCRIPTION_PLAN_UPDATE, ROLE_VIEW, ROLE_CREATE, ROLE_UPDATE, ROLE_DELETE,
 			LEAD_LIST_ANY, LEAD_VIEW_ANY, LEAD_UPDATE_ANY, LEAD_DELETE_ANY);
@@ -146,6 +168,7 @@ class RolePermissionUpdateTests {
 		Set<String> afterAllMigrations = new HashSet<>(USER_PERMISSIONS);
 		afterAllMigrations.addAll(USER_PROPERTY_PERMISSIONS);
 		afterAllMigrations.addAll(LEAD_CHILD_PERMISSIONS);
+		afterAllMigrations.addAll(USER_SITE_VISIT_PERMISSIONS);
 		assertThat(user.grantedPermissions()).containsExactlyInAnyOrderElementsOf(afterAllMigrations);
 		assertThat(user.isGranted("lead", "view_any")).isFalse();
 		assertThat(user.isGranted("admin_panel", "access")).isFalse();
@@ -157,7 +180,8 @@ class RolePermissionUpdateTests {
 		Role admin = roleRepository.findBySlug("admin").orElseThrow();
 		// V202610251400 later derives the split plan permissions from view and update; V202610251500 adds
 		// properties, V202610251710 banners, V202610251900 blog categories, V202610252000 blogs,
-		// V202610261100 FAQs, V202610261300 pages and V202610261430 lead create/assign, schedules and interactions.
+		// V202610261100 FAQs, V202610261300 pages, V202610261430 lead create/assign, schedules and interactions
+		// and V202610271110 site visits.
 		Set<String> afterAllMigrations = new HashSet<>(ADMIN_PERMISSIONS);
 		afterAllMigrations.addAll(Set.of(SUBSCRIPTION_PLAN_LIST, SUBSCRIPTION_PLAN_CHANGE_STATUS));
 		afterAllMigrations.addAll(ADMIN_PROPERTY_PERMISSIONS);
@@ -168,6 +192,7 @@ class RolePermissionUpdateTests {
 		afterAllMigrations.addAll(ADMIN_PAGE_PERMISSIONS);
 		afterAllMigrations.addAll(LEAD_CHILD_PERMISSIONS);
 		afterAllMigrations.addAll(ADMIN_LEAD_PERMISSIONS);
+		afterAllMigrations.addAll(ADMIN_SITE_VISIT_PERMISSIONS);
 
 		assertThat(admin.getName()).isEqualTo("Admin");
 		assertThat(admin.getStatus()).isEqualTo(RoleStatus.ACTIVE);

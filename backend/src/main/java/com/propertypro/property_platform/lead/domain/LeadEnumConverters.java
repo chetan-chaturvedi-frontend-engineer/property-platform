@@ -125,4 +125,31 @@ public final class LeadEnumConverters {
 
 	}
 
+	@Converter(autoApply = true)
+	public static class SiteVisitStatusConverter extends PersistableEnumConverter<SiteVisitStatus> {
+
+		public SiteVisitStatusConverter() {
+			super(SiteVisitStatus.class);
+		}
+
+	}
+
+	@Converter(autoApply = true)
+	public static class SiteVisitTypeConverter extends PersistableEnumConverter<SiteVisitType> {
+
+		public SiteVisitTypeConverter() {
+			super(SiteVisitType.class);
+		}
+
+	}
+
+	@Converter(autoApply = true)
+	public static class SiteVisitInterestConverter extends PersistableEnumConverter<SiteVisitInterest> {
+
+		public SiteVisitInterestConverter() {
+			super(SiteVisitInterest.class);
+		}
+
+	}
+
 }

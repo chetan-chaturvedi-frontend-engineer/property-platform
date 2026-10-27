@@ -327,6 +327,8 @@ class LeadSchemaTests {
 		leadRepository.saveAndFlush(new Lead(agentId, LeadPurpose.BUY, "Ravi", PHONE));
 		int users = jdbc.queryForObject("SELECT count(*) FROM users", Integer.class);
 
+		// site_visits references leads, so it goes first.
+		jdbc.execute(script("db/rollback/U202610271000__create_site_visits.sql"));
 		jdbc.execute(script("db/rollback/U202610261420__create_lead_interactions.sql"));
 		jdbc.execute(script("db/rollback/U202610261410__create_lead_schedules.sql"));
 		jdbc.execute(script("db/rollback/U202610261400__create_leads.sql"));

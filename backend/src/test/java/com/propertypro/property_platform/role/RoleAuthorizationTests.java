@@ -32,6 +32,13 @@ import static com.propertypro.property_platform.security.Permissions.PROPERTY_DE
 import static com.propertypro.property_platform.security.Permissions.PROPERTY_LIST;
 import static com.propertypro.property_platform.security.Permissions.PROPERTY_UPDATE;
 import static com.propertypro.property_platform.security.Permissions.PROPERTY_VIEW;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_ASSIGN;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_CREATE;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_LIST;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_SUBMIT_REPORT;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_UPDATE_STATUS;
+import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_VIEW;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -77,7 +84,9 @@ class RoleAuthorizationTests extends AbstractIntegrationTest {
 			.containsExactlyInAnyOrder(LEAD_LIST, LEAD_VIEW, LEAD_CREATE, LEAD_UPDATE, LEAD_DELETE, PROPERTY_CREATE,
 					PROPERTY_LIST, PROPERTY_VIEW, PROPERTY_UPDATE, PROPERTY_DELETE, LEAD_SCHEDULE_VIEW,
 					LEAD_SCHEDULE_CREATE, LEAD_SCHEDULE_UPDATE, LEAD_SCHEDULE_DELETE, LEAD_INTERACTION_VIEW,
-					LEAD_INTERACTION_CREATE, LEAD_INTERACTION_UPDATE, LEAD_INTERACTION_DELETE);
+					LEAD_INTERACTION_CREATE, LEAD_INTERACTION_UPDATE, LEAD_INTERACTION_DELETE, SITE_VISIT_LIST,
+					SITE_VISIT_VIEW, SITE_VISIT_CREATE, SITE_VISIT_UPDATE, SITE_VISIT_UPDATE_STATUS,
+					SITE_VISIT_SUBMIT_REPORT, SITE_VISIT_ASSIGN);
 
 		getWithToken(ADMIN_PLANS, accessToken).andExpect(status().isForbidden());
 	}
