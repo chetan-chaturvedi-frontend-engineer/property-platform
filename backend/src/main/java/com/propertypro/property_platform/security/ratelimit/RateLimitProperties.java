@@ -36,5 +36,9 @@ public record RateLimitProperties(
 		/** Lead creation; separate so a flood of new leads cannot use up the write budget. */
 		RateLimit leadCreateUser,
 		/** Lead, schedule and interaction writes other than lead creation. */
-		RateLimit leadWriteUser) {
+		RateLimit leadWriteUser,
+		/** Site visit bookings; separate so retries and floods cannot use up the write budget. */
+		RateLimit siteVisitCreateUser,
+		/** Site visit writes other than creation: update, assign, status, report, delete. */
+		RateLimit siteVisitWriteUser) {
 }

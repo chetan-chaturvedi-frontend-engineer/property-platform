@@ -139,12 +139,20 @@ app:
     # Lead creation, and every other lead/schedule/interaction write (update, assign, delete, ...).
     lead-create-user: { max-requests: 120, window: 1h }
     lead-write-user: { max-requests: 600, window: 1h }
+    # Site visit bookings, and every other site visit write (update, assign, status, report, delete).
+    site-visit-create-user: { max-requests: 30, window: 1h }
+    site-visit-write-user: { max-requests: 600, window: 1h }
   banner:
     # Accepted banner types and placements; adding one needs no migration (lowercase snake_case).
     types: promotion, announcement, offer
     placements: home_top, home_middle, property_list, property_detail
     # Routes internal banner links may open: the route or any path below it ("/" = home page only).
     internal-link-prefixes: /, /properties, /projects, /offers, /blogs, /pages, /faqs, /subscription-plans
+  site-visit:
+    # Visit dates and times are wall-clock values at the property; "today" and "past" use this zone.
+    time-zone: Asia/Kolkata
+    # How far ahead a visit may be booked or moved.
+    max-advance-days: 90
   faq:
     # FAQ categories (key: label), in display order; there is no categories table. Keys are stored in
     # faqs.category (lowercase snake_case), so change a label freely but never rename a key in use.

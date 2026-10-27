@@ -47,6 +47,34 @@ public final class Permissions {
 	/** Soft delete. */
 	public static final String LEAD_INTERACTION_DELETE = "LEAD_INTERACTION_DELETE";
 
+	// Site visits. App codes cover only visits the caller is the builder (property owner), visitor or,
+	// with SITE_VISIT_ACCESS_ASSIGNED, the assignee of (404 for others), and never grant admin access;
+	// _ANY codes cover every visit on the admin dashboard.
+	public static final String SITE_VISIT_LIST = "SITE_VISIT_LIST";
+	public static final String SITE_VISIT_VIEW = "SITE_VISIT_VIEW";
+	/** Book a visit to a published property, or record one at the caller's own property. */
+	public static final String SITE_VISIT_CREATE = "SITE_VISIT_CREATE";
+	/** Edit the fields the caller's relation to the visit allows (builder or assignee, never the visitor). */
+	public static final String SITE_VISIT_UPDATE = "SITE_VISIT_UPDATE";
+	/** Status changes allowed by the caller's relation; a visitor may only cancel. */
+	public static final String SITE_VISIT_UPDATE_STATUS = "SITE_VISIT_UPDATE_STATUS";
+	/** The report of a completed visit, by its builder or assignee, once; later changes need the _ANY code. */
+	public static final String SITE_VISIT_SUBMIT_REPORT = "SITE_VISIT_SUBMIT_REPORT";
+	/** Builders assign their own visits. */
+	public static final String SITE_VISIT_ASSIGN = "SITE_VISIT_ASSIGN";
+	/** Visits assigned to the caller count as their own, and the caller may be chosen as assignee. */
+	public static final String SITE_VISIT_ACCESS_ASSIGNED = "SITE_VISIT_ACCESS_ASSIGNED";
+	public static final String SITE_VISIT_LIST_ANY = "SITE_VISIT_LIST_ANY";
+	public static final String SITE_VISIT_VIEW_ANY = "SITE_VISIT_VIEW_ANY";
+	public static final String SITE_VISIT_CREATE_ANY = "SITE_VISIT_CREATE_ANY";
+	public static final String SITE_VISIT_UPDATE_ANY = "SITE_VISIT_UPDATE_ANY";
+	/** Soft delete. */
+	public static final String SITE_VISIT_DELETE_ANY = "SITE_VISIT_DELETE_ANY";
+	public static final String SITE_VISIT_ASSIGN_ANY = "SITE_VISIT_ASSIGN_ANY";
+	public static final String SITE_VISIT_UPDATE_STATUS_ANY = "SITE_VISIT_UPDATE_STATUS_ANY";
+	/** Submit or replace any visit report, including locked ones. */
+	public static final String SITE_VISIT_SUBMIT_REPORT_ANY = "SITE_VISIT_SUBMIT_REPORT_ANY";
+
 	// Subscription plan catalog (admin dashboard). Plans have no owner, so there is no _ANY variant.
 	public static final String SUBSCRIPTION_PLAN_LIST = "SUBSCRIPTION_PLAN_LIST";
 	public static final String SUBSCRIPTION_PLAN_VIEW = "SUBSCRIPTION_PLAN_VIEW";
