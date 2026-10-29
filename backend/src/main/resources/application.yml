@@ -145,6 +145,8 @@ app:
     # Builder team invitations (each looks up an account), and every other builder team write.
     builder-team-create-user: { max-requests: 30, window: 1h }
     builder-team-write-user: { max-requests: 300, window: 1h }
+    # Creation and updates of the caller's own settings.
+    user-setting-write-user: { max-requests: 120, window: 1h }
   banner:
     # Accepted banner types and placements; adding one needs no migration (lowercase snake_case).
     types: promotion, announcement, offer

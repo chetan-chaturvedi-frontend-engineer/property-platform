@@ -104,6 +104,11 @@ public final class Permissions {
 	/** Accept or reject an invitation to another builder's team. */
 	public static final String BUILDER_TEAM_MEMBERSHIP_RESPOND = "BUILDER_TEAM_MEMBERSHIP_RESPOND";
 
+	// User settings: only the caller's own settings, so there is no _ANY variant.
+	public static final String USER_SETTING_VIEW = "USER_SETTING_VIEW";
+	public static final String USER_SETTING_CREATE = "USER_SETTING_CREATE";
+	public static final String USER_SETTING_UPDATE = "USER_SETTING_UPDATE";
+
 	// Subscription plan catalog (admin dashboard). Plans have no owner, so there is no _ANY variant.
 	public static final String SUBSCRIPTION_PLAN_LIST = "SUBSCRIPTION_PLAN_LIST";
 	public static final String SUBSCRIPTION_PLAN_VIEW = "SUBSCRIPTION_PLAN_VIEW";

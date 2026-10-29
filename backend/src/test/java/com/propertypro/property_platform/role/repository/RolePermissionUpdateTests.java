@@ -115,6 +115,9 @@ import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTIO
 import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_PLAN_LIST;
 import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_PLAN_UPDATE;
 import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_PLAN_VIEW;
+import static com.propertypro.property_platform.security.Permissions.USER_SETTING_CREATE;
+import static com.propertypro.property_platform.security.Permissions.USER_SETTING_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.USER_SETTING_VIEW;
 import static org.assertj.core.api.Assertions.assertThat;
 
 /** V202610251300: user and admin role permissions. Each test is rolled back. */
@@ -168,6 +171,9 @@ class RolePermissionUpdateTests {
 	private static final Set<String> ADMIN_BUILDER_TEAM_PERMISSIONS = Set.of(BUILDER_TEAM_LIST_ANY,
 			BUILDER_TEAM_VIEW_ANY, BUILDER_TEAM_CREATE_ANY, BUILDER_TEAM_UPDATE_ANY, BUILDER_TEAM_DELETE_ANY,
 			BUILDER_TEAM_ASSIGN_ROLE, BUILDER_TEAM_MANAGE_PERMISSIONS, BUILDER_TEAM_MANAGE_STATUS);
+	/** Added to the user and admin roles later by V202610291010. */
+	private static final Set<String> USER_SETTING_PERMISSIONS = Set.of(USER_SETTING_VIEW, USER_SETTING_CREATE,
+			USER_SETTING_UPDATE);
 	private static final Set<String> ADMIN_PERMISSIONS = Set.of(ADMIN_PANEL_ACCESS, SUBSCRIPTION_PLAN_VIEW,
 			SUBSCRIPTION_PLAN_CREATE, SUBSCRIPTION_PLAN_UPDATE, ROLE_VIEW, ROLE_CREATE, ROLE_UPDATE, ROLE_DELETE,
 			LEAD_LIST_ANY, LEAD_VIEW_ANY, LEAD_UPDATE_ANY, LEAD_DELETE_ANY);
@@ -194,6 +200,7 @@ class RolePermissionUpdateTests {
 		afterAllMigrations.addAll(LEAD_CHILD_PERMISSIONS);
 		afterAllMigrations.addAll(USER_SITE_VISIT_PERMISSIONS);
 		afterAllMigrations.addAll(USER_BUILDER_TEAM_PERMISSIONS);
+		afterAllMigrations.addAll(USER_SETTING_PERMISSIONS);
 		assertThat(user.grantedPermissions()).containsExactlyInAnyOrderElementsOf(afterAllMigrations);
 		assertThat(user.isGranted("lead", "view_any")).isFalse();
 		assertThat(user.isGranted("admin_panel", "access")).isFalse();
@@ -206,7 +213,7 @@ class RolePermissionUpdateTests {
 		// V202610251400 later derives the split plan permissions from view and update; V202610251500 adds
 		// properties, V202610251710 banners, V202610251900 blog categories, V202610252000 blogs,
 		// V202610261100 FAQs, V202610261300 pages, V202610261430 lead create/assign, schedules and interactions
-		// V202610271110 site visits and V202610271310 builder teams.
+		// V202610271110 site visits, V202610271310 builder teams and V202610291010 user settings.
 		Set<String> afterAllMigrations = new HashSet<>(ADMIN_PERMISSIONS);
 		afterAllMigrations.addAll(Set.of(SUBSCRIPTION_PLAN_LIST, SUBSCRIPTION_PLAN_CHANGE_STATUS));
 		afterAllMigrations.addAll(ADMIN_PROPERTY_PERMISSIONS);
@@ -219,6 +226,7 @@ class RolePermissionUpdateTests {
 		afterAllMigrations.addAll(ADMIN_LEAD_PERMISSIONS);
 		afterAllMigrations.addAll(ADMIN_SITE_VISIT_PERMISSIONS);
 		afterAllMigrations.addAll(ADMIN_BUILDER_TEAM_PERMISSIONS);
+		afterAllMigrations.addAll(USER_SETTING_PERMISSIONS);
 
 		assertThat(admin.getName()).isEqualTo("Admin");
 		assertThat(admin.getStatus()).isEqualTo(RoleStatus.ACTIVE);

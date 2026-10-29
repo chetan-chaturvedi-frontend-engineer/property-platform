@@ -44,5 +44,7 @@ public record RateLimitProperties(
 		/** Team invitations; separate and small, since each one looks up an account by email or phone. */
 		RateLimit builderTeamCreateUser,
 		/** Builder team writes other than invitations: update, delete, accept and reject. */
-		RateLimit builderTeamWriteUser) {
+		RateLimit builderTeamWriteUser,
+		/** Creation and updates of the caller's own settings. */
+		RateLimit userSettingWriteUser) {
 }
