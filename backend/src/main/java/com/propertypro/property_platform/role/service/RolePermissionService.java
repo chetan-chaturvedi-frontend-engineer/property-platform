@@ -35,4 +35,12 @@ public class RolePermissionService {
 			.map(role -> new ResolvedRole(role.getSlug(), role.getName(), role.grantedPermissions()));
 	}
 
+	/** The active, non-deleted role with this slug; empty otherwise. */
+	@Transactional(readOnly = true)
+	public Optional<ResolvedRole> findActiveRole(String slug) {
+		return roleRepository.findBySlug(slug)
+			.filter(Role::isActive)
+			.map(role -> new ResolvedRole(role.getSlug(), role.getName(), role.grantedPermissions()));
+	}
+
 }

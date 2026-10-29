@@ -24,6 +24,13 @@ public interface UserSubscriptionRepository extends JpaRepository<UserSubscripti
 			  and (s.endsAt is null or s.endsAt > :now)""")
 	Optional<UserSubscription> findInForceForUpdate(Long userId, SubscriptionStatus active, Instant now);
 
+	/** Like {@link #findInForceForUpdate}, without a lock. */
+	@Query("""
+			select s from UserSubscription s
+			where s.userId = :userId and s.status = :active and s.startsAt <= :now
+			  and (s.endsAt is null or s.endsAt > :now)""")
+	Optional<UserSubscription> findInForce(Long userId, SubscriptionStatus active, Instant now);
+
 	/** Whether a subscription with one of {@code statuses} ran until its end before {@code now}. */
 	@Query("""
 			select count(s) > 0 from UserSubscription s

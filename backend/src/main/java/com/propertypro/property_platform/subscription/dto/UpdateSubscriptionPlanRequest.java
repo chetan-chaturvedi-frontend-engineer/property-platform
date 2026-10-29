@@ -26,6 +26,7 @@ import static com.propertypro.property_platform.subscription.domain.Subscription
 import static com.propertypro.property_platform.subscription.domain.SubscriptionPlan.MAX_FEATURES;
 import static com.propertypro.property_platform.subscription.domain.SubscriptionPlan.MAX_PROPERTIES;
 import static com.propertypro.property_platform.subscription.domain.SubscriptionPlan.MAX_SORT_ORDER;
+import static com.propertypro.property_platform.subscription.domain.SubscriptionPlan.MAX_TEAM_MEMBERS;
 import static com.propertypro.property_platform.subscription.domain.SubscriptionPlan.MAX_TRIAL_DAYS;
 import static com.propertypro.property_platform.subscription.domain.SubscriptionPlan.PHOTO_MAX_LENGTH;
 import static com.propertypro.property_platform.subscription.domain.SubscriptionPlan.PHOTO_PATTERN;
@@ -69,6 +70,8 @@ public class UpdateSubscriptionPlanRequest {
 	private Optional<@Size(max = DESCRIPTION_MAX_LENGTH) String> description;
 
 	private Optional<@Min(0) @Max(MAX_PROPERTIES) Integer> noOfProperties;
+
+	private Optional<@NotNull @Min(0) @Max(MAX_TEAM_MEMBERS) Integer> noOfTeamMembers;
 
 	private Optional<@NotNull @Size(max = MAX_FEATURES)
 			List<@NotBlank @Size(max = FEATURE_MAX_LENGTH) String>> features;

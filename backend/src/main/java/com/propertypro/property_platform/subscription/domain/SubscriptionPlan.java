@@ -56,6 +56,7 @@ public class SubscriptionPlan {
 	public static final int FEATURE_MAX_LENGTH = 200;
 	public static final int MAX_BILLING_INTERVAL_COUNT = 36;
 	public static final int MAX_PROPERTIES = 1_000_000;
+	public static final int MAX_TEAM_MEMBERS = 10_000;
 	public static final int MAX_SORT_ORDER = 100_000;
 	public static final int MAX_TRIAL_DAYS = 365;
 	/** Same rule as {@code chk_subscription_plans_slug_format}. */
@@ -117,6 +118,11 @@ public class SubscriptionPlan {
 	@PositiveOrZero
 	@Column(name = "no_of_properties")
 	private Integer noOfProperties;
+
+	/** Maximum pending and active builder team members; 0 means team management is not included. */
+	@PositiveOrZero
+	@Column(name = "no_of_team_members", nullable = false)
+	private int noOfTeamMembers;
 
 	/** Display-only feature list; not used for feature gating. */
 	@NotNull

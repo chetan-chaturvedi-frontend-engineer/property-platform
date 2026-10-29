@@ -14,6 +14,16 @@ import org.springframework.test.web.servlet.request.RequestPostProcessor;
 import java.util.List;
 import java.util.Map;
 
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_ASSIGN_ROLE;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_CREATE;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_DELETE;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_LIST;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_MANAGE_PERMISSIONS;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_MANAGE_STATUS;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_MEMBERSHIP_RESPOND;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_MEMBERSHIP_VIEW;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_VIEW;
 import static com.propertypro.property_platform.security.Permissions.LEAD_CREATE;
 import static com.propertypro.property_platform.security.Permissions.LEAD_DELETE;
 import static com.propertypro.property_platform.security.Permissions.LEAD_INTERACTION_CREATE;
@@ -86,7 +96,9 @@ class RoleAuthorizationTests extends AbstractIntegrationTest {
 					LEAD_SCHEDULE_CREATE, LEAD_SCHEDULE_UPDATE, LEAD_SCHEDULE_DELETE, LEAD_INTERACTION_VIEW,
 					LEAD_INTERACTION_CREATE, LEAD_INTERACTION_UPDATE, LEAD_INTERACTION_DELETE, SITE_VISIT_LIST,
 					SITE_VISIT_VIEW, SITE_VISIT_CREATE, SITE_VISIT_UPDATE, SITE_VISIT_UPDATE_STATUS,
-					SITE_VISIT_SUBMIT_REPORT, SITE_VISIT_ASSIGN);
+					SITE_VISIT_SUBMIT_REPORT, SITE_VISIT_ASSIGN, BUILDER_TEAM_LIST, BUILDER_TEAM_VIEW, BUILDER_TEAM_CREATE,
+					BUILDER_TEAM_UPDATE, BUILDER_TEAM_DELETE, BUILDER_TEAM_ASSIGN_ROLE, BUILDER_TEAM_MANAGE_PERMISSIONS,
+					BUILDER_TEAM_MANAGE_STATUS, BUILDER_TEAM_MEMBERSHIP_VIEW, BUILDER_TEAM_MEMBERSHIP_RESPOND);
 
 		getWithToken(ADMIN_PLANS, accessToken).andExpect(status().isForbidden());
 	}

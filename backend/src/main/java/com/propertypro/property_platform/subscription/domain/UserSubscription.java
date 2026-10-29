@@ -60,6 +60,10 @@ public class UserSubscription {
 	@Column(name = "no_of_properties", updatable = false)
 	private Integer noOfProperties;
 
+	/** Team member limit copied from the plan; 0 means team management is not included. */
+	@Column(name = "no_of_team_members", nullable = false, updatable = false)
+	private int noOfTeamMembers;
+
 	@Column(name = "starts_at", nullable = false)
 	private Instant startsAt;
 
@@ -91,6 +95,7 @@ public class UserSubscription {
 		this.billingInterval = plan.getBillingInterval();
 		this.billingIntervalCount = plan.getBillingIntervalCount();
 		this.noOfProperties = plan.getNoOfProperties();
+		this.noOfTeamMembers = plan.getNoOfTeamMembers();
 		this.startsAt = startsAt;
 		this.endsAt = periodEnd(startsAt, plan.getBillingInterval(), plan.getBillingIntervalCount());
 	}
