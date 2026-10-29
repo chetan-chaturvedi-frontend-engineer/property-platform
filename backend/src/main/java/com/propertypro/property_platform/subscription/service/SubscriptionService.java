@@ -1,5 +1,6 @@
 package com.propertypro.property_platform.subscription.service;
 
+import com.propertypro.property_platform.common.exception.ApiException;
 import com.propertypro.property_platform.subscription.domain.SubscriptionStatus;
 import com.propertypro.property_platform.subscription.domain.UserSubscription;
 import com.propertypro.property_platform.subscription.exception.SubscriptionExceptions;
@@ -39,7 +40,8 @@ public class SubscriptionService {
 	 */
 	@Transactional(propagation = Propagation.MANDATORY)
 	public void requirePropertyCapacity(Long userId, LongSupplier currentProperties) {
-		UserSubscription subscription = lockSubscriptionInForce(userId);
+		UserSubscription subscription = lockSubscriptionInForce(userId, SubscriptionExceptions.subscriptionExpired(),
+				SubscriptionExceptions.subscriptionRequired());
 		Integer limit = subscription.getNoOfProperties();
 		if (limit == null) {
 			return;
@@ -50,12 +52,48 @@ public class SubscriptionService {
 		}
 	}
 
-	private UserSubscription lockSubscriptionInForce(Long userId) {
+	/**
+	 * Throws unless the builder may hold one more team member (pending or active). Same locking as
+	 * {@link #requirePropertyCapacity}: concurrent invitations and reactivations by the same builder run
+	 * one after another, so the limit cannot be exceeded. The caller must write the membership in the
+	 * same transaction.
+	 *
+	 * @param currentMembers counts the builder's pending and active members; called only once the lock is held
+	 */
+	@Transactional(propagation = Propagation.MANDATORY)
+	public void requireTeamMemberCapacity(Long builderId, LongSupplier currentMembers) {
+		UserSubscription subscription = lockSubscriptionInForce(builderId,
+				SubscriptionExceptions.teamSubscriptionExpired(), SubscriptionExceptions.teamSubscriptionRequired());
+		int limit = subscription.getNoOfTeamMembers();
+		if (limit == 0) {
+			throw SubscriptionExceptions.teamManagementNotIncluded(subscription.getPlanTitle());
+		}
+		long current = currentMembers.getAsLong();
+		if (current >= limit) {
+			throw SubscriptionExceptions.teamMemberLimitReached(subscription.getPlanTitle(), limit, current);
+		}
+	}
+
+	/**
+	 * Throws unless the builder's subscription in force includes team management. For changes that use
+	 * no extra seat, such as a member's role or permissions; nothing is locked.
+	 */
+	@Transactional(readOnly = true)
+	public void requireTeamManagement(Long builderId) {
+		Instant now = clock.instant();
+		UserSubscription subscription = subscriptionRepository.findInForce(builderId, SubscriptionStatus.ACTIVE, now)
+			.orElseThrow(() -> subscriptionRepository.existsEndedBefore(builderId, ONCE_IN_FORCE, now)
+					? SubscriptionExceptions.teamSubscriptionExpired()
+					: SubscriptionExceptions.teamSubscriptionRequired());
+		if (subscription.getNoOfTeamMembers() == 0) {
+			throw SubscriptionExceptions.teamManagementNotIncluded(subscription.getPlanTitle());
+		}
+	}
+
+	private UserSubscription lockSubscriptionInForce(Long userId, ApiException expired, ApiException required) {
 		Instant now = clock.instant();
 		return subscriptionRepository.findInForceForUpdate(userId, SubscriptionStatus.ACTIVE, now)
-			.orElseThrow(() -> subscriptionRepository.existsEndedBefore(userId, ONCE_IN_FORCE, now)
-					? SubscriptionExceptions.subscriptionExpired()
-					: SubscriptionExceptions.subscriptionRequired());
+			.orElseThrow(() -> subscriptionRepository.existsEndedBefore(userId, ONCE_IN_FORCE, now) ? expired : required);
 	}
 
 }

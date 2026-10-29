@@ -75,6 +75,35 @@ public final class Permissions {
 	/** Submit or replace any visit report, including locked ones. */
 	public static final String SITE_VISIT_SUBMIT_REPORT_ANY = "SITE_VISIT_SUBMIT_REPORT_ANY";
 
+	// Builder teams. App codes cover only the caller's own team (memberships whose builder is the caller; 404
+	// for others) and never grant admin access; _ANY codes cover every builder's team on the admin dashboard.
+	// ASSIGN_ROLE, MANAGE_PERMISSIONS and MANAGE_STATUS are capabilities needed next to the scope code
+	// (BUILDER_TEAM_CREATE/UPDATE or their _ANY variants) to set those fields.
+	public static final String BUILDER_TEAM_LIST = "BUILDER_TEAM_LIST";
+	public static final String BUILDER_TEAM_VIEW = "BUILDER_TEAM_VIEW";
+	/** Invite a member to the caller's team; needs a subscription that includes team management. */
+	public static final String BUILDER_TEAM_CREATE = "BUILDER_TEAM_CREATE";
+	/** Edit notes; role, permissions and status also need their capability code. */
+	public static final String BUILDER_TEAM_UPDATE = "BUILDER_TEAM_UPDATE";
+	/** Remove (revoke and soft delete) a member; allowed without a subscription. */
+	public static final String BUILDER_TEAM_DELETE = "BUILDER_TEAM_DELETE";
+	/** Change a member's role. */
+	public static final String BUILDER_TEAM_ASSIGN_ROLE = "BUILDER_TEAM_ASSIGN_ROLE";
+	/** Grant or change a member's permissions, including non-empty permissions on creation. */
+	public static final String BUILDER_TEAM_MANAGE_PERMISSIONS = "BUILDER_TEAM_MANAGE_PERMISSIONS";
+	/** Activate, deactivate or revoke a member, including a status other than pending on admin creation. */
+	public static final String BUILDER_TEAM_MANAGE_STATUS = "BUILDER_TEAM_MANAGE_STATUS";
+	public static final String BUILDER_TEAM_LIST_ANY = "BUILDER_TEAM_LIST_ANY";
+	public static final String BUILDER_TEAM_VIEW_ANY = "BUILDER_TEAM_VIEW_ANY";
+	public static final String BUILDER_TEAM_CREATE_ANY = "BUILDER_TEAM_CREATE_ANY";
+	public static final String BUILDER_TEAM_UPDATE_ANY = "BUILDER_TEAM_UPDATE_ANY";
+	/** Soft delete. */
+	public static final String BUILDER_TEAM_DELETE_ANY = "BUILDER_TEAM_DELETE_ANY";
+	/** The caller's own memberships in other builders' teams: list and detail. */
+	public static final String BUILDER_TEAM_MEMBERSHIP_VIEW = "BUILDER_TEAM_MEMBERSHIP_VIEW";
+	/** Accept or reject an invitation to another builder's team. */
+	public static final String BUILDER_TEAM_MEMBERSHIP_RESPOND = "BUILDER_TEAM_MEMBERSHIP_RESPOND";
+
 	// Subscription plan catalog (admin dashboard). Plans have no owner, so there is no _ANY variant.
 	public static final String SUBSCRIPTION_PLAN_LIST = "SUBSCRIPTION_PLAN_LIST";
 	public static final String SUBSCRIPTION_PLAN_VIEW = "SUBSCRIPTION_PLAN_VIEW";

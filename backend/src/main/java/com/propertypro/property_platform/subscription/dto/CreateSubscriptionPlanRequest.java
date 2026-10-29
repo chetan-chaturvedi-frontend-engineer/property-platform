@@ -23,6 +23,7 @@ import static com.propertypro.property_platform.subscription.domain.Subscription
 import static com.propertypro.property_platform.subscription.domain.SubscriptionPlan.MAX_FEATURES;
 import static com.propertypro.property_platform.subscription.domain.SubscriptionPlan.MAX_PROPERTIES;
 import static com.propertypro.property_platform.subscription.domain.SubscriptionPlan.MAX_SORT_ORDER;
+import static com.propertypro.property_platform.subscription.domain.SubscriptionPlan.MAX_TEAM_MEMBERS;
 import static com.propertypro.property_platform.subscription.domain.SubscriptionPlan.MAX_TRIAL_DAYS;
 import static com.propertypro.property_platform.subscription.domain.SubscriptionPlan.PHOTO_MAX_LENGTH;
 import static com.propertypro.property_platform.subscription.domain.SubscriptionPlan.PHOTO_PATTERN;
@@ -32,7 +33,8 @@ import static com.propertypro.property_platform.subscription.domain.Subscription
 
 /**
  * New plan. Omitted optional fields take the column defaults; {@code slug} is generated from the
- * title when omitted. {@code noOfProperties} omitted or null means unlimited.
+ * title when omitted. {@code noOfProperties} omitted or null means unlimited; {@code noOfTeamMembers}
+ * omitted means 0 (team management not included).
  */
 public record CreateSubscriptionPlanRequest(
 		@Size(max = ICON_MAX_LENGTH) @Pattern(regexp = ICON_PATTERN, message = "must be an icon identifier") String icon,
@@ -47,6 +49,7 @@ public record CreateSubscriptionPlanRequest(
 		@Min(1) @Max(MAX_BILLING_INTERVAL_COUNT) Integer billingIntervalCount,
 		@Size(max = DESCRIPTION_MAX_LENGTH) String description,
 		@Min(0) @Max(MAX_PROPERTIES) Integer noOfProperties,
+		@Min(0) @Max(MAX_TEAM_MEMBERS) Integer noOfTeamMembers,
 		@Size(max = MAX_FEATURES) List<@NotBlank @Size(max = FEATURE_MAX_LENGTH) String> features,
 		@Pattern(regexp = SubscriptionPlanStatus.VALUES, message = "must be draft, active or inactive") String status,
 		Boolean popular,

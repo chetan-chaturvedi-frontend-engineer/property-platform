@@ -61,6 +61,7 @@ public class SubscriptionPlanService {
 		plan.setPhoto(request.photo());
 		plan.setDescription(request.description());
 		plan.setNoOfProperties(request.noOfProperties());
+		Optional.ofNullable(request.noOfTeamMembers()).ifPresent(plan::setNoOfTeamMembers);
 		// Omitted fields keep the entity defaults, which mirror the column defaults.
 		Optional.ofNullable(request.currency()).ifPresent(plan::setCurrency);
 		Optional.ofNullable(request.billingInterval()).map(BillingInterval::fromValue).ifPresent(plan::setBillingInterval);
@@ -88,6 +89,7 @@ public class SubscriptionPlanService {
 		apply(request.getBillingIntervalCount(), plan::setBillingIntervalCount);
 		apply(request.getDescription(), plan::setDescription);
 		apply(request.getNoOfProperties(), plan::setNoOfProperties);
+		apply(request.getNoOfTeamMembers(), plan::setNoOfTeamMembers);
 		apply(request.getFeatures(), features -> plan.setFeatures(normalizeFeatures(features)));
 		apply(request.getStatus(), value -> plan.setStatus(SubscriptionPlanStatus.fromValue(value)));
 		apply(request.getPopular(), plan::setPopular);

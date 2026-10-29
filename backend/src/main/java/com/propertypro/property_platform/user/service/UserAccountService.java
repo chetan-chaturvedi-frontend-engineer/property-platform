@@ -27,6 +27,18 @@ public class UserAccountService {
 			.map(user -> new AccountState(user.getStatus(), user.isEmailVerified() || user.isPhoneVerified()));
 	}
 
+	/**
+	 * The id of the active, verified account with this email or phone; empty for unknown, deleted,
+	 * blocked or unverified accounts alike. Pass normalized values (lowercase email, E.164 phone).
+	 */
+	@Transactional(readOnly = true)
+	public Optional<Long> findActiveVerifiedId(String email, String phone) {
+		Optional<User> user = email != null ? userRepository.findByEmail(email) : userRepository.findByPhone(phone);
+		return user.filter(found -> found.getStatus() == UserStatus.ACTIVE
+				&& (found.isEmailVerified() || found.isPhoneVerified()))
+			.map(User::getId);
+	}
+
 	/** Summaries of the users that exist and are not soft-deleted, by id. */
 	@Transactional(readOnly = true)
 	public Map<Long, UserSummary> findSummaries(Collection<Long> userIds) {

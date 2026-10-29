@@ -142,6 +142,9 @@ app:
     # Site visit bookings, and every other site visit write (update, assign, status, report, delete).
     site-visit-create-user: { max-requests: 30, window: 1h }
     site-visit-write-user: { max-requests: 600, window: 1h }
+    # Builder team invitations (each looks up an account), and every other builder team write.
+    builder-team-create-user: { max-requests: 30, window: 1h }
+    builder-team-write-user: { max-requests: 300, window: 1h }
   banner:
     # Accepted banner types and placements; adding one needs no migration (lowercase snake_case).
     types: promotion, announcement, offer

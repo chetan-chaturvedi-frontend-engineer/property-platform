@@ -40,5 +40,9 @@ public record RateLimitProperties(
 		/** Site visit bookings; separate so retries and floods cannot use up the write budget. */
 		RateLimit siteVisitCreateUser,
 		/** Site visit writes other than creation: update, assign, status, report, delete. */
-		RateLimit siteVisitWriteUser) {
+		RateLimit siteVisitWriteUser,
+		/** Team invitations; separate and small, since each one looks up an account by email or phone. */
+		RateLimit builderTeamCreateUser,
+		/** Builder team writes other than invitations: update, delete, accept and reject. */
+		RateLimit builderTeamWriteUser) {
 }

@@ -18,6 +18,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_ASSIGN_ROLE;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_CREATE;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_CREATE_ANY;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_DELETE;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_DELETE_ANY;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_LIST;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_LIST_ANY;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_MANAGE_PERMISSIONS;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_MANAGE_STATUS;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_MEMBERSHIP_RESPOND;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_MEMBERSHIP_VIEW;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_UPDATE_ANY;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_VIEW;
+import static com.propertypro.property_platform.security.Permissions.BUILDER_TEAM_VIEW_ANY;
 import static com.propertypro.property_platform.security.Permissions.ADMIN_PANEL_ACCESS;
 import static com.propertypro.property_platform.security.Permissions.BANNER_CHANGE_STATUS;
 import static com.propertypro.property_platform.security.Permissions.BANNER_CREATE;
@@ -144,6 +159,15 @@ class RolePermissionUpdateTests {
 	private static final Set<String> ADMIN_SITE_VISIT_PERMISSIONS = Set.of(SITE_VISIT_LIST_ANY, SITE_VISIT_VIEW_ANY,
 			SITE_VISIT_CREATE_ANY, SITE_VISIT_UPDATE_ANY, SITE_VISIT_DELETE_ANY, SITE_VISIT_ASSIGN_ANY,
 			SITE_VISIT_UPDATE_STATUS_ANY, SITE_VISIT_SUBMIT_REPORT_ANY);
+	/** Added to the user role later by V202610271310. */
+	private static final Set<String> USER_BUILDER_TEAM_PERMISSIONS = Set.of(BUILDER_TEAM_LIST, BUILDER_TEAM_VIEW,
+			BUILDER_TEAM_CREATE, BUILDER_TEAM_UPDATE, BUILDER_TEAM_DELETE, BUILDER_TEAM_ASSIGN_ROLE,
+			BUILDER_TEAM_MANAGE_PERMISSIONS, BUILDER_TEAM_MANAGE_STATUS, BUILDER_TEAM_MEMBERSHIP_VIEW,
+			BUILDER_TEAM_MEMBERSHIP_RESPOND);
+	/** Added to the admin role later by V202610271310. */
+	private static final Set<String> ADMIN_BUILDER_TEAM_PERMISSIONS = Set.of(BUILDER_TEAM_LIST_ANY,
+			BUILDER_TEAM_VIEW_ANY, BUILDER_TEAM_CREATE_ANY, BUILDER_TEAM_UPDATE_ANY, BUILDER_TEAM_DELETE_ANY,
+			BUILDER_TEAM_ASSIGN_ROLE, BUILDER_TEAM_MANAGE_PERMISSIONS, BUILDER_TEAM_MANAGE_STATUS);
 	private static final Set<String> ADMIN_PERMISSIONS = Set.of(ADMIN_PANEL_ACCESS, SUBSCRIPTION_PLAN_VIEW,
 			SUBSCRIPTION_PLAN_CREATE, SUBSCRIPTION_PLAN_UPDATE, ROLE_VIEW, ROLE_CREATE, ROLE_UPDATE, ROLE_DELETE,
 			LEAD_LIST_ANY, LEAD_VIEW_ANY, LEAD_UPDATE_ANY, LEAD_DELETE_ANY);
@@ -169,6 +193,7 @@ class RolePermissionUpdateTests {
 		afterAllMigrations.addAll(USER_PROPERTY_PERMISSIONS);
 		afterAllMigrations.addAll(LEAD_CHILD_PERMISSIONS);
 		afterAllMigrations.addAll(USER_SITE_VISIT_PERMISSIONS);
+		afterAllMigrations.addAll(USER_BUILDER_TEAM_PERMISSIONS);
 		assertThat(user.grantedPermissions()).containsExactlyInAnyOrderElementsOf(afterAllMigrations);
 		assertThat(user.isGranted("lead", "view_any")).isFalse();
 		assertThat(user.isGranted("admin_panel", "access")).isFalse();
@@ -181,7 +206,7 @@ class RolePermissionUpdateTests {
 		// V202610251400 later derives the split plan permissions from view and update; V202610251500 adds
 		// properties, V202610251710 banners, V202610251900 blog categories, V202610252000 blogs,
 		// V202610261100 FAQs, V202610261300 pages, V202610261430 lead create/assign, schedules and interactions
-		// and V202610271110 site visits.
+		// V202610271110 site visits and V202610271310 builder teams.
 		Set<String> afterAllMigrations = new HashSet<>(ADMIN_PERMISSIONS);
 		afterAllMigrations.addAll(Set.of(SUBSCRIPTION_PLAN_LIST, SUBSCRIPTION_PLAN_CHANGE_STATUS));
 		afterAllMigrations.addAll(ADMIN_PROPERTY_PERMISSIONS);
@@ -193,6 +218,7 @@ class RolePermissionUpdateTests {
 		afterAllMigrations.addAll(LEAD_CHILD_PERMISSIONS);
 		afterAllMigrations.addAll(ADMIN_LEAD_PERMISSIONS);
 		afterAllMigrations.addAll(ADMIN_SITE_VISIT_PERMISSIONS);
+		afterAllMigrations.addAll(ADMIN_BUILDER_TEAM_PERMISSIONS);
 
 		assertThat(admin.getName()).isEqualTo("Admin");
 		assertThat(admin.getStatus()).isEqualTo(RoleStatus.ACTIVE);

@@ -35,4 +35,35 @@ public final class SubscriptionExceptions {
 				"You have reached your property limit. Upgrade your subscription to add more properties.", details);
 	}
 
+	/** Builder team management without a subscription in force. Same code as {@link #subscriptionRequired()}. */
+	public static ApiException teamSubscriptionRequired() {
+		return new ApiException(HttpStatus.FORBIDDEN, "subscription_required",
+				"An active subscription is required to manage your team.");
+	}
+
+	/** Same code as {@link #subscriptionExpired()}. */
+	public static ApiException teamSubscriptionExpired() {
+		return new ApiException(HttpStatus.FORBIDDEN, "subscription_expired",
+				"Your subscription has expired. Renew it to manage your team.");
+	}
+
+	/** The subscription in force has a team member limit of 0. */
+	public static ApiException teamManagementNotIncluded(String planTitle) {
+		return new ApiException(HttpStatus.FORBIDDEN, "team_management_not_included",
+				"Your plan does not include team management. Upgrade your subscription to add team members.",
+				Map.of("plan", planTitle));
+	}
+
+	/** Pending and active members already use every seat. Only the requesting builder's own numbers. */
+	public static ApiException teamMemberLimitReached(String planTitle, int memberLimit, long currentMembers) {
+		Map<String, Object> details = new LinkedHashMap<>();
+		details.put("plan", planTitle);
+		details.put("teamMemberLimit", memberLimit);
+		details.put("currentTeamMembers", currentMembers);
+		details.put("remainingTeamMembers", Math.max(0, memberLimit - currentMembers));
+		return new ApiException(HttpStatus.FORBIDDEN, "team_member_limit_reached",
+				"You have reached your team member limit. Upgrade your subscription, or deactivate or remove a "
+						+ "member, to add more.", details);
+	}
+
 }
