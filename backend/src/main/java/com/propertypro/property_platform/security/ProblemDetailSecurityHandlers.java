@@ -1,5 +1,8 @@
 package com.propertypro.property_platform.security;
 
+import com.propertypro.property_platform.activitylog.service.SystemLogEntry;
+import com.propertypro.property_platform.activitylog.service.SystemLogModules;
+import com.propertypro.property_platform.activitylog.service.SystemLogService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthenticationEntryPoint;
@@ -26,11 +29,12 @@ final class ProblemDetailSecurityHandlers {
 		};
 	}
 
-	static AccessDeniedHandler accessDeniedHandler() {
+	static AccessDeniedHandler accessDeniedHandler(SystemLogService systemLog) {
 		BearerTokenAccessDeniedHandler delegate = new BearerTokenAccessDeniedHandler();
 		return (request, response, ex) -> {
 			delegate.handle(request, response, ex);
 			write(response, 403, "Forbidden", "Access denied.", "forbidden");
+			systemLog.record(SystemLogEntry.warning(SystemLogModules.PERMISSIONS, "Access denied by security policy"));
 		};
 	}
 

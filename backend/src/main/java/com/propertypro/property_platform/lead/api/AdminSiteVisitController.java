@@ -1,5 +1,6 @@
 package com.propertypro.property_platform.lead.api;
 
+import com.propertypro.property_platform.activitylog.web.SystemLogged;
 import com.propertypro.property_platform.common.web.PageResponse;
 import com.propertypro.property_platform.config.OpenApiConfig;
 import com.propertypro.property_platform.lead.dto.AdminCreateSiteVisitRequest;
@@ -54,6 +55,7 @@ public class AdminSiteVisitController {
 	@Operation(summary = "List all site visits (SITE_VISIT_LIST_ANY)", description = """
 			page (zero-based), size (max 100), sort by visitDate, createdAt, updatedAt, nextFollowUp or status.""")
 	@GetMapping
+	@SystemLogged(action = "Viewed all site visits")
 	@PreAuthorize("hasAuthority('SITE_VISIT_LIST_ANY')")
 	public PageResponse<SiteVisitSummaryResponse> list(CurrentActor actor, @Valid SiteVisitFilter filter,
 			@SortDefault(sort = "visitDate", direction = Sort.Direction.DESC) Pageable pageable) {
@@ -72,6 +74,7 @@ public class AdminSiteVisitController {
 
 	@Operation(summary = "Site visit details (SITE_VISIT_VIEW_ANY)")
 	@GetMapping("/{id}")
+	@SystemLogged(action = "Viewed site visit details")
 	@PreAuthorize("hasAuthority('SITE_VISIT_VIEW_ANY')")
 	public SiteVisitResponse get(CurrentActor actor, @PathVariable Long id) {
 		return siteVisitService.get(id, actor, true);

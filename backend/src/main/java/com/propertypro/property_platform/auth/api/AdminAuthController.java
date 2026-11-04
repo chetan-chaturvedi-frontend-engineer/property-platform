@@ -72,7 +72,7 @@ public class AdminAuthController {
 	@SecurityRequirement(name = OpenApiConfig.BEARER_AUTH)
 	@PostMapping("/logout")
 	public MessageResponse logout(@AuthenticationPrincipal Jwt jwt) {
-		tokenService.revokeSession(UUID.fromString(jwt.getClaimAsString(ActiveSessionValidator.SESSION_CLAIM)),
+		tokenService.logout(UUID.fromString(jwt.getClaimAsString(ActiveSessionValidator.SESSION_CLAIM)),
 				"admin_logout");
 		return new MessageResponse("Logged out.");
 	}

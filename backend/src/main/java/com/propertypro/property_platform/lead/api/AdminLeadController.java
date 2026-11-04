@@ -1,5 +1,6 @@
 package com.propertypro.property_platform.lead.api;
 
+import com.propertypro.property_platform.activitylog.web.SystemLogged;
 import com.propertypro.property_platform.common.web.PageResponse;
 import com.propertypro.property_platform.config.OpenApiConfig;
 import com.propertypro.property_platform.lead.dto.LeadFilter;
@@ -35,6 +36,7 @@ public class AdminLeadController {
 
 	@Operation(summary = "List all leads", description = "Same filters and sorting as GET /api/v1/leads.")
 	@GetMapping
+	@SystemLogged(action = "Viewed all leads")
 	@PreAuthorize("hasAuthority('LEAD_LIST_ANY')")
 	public PageResponse<LeadSummaryResponse> list(@Valid LeadFilter filter,
 			@SortDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {

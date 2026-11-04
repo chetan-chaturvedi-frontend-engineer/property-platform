@@ -117,7 +117,9 @@ Rules:
 - File uploads: allow-list MIME types and extensions, enforce size limits, store outside the app (object storage, S3-compatible), random object keys, serve via signed/CDN URLs. Never trust client filenames.
 - CORS: explicit allow-list of the admin dashboard origin(s). No `*` with credentials.
 - Secrets only from env vars / secret manager. Never log passwords, tokens, OTPs or document numbers.
-- Sensitive admin actions (user/role/settings/transaction changes) must write an activity log entry.
+- Sensitive admin actions (user/role/settings/transaction changes) must write an activity log entry. Successful
+  API writes and 403s are logged automatically (`activitylog/web/SystemLogInterceptor`); add `@SystemLogged` to
+  reads of sensitive data and call `SystemLogService.record` for anything else. `system_logs` is append-only.
 
 ## Subscriptions & feature gating
 

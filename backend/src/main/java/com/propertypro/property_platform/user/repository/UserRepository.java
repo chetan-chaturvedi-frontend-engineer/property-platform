@@ -6,6 +6,8 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
 import java.time.Instant;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 /** Derived queries exclude soft-deleted users; native queries state their own policy. */
@@ -21,6 +23,13 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	@Query(value = "SELECT EXISTS (SELECT 1 FROM users WHERE email = :email OR phone = :phone)", nativeQuery = true)
 	boolean existsByEmailOrPhoneIncludingDeleted(String email, String phone);
 
+	/** Includes soft-deleted users, whom audit views must still identify. Only ever select non-sensitive columns. */
+	@Query(value = """
+			SELECT id, full_name AS fullName, email, phone, status, user_type AS userType,
+			       deleted_at IS NOT NULL AS deleted, created_at AS createdAt
+			FROM users WHERE id IN (:ids)""", nativeQuery = true)
+	List<AuditProfile> findAuditProfiles(Collection<Long> ids);
+
 	/** Hard-deletes registrations never verified on any channel, freeing their email and phone. */
 	@Modifying
 	@Query(value = """
@@ -28,5 +37,25 @@ public interface UserRepository extends JpaRepository<User, Long> {
 			WHERE status = 'pending' AND email_verified IS NULL AND phone_verified IS NULL
 			  AND deleted_at IS NULL AND created_at < :createdBefore""", nativeQuery = true)
 	int deleteUnverifiedPendingCreatedBefore(Instant createdBefore);
+
+	interface AuditProfile {
+
+		Long getId();
+
+		String getFullName();
+
+		String getEmail();
+
+		String getPhone();
+
+		String getStatus();
+
+		String getUserType();
+
+		boolean isDeleted();
+
+		Instant getCreatedAt();
+
+	}
 
 }

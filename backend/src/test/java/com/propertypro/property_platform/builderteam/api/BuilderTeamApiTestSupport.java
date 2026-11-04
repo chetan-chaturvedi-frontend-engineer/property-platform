@@ -74,7 +74,7 @@ abstract class BuilderTeamApiTestSupport extends AbstractIntegrationTest {
 
 	@AfterEach
 	void restoreRolesAndData() {
-		jdbc.execute("TRUNCATE users RESTART IDENTITY CASCADE");
+		jdbc.execute("TRUNCATE system_logs, users RESTART IDENTITY CASCADE");
 		jdbc.update("DELETE FROM subscription_plans WHERE slug LIKE ?", PLAN_PREFIX + "%");
 		jdbc.update("DELETE FROM roles WHERE slug <> ALL (?)", (Object) SEEDED_ROLES.toArray(String[]::new));
 		originalRoles.forEach(role -> jdbc.update(

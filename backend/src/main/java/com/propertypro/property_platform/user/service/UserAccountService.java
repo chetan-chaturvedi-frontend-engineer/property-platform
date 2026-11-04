@@ -2,6 +2,7 @@ package com.propertypro.property_platform.user.service;
 
 import com.propertypro.property_platform.user.domain.User;
 import com.propertypro.property_platform.user.domain.UserStatus;
+import com.propertypro.property_platform.user.dto.UserAuditProfile;
 import com.propertypro.property_platform.user.dto.UserSummary;
 import com.propertypro.property_platform.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -44,6 +45,15 @@ public class UserAccountService {
 	public Map<Long, UserSummary> findSummaries(Collection<Long> userIds) {
 		return userRepository.findAllById(userIds).stream()
 			.collect(Collectors.toMap(User::getId, UserSummary::from, (a, b) -> a));
+	}
+
+	/** Profiles of the users that exist, soft-deleted ones included, by id. */
+	@Transactional(readOnly = true)
+	public Map<Long, UserAuditProfile> findAuditProfiles(Collection<Long> userIds) {
+		return userRepository.findAuditProfiles(userIds).stream()
+			.collect(Collectors.toMap(UserRepository.AuditProfile::getId,
+					user -> new UserAuditProfile(user.getId(), user.getFullName(), user.getEmail(), user.getPhone(),
+							user.getStatus(), user.getUserType(), user.isDeleted(), user.getCreatedAt())));
 	}
 
 	/**

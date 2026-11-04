@@ -1,5 +1,8 @@
 package com.propertypro.property_platform.auth.job;
 
+import com.propertypro.property_platform.activitylog.service.SystemLogEntry;
+import com.propertypro.property_platform.activitylog.service.SystemLogModules;
+import com.propertypro.property_platform.activitylog.service.SystemLogService;
 import com.propertypro.property_platform.auth.config.AuthProperties;
 import com.propertypro.property_platform.auth.repository.AuthSessionRepository;
 import com.propertypro.property_platform.otp.repository.OtpChallengeRepository;
@@ -13,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Map;
 
 /**
  * Removes expired OTP challenges, finished sessions and never-verified pending registrations.
@@ -32,6 +36,7 @@ public class AuthCleanupJob {
 	private final UserRepository userRepository;
 	private final AuthProperties properties;
 	private final Clock clock;
+	private final SystemLogService systemLog;
 
 	@Scheduled(initialDelayString = "PT5M", fixedDelayString = "${app.auth.cleanup-interval:PT1H}")
 	@Transactional
@@ -44,6 +49,9 @@ public class AuthCleanupJob {
 		if (challenges + sessions + registrations > 0) {
 			log.info("Auth cleanup removed otpChallenges={} sessions={} unverifiedRegistrations={}", challenges,
 					sessions, registrations);
+			systemLog.record(SystemLogEntry.info(SystemLogModules.AUTHENTICATION, "Expired authentication data removed")
+				.withAdditionalData(Map.of("otpChallenges", challenges, "sessions", sessions,
+						"unverifiedRegistrations", registrations)));
 		}
 	}
 

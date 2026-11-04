@@ -1,5 +1,8 @@
 package com.propertypro.property_platform.auth.service;
 
+import com.propertypro.property_platform.activitylog.service.SystemLogEntry;
+import com.propertypro.property_platform.activitylog.service.SystemLogModules;
+import com.propertypro.property_platform.activitylog.service.SystemLogService;
 import com.propertypro.property_platform.auth.dto.LoginRequest;
 import com.propertypro.property_platform.auth.exception.AuthExceptions;
 import com.propertypro.property_platform.common.exception.ApiException;
@@ -11,6 +14,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -27,16 +31,18 @@ public class LoginService {
 	private final PasswordEncoder passwordEncoder;
 	private final RateLimiter rateLimiter;
 	private final RateLimitProperties limits;
+	private final SystemLogService systemLog;
 	/** Compared against when the account does not exist, so response time does not reveal it. */
 	private final String dummyPasswordHash;
 
 	public LoginService(AccountResolver accountResolver, TokenService tokenService, PasswordEncoder passwordEncoder,
-			RateLimiter rateLimiter, RateLimitProperties limits) {
+			RateLimiter rateLimiter, RateLimitProperties limits, SystemLogService systemLog) {
 		this.accountResolver = accountResolver;
 		this.tokenService = tokenService;
 		this.passwordEncoder = passwordEncoder;
 		this.rateLimiter = rateLimiter;
 		this.limits = limits;
+		this.systemLog = systemLog;
 		this.dummyPasswordHash = passwordEncoder.encode(UUID.randomUUID().toString());
 	}
 
@@ -53,6 +59,9 @@ public class LoginService {
 		if (user.isEmpty() || !passwordMatches) {
 			rateLimiter.acquire(failureKey, limits.loginIdentifier());
 			log.warn("Login failed ip={} userId={}", clientIp, user.map(User::getId).orElse(null));
+			systemLog.record(SystemLogEntry.warning(SystemLogModules.AUTHENTICATION, "Failed login attempt")
+				.withUserId(user.map(User::getId).orElse(null))
+				.withAdditionalData(Map.of("reason", "invalid_credentials")));
 			throw AuthExceptions.invalidCredentials();
 		}
 
@@ -60,10 +69,14 @@ public class LoginService {
 		ApiException stateError = AccountStatePolicy.check(account);
 		if (stateError != null) {
 			log.warn("Login rejected userId={} status={}", account.getId(), account.getStatus().getValue());
+			systemLog.record(SystemLogEntry.warning(SystemLogModules.AUTHENTICATION, "Login rejected by account status")
+				.withUserId(account.getId())
+				.withAdditionalData(Map.of("status", account.getStatus().getValue())));
 			throw stateError;
 		}
 		IssuedTokens tokens = tokenService.startSession(account.getId());
 		log.info("Login succeeded userId={}", account.getId());
+		systemLog.record(SystemLogEntry.success(SystemLogModules.AUTHENTICATION, "User logged in").withUserId(account.getId()));
 		return new LoginResult(account, tokens);
 	}
 

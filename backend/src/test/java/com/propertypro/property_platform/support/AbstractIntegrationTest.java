@@ -47,9 +47,13 @@ public abstract class AbstractIntegrationTest {
 	@Autowired
 	protected InMemoryRateLimiter rateLimiter;
 
+	/**
+	 * System logs are written in the background and lock system_logs before users. Listing system_logs
+	 * first in a TRUNCATE keeps that order, so a late write from the previous test cannot deadlock it.
+	 */
 	@BeforeEach
 	void resetState() {
-		jdbc.execute("TRUNCATE refresh_tokens, auth_sessions, otp_challenges, users RESTART IDENTITY CASCADE");
+		jdbc.execute("TRUNCATE system_logs, refresh_tokens, auth_sessions, otp_challenges, users RESTART IDENTITY CASCADE");
 		rateLimiter.reset();
 		outbox.clear();
 	}
