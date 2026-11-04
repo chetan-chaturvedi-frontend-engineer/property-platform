@@ -1,5 +1,8 @@
 package com.propertypro.property_platform.auth.service;
 
+import com.propertypro.property_platform.activitylog.service.SystemLogEntry;
+import com.propertypro.property_platform.activitylog.service.SystemLogModules;
+import com.propertypro.property_platform.activitylog.service.SystemLogService;
 import com.propertypro.property_platform.auth.dto.RegisterRequest;
 import com.propertypro.property_platform.auth.exception.AuthExceptions;
 import com.propertypro.property_platform.common.exception.FieldValidationException;
@@ -33,10 +36,11 @@ public class RegistrationService {
 	private final RateLimiter rateLimiter;
 	private final RateLimitProperties limits;
 	private final TransactionTemplate transaction;
+	private final SystemLogService systemLog;
 
 	public RegistrationService(UserRepository userRepository, OtpService otpService, PasswordEncoder passwordEncoder,
 			PhoneNumberNormalizer phoneNumberNormalizer, RateLimiter rateLimiter, RateLimitProperties limits,
-			PlatformTransactionManager transactionManager) {
+			PlatformTransactionManager transactionManager, SystemLogService systemLog) {
 		this.userRepository = userRepository;
 		this.otpService = otpService;
 		this.passwordEncoder = passwordEncoder;
@@ -44,6 +48,7 @@ public class RegistrationService {
 		this.rateLimiter = rateLimiter;
 		this.limits = limits;
 		this.transaction = new TransactionTemplate(transactionManager);
+		this.systemLog = systemLog;
 	}
 
 	public User register(RegisterRequest request, String clientIp) {
@@ -72,6 +77,9 @@ public class RegistrationService {
 			throw AuthExceptions.accountExists();
 		}
 		log.info("User registered userId={}", user.getId());
+		systemLog.record(SystemLogEntry.success(SystemLogModules.AUTHENTICATION, "User registered")
+			.withUserId(user.getId())
+			.withReference("User", user.getId()));
 		return user;
 	}
 

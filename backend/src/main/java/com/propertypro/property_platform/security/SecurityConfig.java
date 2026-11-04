@@ -1,5 +1,6 @@
 package com.propertypro.property_platform.security;
 
+import com.propertypro.property_platform.activitylog.service.SystemLogService;
 import com.propertypro.property_platform.role.service.RolePermissionService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,8 +33,8 @@ public class SecurityConfig {
 	private static final String[] ADMIN_PUBLIC_ENDPOINTS = { "/api/v1/admin/login", "/api/v1/admin/refresh" };
 
 	@Bean
-	SecurityFilterChain securityFilterChain(HttpSecurity http, RolePermissionService rolePermissionService)
-			throws Exception {
+	SecurityFilterChain securityFilterChain(HttpSecurity http, RolePermissionService rolePermissionService,
+			SystemLogService systemLog) throws Exception {
 		http
 			// Bearer tokens in the Authorization header, no cookies: CSRF does not apply.
 			.csrf(AbstractHttpConfigurer::disable)
@@ -57,10 +58,10 @@ public class SecurityConfig {
 			.oauth2ResourceServer(resourceServer -> resourceServer
 				.jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter(rolePermissionService)))
 				.authenticationEntryPoint(ProblemDetailSecurityHandlers.authenticationEntryPoint())
-				.accessDeniedHandler(ProblemDetailSecurityHandlers.accessDeniedHandler()))
+				.accessDeniedHandler(ProblemDetailSecurityHandlers.accessDeniedHandler(systemLog)))
 			.exceptionHandling(exceptions -> exceptions
 				.authenticationEntryPoint(ProblemDetailSecurityHandlers.authenticationEntryPoint())
-				.accessDeniedHandler(ProblemDetailSecurityHandlers.accessDeniedHandler()));
+				.accessDeniedHandler(ProblemDetailSecurityHandlers.accessDeniedHandler(systemLog)));
 		return http.build();
 	}
 

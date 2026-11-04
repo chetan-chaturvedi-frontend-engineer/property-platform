@@ -170,6 +170,11 @@ public final class Permissions {
 	/** Permanent delete. */
 	public static final String PAGE_DELETE = "PAGE_DELETE";
 
+	// System logs (admin dashboard). Append-only, so there is no update or delete code.
+	public static final String SYSTEM_LOG_LIST = "SYSTEM_LOG_LIST";
+	public static final String SYSTEM_LOG_VIEW = "SYSTEM_LOG_VIEW";
+	public static final String SYSTEM_LOG_CREATE = "SYSTEM_LOG_CREATE";
+
 	// Property projects. Owner-scoped codes cover only the current user's properties (404 for others);
 	// _ANY codes cover every owner's properties (admin).
 	public static final String PROPERTY_CREATE = "PROPERTY_CREATE";

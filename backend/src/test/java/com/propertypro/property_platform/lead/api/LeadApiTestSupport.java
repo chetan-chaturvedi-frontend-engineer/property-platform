@@ -59,7 +59,7 @@ abstract class LeadApiTestSupport extends AbstractIntegrationTest {
 	/** Also leaves no committed rows behind for tests that do not truncate first (e.g. @DataJpaTest classes). */
 	@AfterEach
 	void restoreRolesAndData() {
-		jdbc.execute("TRUNCATE users RESTART IDENTITY CASCADE");
+		jdbc.execute("TRUNCATE system_logs, users RESTART IDENTITY CASCADE");
 		jdbc.update("DELETE FROM roles WHERE slug <> ALL (?)", (Object) SEEDED_ROLES.toArray(String[]::new));
 		originalRoles.forEach(role -> jdbc.update(
 				"UPDATE roles SET name = ?, permissions = ?::jsonb, status = ?, deleted_at = NULL WHERE slug = ?",

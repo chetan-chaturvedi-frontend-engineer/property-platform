@@ -1,5 +1,8 @@
 package com.propertypro.property_platform.auth.service;
 
+import com.propertypro.property_platform.activitylog.service.SystemLogEntry;
+import com.propertypro.property_platform.activitylog.service.SystemLogModules;
+import com.propertypro.property_platform.activitylog.service.SystemLogService;
 import com.propertypro.property_platform.auth.dto.AdminLoginRequest;
 import com.propertypro.property_platform.auth.dto.AdminTokenResponse;
 import com.propertypro.property_platform.auth.dto.AdminUserResponse;
@@ -16,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,12 +42,13 @@ public class AdminAuthService {
 	private final PasswordEncoder passwordEncoder;
 	private final RateLimiter rateLimiter;
 	private final RateLimitProperties limits;
+	private final SystemLogService systemLog;
 	/** Compared against when the account does not exist, so response time does not reveal it. */
 	private final String dummyPasswordHash;
 
 	public AdminAuthService(AccountResolver accountResolver, TokenService tokenService,
 			RolePermissionService rolePermissionService, UserRepository userRepository, PasswordEncoder passwordEncoder,
-			RateLimiter rateLimiter, RateLimitProperties limits) {
+			RateLimiter rateLimiter, RateLimitProperties limits, SystemLogService systemLog) {
 		this.accountResolver = accountResolver;
 		this.tokenService = tokenService;
 		this.rolePermissionService = rolePermissionService;
@@ -51,6 +56,7 @@ public class AdminAuthService {
 		this.passwordEncoder = passwordEncoder;
 		this.rateLimiter = rateLimiter;
 		this.limits = limits;
+		this.systemLog = systemLog;
 		this.dummyPasswordHash = passwordEncoder.encode(UUID.randomUUID().toString());
 	}
 
@@ -71,6 +77,9 @@ public class AdminAuthService {
 		if (user.isEmpty() || !passwordMatches) {
 			rateLimiter.acquire(failureKey, limits.adminLoginIdentifier());
 			log.warn("Admin login failed ip={} userId={}", clientIp, user.map(User::getId).orElse(null));
+			systemLog.record(SystemLogEntry.warning(SystemLogModules.AUTHENTICATION, "Failed admin login attempt")
+				.withUserId(user.map(User::getId).orElse(null))
+				.withAdditionalData(Map.of("reason", "invalid_credentials")));
 			throw AuthExceptions.invalidCredentials();
 		}
 
@@ -79,11 +88,15 @@ public class AdminAuthService {
 		if (stateError != null) {
 			log.warn("Admin login rejected ip={} userId={} status={}", clientIp, account.getId(),
 					account.getStatus().getValue());
+			systemLog.record(SystemLogEntry.warning(SystemLogModules.AUTHENTICATION, "Admin login rejected by account status")
+				.withUserId(account.getId())
+				.withAdditionalData(Map.of("status", account.getStatus().getValue())));
 			throw stateError;
 		}
 		ResolvedRole role = requireAdminRole(account.getId());
 		IssuedTokens tokens = tokenService.startSession(account.getId());
 		log.info("Admin login succeeded ip={} userId={} role={}", clientIp, account.getId(), role.slug());
+		systemLog.record(SystemLogEntry.success(SystemLogModules.AUTHENTICATION, "Admin logged in").withUserId(account.getId()));
 		return AdminTokenResponse.of(tokens, AdminUserResponse.of(account, role));
 	}
 
@@ -99,6 +112,8 @@ public class AdminAuthService {
 		if (role.isEmpty() || user.isEmpty()) {
 			tokenService.revokeSession(tokens.sessionId(), "admin_access_revoked");
 			log.warn("Admin token refresh denied userId={}", tokens.userId());
+			systemLog.record(SystemLogEntry.warning(SystemLogModules.PERMISSIONS, "Admin token refresh denied")
+				.withUserId(tokens.userId()));
 			throw AuthExceptions.adminAccessDenied();
 		}
 		return AdminTokenResponse.of(tokens, AdminUserResponse.of(user.get(), role.get()));
@@ -115,6 +130,8 @@ public class AdminAuthService {
 			.filter(role -> role.grants(Permissions.ADMIN_PANEL_ACCESS))
 			.orElseThrow(() -> {
 				log.warn("Admin access denied userId={}", userId);
+				systemLog.record(SystemLogEntry.warning(SystemLogModules.PERMISSIONS, "Admin panel access denied")
+					.withUserId(userId));
 				return AuthExceptions.adminAccessDenied();
 			});
 	}

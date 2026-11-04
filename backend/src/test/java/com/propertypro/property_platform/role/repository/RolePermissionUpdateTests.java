@@ -115,6 +115,9 @@ import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTIO
 import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_PLAN_LIST;
 import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_PLAN_UPDATE;
 import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_PLAN_VIEW;
+import static com.propertypro.property_platform.security.Permissions.SYSTEM_LOG_CREATE;
+import static com.propertypro.property_platform.security.Permissions.SYSTEM_LOG_LIST;
+import static com.propertypro.property_platform.security.Permissions.SYSTEM_LOG_VIEW;
 import static com.propertypro.property_platform.security.Permissions.USER_SETTING_CREATE;
 import static com.propertypro.property_platform.security.Permissions.USER_SETTING_UPDATE;
 import static com.propertypro.property_platform.security.Permissions.USER_SETTING_VIEW;
@@ -213,7 +216,8 @@ class RolePermissionUpdateTests {
 		// V202610251400 later derives the split plan permissions from view and update; V202610251500 adds
 		// properties, V202610251710 banners, V202610251900 blog categories, V202610252000 blogs,
 		// V202610261100 FAQs, V202610261300 pages, V202610261430 lead create/assign, schedules and interactions
-		// V202610271110 site visits, V202610271310 builder teams and V202610291010 user settings.
+		// V202610271110 site visits, V202610271310 builder teams, V202610291010 user settings and
+		// V202611041100 system logs.
 		Set<String> afterAllMigrations = new HashSet<>(ADMIN_PERMISSIONS);
 		afterAllMigrations.addAll(Set.of(SUBSCRIPTION_PLAN_LIST, SUBSCRIPTION_PLAN_CHANGE_STATUS));
 		afterAllMigrations.addAll(ADMIN_PROPERTY_PERMISSIONS);
@@ -227,6 +231,7 @@ class RolePermissionUpdateTests {
 		afterAllMigrations.addAll(ADMIN_SITE_VISIT_PERMISSIONS);
 		afterAllMigrations.addAll(ADMIN_BUILDER_TEAM_PERMISSIONS);
 		afterAllMigrations.addAll(USER_SETTING_PERMISSIONS);
+		afterAllMigrations.addAll(Set.of(SYSTEM_LOG_LIST, SYSTEM_LOG_VIEW, SYSTEM_LOG_CREATE));
 
 		assertThat(admin.getName()).isEqualTo("Admin");
 		assertThat(admin.getStatus()).isEqualTo(RoleStatus.ACTIVE);

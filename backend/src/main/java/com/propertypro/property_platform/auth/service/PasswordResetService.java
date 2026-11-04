@@ -1,5 +1,8 @@
 package com.propertypro.property_platform.auth.service;
 
+import com.propertypro.property_platform.activitylog.service.SystemLogEntry;
+import com.propertypro.property_platform.activitylog.service.SystemLogModules;
+import com.propertypro.property_platform.activitylog.service.SystemLogService;
 import com.propertypro.property_platform.auth.dto.ResetPasswordRequest;
 import com.propertypro.property_platform.otp.domain.OtpPurpose;
 import com.propertypro.property_platform.otp.exception.InvalidOtpException;
@@ -29,10 +32,11 @@ public class PasswordResetService {
 	private final RateLimiter rateLimiter;
 	private final RateLimitProperties limits;
 	private final TransactionTemplate transaction;
+	private final SystemLogService systemLog;
 
 	public PasswordResetService(AccountResolver accountResolver, OtpService otpService, TokenService tokenService,
 			PasswordEncoder passwordEncoder, RateLimiter rateLimiter, RateLimitProperties limits,
-			PlatformTransactionManager transactionManager) {
+			PlatformTransactionManager transactionManager, SystemLogService systemLog) {
 		this.accountResolver = accountResolver;
 		this.otpService = otpService;
 		this.tokenService = tokenService;
@@ -40,6 +44,7 @@ public class PasswordResetService {
 		this.rateLimiter = rateLimiter;
 		this.limits = limits;
 		this.transaction = new TransactionTemplate(transactionManager);
+		this.systemLog = systemLog;
 	}
 
 	/** Only active accounts may reset; a reset never activates or unblocks an account. */
@@ -53,18 +58,28 @@ public class PasswordResetService {
 		rateLimiter.acquire("otp-verify:id:" + identifier.value(), limits.otpVerifyIdentifier());
 		String passwordHash = passwordEncoder.encode(request.password());
 
-		Long userId = transaction.execute(status -> {
-			User user = accountResolver.findUser(identifier)
-					.filter(PasswordResetService::canResetPassword)
-					.filter(u -> AccountResolver.isVerified(u, identifier))
-					.orElseThrow(InvalidOtpException::new);
-			otpService.verifyAndConsume(user.getId(), OtpPurpose.PASSWORD_RESET, identifier.value(), request.otp());
-			user.setPasswordHash(passwordHash);
-			otpService.invalidateOpen(user.getId(), OtpPurpose.PASSWORD_RESET);
-			tokenService.revokeAllSessions(user.getId(), "password_reset");
-			return user.getId();
-		});
+		Long userId;
+		try {
+			userId = transaction.execute(status -> {
+				User user = accountResolver.findUser(identifier)
+						.filter(PasswordResetService::canResetPassword)
+						.filter(u -> AccountResolver.isVerified(u, identifier))
+						.orElseThrow(InvalidOtpException::new);
+				otpService.verifyAndConsume(user.getId(), OtpPurpose.PASSWORD_RESET, identifier.value(), request.otp());
+				user.setPasswordHash(passwordHash);
+				otpService.invalidateOpen(user.getId(), OtpPurpose.PASSWORD_RESET);
+				tokenService.revokeAllSessions(user.getId(), "password_reset");
+				return user.getId();
+			});
+		}
+		catch (InvalidOtpException ex) {
+			systemLog.record(SystemLogEntry.warning(SystemLogModules.AUTHENTICATION, "Failed password reset attempt"));
+			throw ex;
+		}
 		log.info("Password reset completed, all sessions revoked userId={}", userId);
+		systemLog.record(SystemLogEntry.success(SystemLogModules.AUTHENTICATION, "Password changed by reset")
+			.withUserId(userId)
+			.withReference("User", userId));
 	}
 
 }

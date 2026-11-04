@@ -1,5 +1,8 @@
 package com.propertypro.property_platform.auth.service;
 
+import com.propertypro.property_platform.activitylog.service.SystemLogEntry;
+import com.propertypro.property_platform.activitylog.service.SystemLogModules;
+import com.propertypro.property_platform.activitylog.service.SystemLogService;
 import com.propertypro.property_platform.auth.domain.AuthSession;
 import com.propertypro.property_platform.auth.domain.RefreshToken;
 import com.propertypro.property_platform.auth.exception.AuthExceptions;
@@ -27,6 +30,7 @@ import java.time.Instant;
 import java.util.Base64;
 import java.util.HexFormat;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 /**
@@ -44,6 +48,7 @@ public class TokenService {
 	private final AuthSessionRepository sessionRepository;
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final Clock clock;
+	private final SystemLogService systemLog;
 
 	@Transactional
 	public IssuedTokens startSession(Long userId) {
@@ -62,6 +67,8 @@ public class TokenService {
 		if (refreshTokenRepository.markUsed(token.getId(), now) != 1) {
 			sessionRepository.revoke(token.getSessionId(), now, "refresh_token_reuse");
 			log.warn("Refresh token reuse detected, session revoked sessionId={}", token.getSessionId());
+			systemLog.record(SystemLogEntry.warning(SystemLogModules.AUTHENTICATION, "Refresh token reuse detected, session revoked")
+				.withAdditionalData(Map.of("sessionId", token.getSessionId().toString())));
 			throw AuthExceptions.invalidRefreshToken();
 		}
 		AuthSession session = sessionRepository.findById(token.getSessionId())
@@ -75,6 +82,14 @@ public class TokenService {
 	@Transactional
 	public void revokeSession(UUID sessionId, String reason) {
 		sessionRepository.revoke(sessionId, clock.instant(), reason);
+	}
+
+	/** A logout the user asked for, unlike the other reasons a session is revoked. */
+	@Transactional
+	public void logout(UUID sessionId, String reason) {
+		revokeSession(sessionId, reason);
+		systemLog.record(SystemLogEntry.success(SystemLogModules.AUTHENTICATION, "User logged out")
+			.withAdditionalData(Map.of("reason", reason)));
 	}
 
 	/** Logs the user out everywhere; call when credentials change or the account is blocked. */

@@ -94,7 +94,7 @@ abstract class PropertyApiTestSupport extends AbstractIntegrationTest {
 	/** Leaves no committed rows behind for tests that do not truncate first (e.g. @DataJpaTest classes). */
 	@AfterEach
 	void removePropertyData() {
-		jdbc.execute("TRUNCATE subscription_plans, users RESTART IDENTITY CASCADE");
+		jdbc.execute("TRUNCATE system_logs, subscription_plans, users RESTART IDENTITY CASCADE");
 	}
 
 	// ---- Users and subscriptions ----
