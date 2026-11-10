@@ -1,0 +1,31 @@
+/** Single source of truth for every color in the app. Never hard-code hex values elsewhere. */
+export const colors = {
+  primary: '#3D22DD',
+  primaryDark: '#2A14B8',
+  primarySoft: '#EEEBFF',
+  primaryTint: '#F6F4FF',
+  background: '#FFFFFF',
+  surface: '#F7F6FD',
+  border: '#E8E6F4',
+  text: '#16142B',
+  textMuted: '#6B6985',
+  textFaint: '#9C9AB3',
+  textInverse: '#FFFFFF',
+  success: '#16A34A',
+  successSoft: '#E7F7ED',
+  warning: '#F59E0B',
+  warningText: '#B7791F',
+  warningSoft: '#FEF3DC',
+  danger: '#E5484D',
+  dangerSoft: '#FDECEC',
+  orange: '#F97316',
+  orangeSoft: '#FFF0E4',
+  blueSoft: '#E6F0FF',
+  dark: '#1B1250',
+  overlay: 'rgba(0,0,0,0.55)',
+  overlayLight: 'rgba(255,255,255,0.55)',
+  shadow: '#2A1B8F',
+  photoTones: ['#2E3A6B', '#6B4E3D', '#34556B', '#4A3A6B', '#3D5A4A'],
+} as const;
+
+export type ColorName = keyof typeof colors;
