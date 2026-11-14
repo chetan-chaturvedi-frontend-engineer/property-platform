@@ -246,6 +246,8 @@ Admins edit, review and publish through the `/api/v1/properties/{id}/...` endpoi
 | GET | `/public/properties/{slug}/media/{mediaId}/content` | public file download |
 | GET | `/public/properties/{slug}/apartments/{apartmentId}/media/{mediaId}/content` | |
 
+Each result carries `id` (use it as `propertyId` when booking a site visit), `startingPrice` (lowest apartment starting price, `null` if none), `apartmentTypes` (distinct types, display order) and `coverUrl` (primary photo, else the first photo; a public content path or an external URL, `null` if no photo). The detail response also carries `id`.
+
 Drafts, pending, approved-but-unpublished, rejected, suspended, archived and deleted properties are 404.
 
 ## Workflows

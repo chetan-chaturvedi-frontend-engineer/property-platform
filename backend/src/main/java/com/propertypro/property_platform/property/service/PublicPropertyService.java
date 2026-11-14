@@ -3,9 +3,11 @@ package com.propertypro.property_platform.property.service;
 import com.propertypro.property_platform.common.exception.FieldValidationException;
 import com.propertypro.property_platform.common.web.PageResponse;
 import com.propertypro.property_platform.property.domain.ApartmentType;
+import com.propertypro.property_platform.property.domain.ProjectMediaType;
 import com.propertypro.property_platform.property.domain.ProjectStatus;
 import com.propertypro.property_platform.property.domain.PropertyApartment;
 import com.propertypro.property_platform.property.domain.PropertyProject;
+import com.propertypro.property_platform.property.domain.PropertyProjectMedia;
 import com.propertypro.property_platform.property.domain.PropertyProjectSummary;
 import com.propertypro.property_platform.property.domain.PropertyType;
 import com.propertypro.property_platform.property.domain.PublicationStatus;
@@ -14,6 +16,8 @@ import com.propertypro.property_platform.property.dto.PublicPropertyResponse;
 import com.propertypro.property_platform.property.dto.PublicPropertySummaryResponse;
 import com.propertypro.property_platform.property.exception.PropertyExceptions;
 import com.propertypro.property_platform.property.mapper.PropertyResponseMapper;
+import com.propertypro.property_platform.property.repository.PropertyApartmentRepository;
+import com.propertypro.property_platform.property.repository.PropertyProjectMediaRepository;
 import com.propertypro.property_platform.property.repository.PropertyProjectRepository;
 import com.propertypro.property_platform.property.repository.PropertyProjectSummaryRepository;
 import com.propertypro.property_platform.property.service.PropertyMediaService.MediaContent;
@@ -23,6 +27,7 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -32,8 +37,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Objects;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /** Read-only access for the public website and app: published, non-deleted properties only. */
 @Service
@@ -44,6 +54,8 @@ public class PublicPropertyService {
 
 	private final PropertyProjectSummaryRepository summaryRepository;
 	private final PropertyProjectRepository projectRepository;
+	private final PropertyApartmentRepository apartmentRepository;
+	private final PropertyProjectMediaRepository projectMediaRepository;
 	private final PropertyResponseMapper mapper;
 	private final PropertyMediaService mediaService;
 
@@ -59,7 +71,35 @@ public class PublicPropertyService {
 		}
 		PageRequest page = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
 				pageable.getSort().and(Sort.by(Sort.Direction.DESC, "id")));
-		return PageResponse.of(summaryRepository.findAll(matching(filter), page), PublicPropertySummaryResponse::from);
+		Page<PropertyProjectSummary> found = summaryRepository.findAll(matching(filter), page);
+		return PageResponse.of(found, toSummaries(found.getContent()));
+	}
+
+	/** Adds price, configuration types and cover photo to a page of results with two batch queries. */
+	private Function<PropertyProjectSummary, PublicPropertySummaryResponse> toSummaries(
+			List<PropertyProjectSummary> projects) {
+		if (projects.isEmpty()) {
+			return p -> PublicPropertySummaryResponse.from(p, null, List.of(), null);
+		}
+		List<Long> ids = projects.stream().map(PropertyProjectSummary::getId).toList();
+		Map<Long, List<PropertyApartment>> apartments = apartmentRepository
+			.findByPropertyProjectIdInOrderByDisplayOrderAscIdAsc(ids).stream()
+			.collect(Collectors.groupingBy(PropertyApartment::getPropertyProjectId));
+		Map<Long, List<PropertyProjectMedia>> photos = projectMediaRepository
+			.findByPropertyProjectIdInAndMediaTypeOrderBySortOrderAscIdAsc(ids, ProjectMediaType.PHOTO).stream()
+			.collect(Collectors.groupingBy(PropertyProjectMedia::getPropertyProjectId));
+		return p -> {
+			List<PropertyApartment> configurations = apartments.getOrDefault(p.getId(), List.of());
+			BigDecimal startingPrice = configurations.stream().map(PropertyApartment::getStartingPrice)
+				.filter(Objects::nonNull).min(Comparator.naturalOrder()).orElse(null);
+			List<ApartmentType> types = configurations.stream().map(PropertyApartment::getApartmentType).distinct()
+				.toList();
+			List<PropertyProjectMedia> projectPhotos = photos.getOrDefault(p.getId(), List.of());
+			String coverUrl = projectPhotos.stream().filter(PropertyProjectMedia::isPrimary).findFirst()
+				.or(() -> projectPhotos.stream().findFirst())
+				.map(m -> mapper.toPublicMediaUrl(p.getSlug(), m)).orElse(null);
+			return PublicPropertySummaryResponse.from(p, startingPrice, types, coverUrl);
+		};
 	}
 
 	@Transactional(readOnly = true)
