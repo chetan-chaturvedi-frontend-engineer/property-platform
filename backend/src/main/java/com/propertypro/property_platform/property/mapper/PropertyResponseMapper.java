@@ -61,13 +61,19 @@ public class PropertyResponseMapper {
 
 	public PublicPropertyResponse toPublicResponse(PropertyProject p) {
 		String base = PUBLIC_BASE + p.getSlug();
-		return new PublicPropertyResponse(p.getSlug(), p.getPropertyType(), p.getProjectName(),
+		return new PublicPropertyResponse(p.getId(), p.getSlug(), p.getPropertyType(), p.getProjectName(),
 				p.getBuilderCompanyName(), p.getReraNumber(), location(p), apartments(p, base),
 				p.getTotalTowersBlocks(), p.getTotalUnitsFlats(), p.getProjectStatus(), p.getLegalApprovalStatus(),
 				p.getLandArea(), p.getLandAreaUnit(), p.getPossessionStartDate(), p.getPossessionEndDate(),
 				p.getProjectDescription(), copy(p.getProjectHighlights()),
 				amenityRepository.findLinkedToProject(p.getId()).stream().map(AmenityResponse::from).toList(),
 				projectMedia(p, base), p.getThreeDTourUrl(), nearbyPlaces(p), p.getPublishedAt());
+	}
+
+	/** Public URL of a project photo: its external URL, or the public content path of an uploaded file. */
+	public String toPublicMediaUrl(String slug, PropertyProjectMedia media) {
+		return media.getExternalUrl() != null ? media.getExternalUrl()
+				: PUBLIC_BASE + slug + "/media/" + media.getId() + "/content";
 	}
 
 	public ApartmentResponse toApartmentResponse(PropertyProject project, PropertyApartment apartment) {

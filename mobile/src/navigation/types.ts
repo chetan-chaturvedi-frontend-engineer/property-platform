@@ -1,8 +1,13 @@
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { OtpPurpose } from '../types';
 
 export type RootStackParamList = {
   BuyerTabs: undefined;
   SellerTabs: undefined;
+  // Auth
+  Login: { identifier?: string; notice?: string } | undefined;
+  Register: undefined;
+  VerifyOtp: { identifier: string; purpose: OtpPurpose };
   // Buyer
   PropertyDetails: { id: string };
   ApartmentDetails: { id: string };

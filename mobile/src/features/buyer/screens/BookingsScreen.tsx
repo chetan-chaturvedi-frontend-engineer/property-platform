@@ -1,19 +1,40 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Chip, Header, Icon, IconButton, PropertyPhoto, Screen, SectionTitle, Tag } from '../../../components';
+import { Alert } from 'react-native';
+import { Button, Card, Chip, EmptyState, Header, Icon, IconButton, PropertyPhoto, Screen, SectionTitle, Tag } from '../../../components';
 import type { TagTone } from '../../../components';
 import { useAsync } from '../../../hooks/useAsync';
 import { bookingService } from '../../../services/bookingService';
+import { useRootNavigation } from '../../../navigation/useRootNavigation';
 import { colors, typography } from '../../../theme';
+import { useAuth } from '../../auth/AuthProvider';
 import { BookingStatus } from '../../../types';
 
 const tabs: ('All Bookings' | BookingStatus)[] = ['All Bookings', 'Upcoming', 'Completed', 'Cancelled'];
 const tone: Record<BookingStatus, TagTone> = { Upcoming: 'primary', Completed: 'success', Cancelled: 'danger' };
 
 export function BookingsScreen() {
-  const { data } = useAsync(() => bookingService.list());
+  const nav = useRootNavigation();
+  const { status } = useAuth();
+  const signedIn = status === 'signedIn';
+  const { data, loading, error, reload } = useAsync(() => (signedIn ? bookingService.list() : Promise.resolve([])), [signedIn]);
   const [tab, setTab] = useState<(typeof tabs)[number]>('All Bookings');
   const list = (data ?? []).filter(b => tab === 'All Bookings' || b.status === tab);
+
+  function cancel(visitId: number) {
+    Alert.alert('Cancel this visit?', 'You can book another slot later.', [
+      { text: 'Keep it', style: 'cancel' },
+      {
+        text: 'Cancel visit',
+        style: 'destructive',
+        onPress: () =>
+          bookingService
+            .cancel(visitId)
+            .then(reload)
+            .catch(e => Alert.alert('Could not cancel', e instanceof Error ? e.message : 'Try again.')),
+      },
+    ]);
+  }
 
   return (
     <Screen>
@@ -22,6 +43,12 @@ export function BookingsScreen() {
         {tabs.map(t => <Chip key={t} label={t} active={tab === t} onPress={() => setTab(t)} />)}
       </View>
       <SectionTitle title="Bookings" />
+      {status === 'signedOut' ? (
+        <EmptyState title="Sign in to see your bookings" body="Your scheduled site visits appear here." actionLabel="Sign In" onAction={() => nav.navigate('Login')} />
+      ) : null}
+      {signedIn && error ? <EmptyState title="Could not load your bookings" body={error.message} actionLabel="Retry" onAction={reload} /> : null}
+      {signedIn && loading && !data ? <EmptyState title="Loading your bookings…" /> : null}
+      {signedIn && !loading && !error && list.length === 0 ? <EmptyState title="No bookings yet" body="Book a site visit from any property." /> : null}
       {list.map((b, i) => (
         <Card key={b.id} style={styles.card}>
           <View style={styles.row}>
@@ -31,7 +58,7 @@ export function BookingsScreen() {
                 <Text style={[typography.h3, styles.flex]}>{b.name}</Text>
                 <Tag label={b.status} tone={tone[b.status]} />
               </View>
-              <Text style={typography.muted}>{b.config}</Text>
+              {b.config ? <Text style={typography.muted}>{b.config}</Text> : null}
               <Text style={typography.muted}>{b.area}</Text>
               <View style={styles.meta}>
                 <Icon name="calendar-outline" size={12} />
@@ -45,7 +72,7 @@ export function BookingsScreen() {
           {b.status === 'Upcoming' ? (
             <View style={[styles.row, styles.actions]}>
               <Button small variant="outline" icon="chatbubble-outline" label="Chat Now" style={styles.flex} />
-              <Button small variant="danger" label="Cancel" style={styles.flex} />
+              <Button small variant="danger" label="Cancel" style={styles.flex} onPress={() => cancel(b.visitId)} />
             </View>
           ) : null}
         </Card>

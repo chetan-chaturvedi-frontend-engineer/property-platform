@@ -363,11 +363,17 @@ class PropertyWizardTests extends PropertyApiTestSupport {
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.content", hasSize(1)))
 			.andExpect(jsonPath("$.content[0].slug").value("green-valley-residency-2"))
-			.andExpect(jsonPath("$.content[0].id").doesNotExist());
+			.andExpect(jsonPath("$.content[0].id").value(published))
+			.andExpect(jsonPath("$.content[0].startingPrice").isNumber())
+			.andExpect(jsonPath("$.content[0].apartmentTypes[0]").value("2bhk"))
+			.andExpect(jsonPath("$.content[0].coverUrl")
+				.value(containsString("/api/v1/public/properties/green-valley-residency-2/media/")))
+			.andExpect(jsonPath("$.content[0].userId").doesNotExist());
 		mvc.perform(get("/api/v1/public/properties/green-valley-residency")).andExpect(status().isNotFound());
 		String slug = column(published, "slug");
 		mvc.perform(get("/api/v1/public/properties/" + slug))
 			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.id").value(published))
 			.andExpect(jsonPath("$.projectEmail").doesNotExist())
 			.andExpect(jsonPath("$.gstNumber").doesNotExist())
 			.andExpect(jsonPath("$.media[0].url").value(containsString("/api/v1/public/properties/" + slug + "/media/")));

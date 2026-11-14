@@ -4,7 +4,7 @@ import { Button, Card, Chip, Header, Icon, IconButton, PropertyPhoto, Screen, Se
 import { RootScreenProps } from '../../../navigation/types';
 import { colors, typography } from '../../../theme';
 import { IconName } from '../../../components';
-import { useAmenities, useProperty, useUnits } from '../hooks/useProperties';
+import { usePropertyAmenities, useProperty, useUnits } from '../hooks/useProperties';
 
 const media: { icon: IconName; label: string }[] = [
   { icon: 'videocam', label: 'Live Tour' },
@@ -24,7 +24,7 @@ export function PropertyDetailsScreen({ navigation, route }: RootScreenProps<'Pr
   const { id } = route.params;
   const { data: p } = useProperty(id);
   const { data: units } = useUnits(id);
-  const { data: amenities } = useAmenities();
+  const { data: amenities } = usePropertyAmenities(id);
   const [filter, setFilter] = useState('All');
   const [liked, setLiked] = useState(false);
 
@@ -51,7 +51,7 @@ export function PropertyDetailsScreen({ navigation, route }: RootScreenProps<'Pr
           </View>
         }
       />
-      <PropertyPhoto tone={p.tone} label={`${p.status}  •  1/${p.photos}`} style={styles.hero} />
+      <PropertyPhoto tone={p.tone} uri={p.coverUrl} label={p.photos > 0 ? `${p.status}  •  1/${p.photos}` : p.status} style={styles.hero} />
       <Card style={styles.mediaCard}>
         <View style={styles.mediaRow}>
           {media.map(m => (
@@ -108,7 +108,7 @@ export function PropertyDetailsScreen({ navigation, route }: RootScreenProps<'Pr
             <PropertyPhoto tone={2} icon="bed-outline" style={styles.unitPhoto} />
             <View style={styles.flex}>
               <Text style={typography.h3}>{u.name}</Text>
-              <Text style={typography.muted}>{u.sqft}  •  {u.facing}</Text>
+              <Text style={typography.muted}>{[u.sqft, u.facing].filter(Boolean).join('  •  ')}</Text>
               <Text style={styles.unitPrice}>{u.price} <Text style={typography.muted}>Onwards</Text></Text>
             </View>
             <Icon name="arrow-forward-circle" size={24} />

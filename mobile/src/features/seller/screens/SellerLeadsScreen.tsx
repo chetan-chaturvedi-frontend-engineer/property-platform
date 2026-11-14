@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Chip, Header, Icon, IconButton, Screen, Tag } from '../../../components';
+import { Button, Card, Chip, EmptyState, Header, Icon, IconButton, Screen, Tag } from '../../../components';
 import type { TagTone } from '../../../components';
+import { useRootNavigation } from '../../../navigation/useRootNavigation';
 import { colors, typography } from '../../../theme';
+import { useAuth } from '../../auth/AuthProvider';
 import { SellerLead } from '../../../types';
 import { useSellerLeads } from '../hooks/useSeller';
 
@@ -10,13 +12,20 @@ const tone: Record<SellerLead['kind'], TagTone> = { 'New Lead': 'success', Enqui
 const tabs = ['All', 'Enquiries', 'Leads'] as const;
 
 export function SellerLeadsScreen() {
-  const { data } = useSellerLeads();
+  const nav = useRootNavigation();
+  const { status } = useAuth();
+  const { data, loading, error, reload } = useSellerLeads();
   const [tab, setTab] = useState<(typeof tabs)[number]>('All');
   const list = (data ?? []).filter(l => tab === 'All' || (tab === 'Enquiries' ? l.kind === 'Enquiry' : l.kind !== 'Enquiry'));
   return (
     <Screen>
       <Header title="Messages" subtitle="All your conversations" showBack={false} right={<IconButton name="search" accessibilityLabel="Search" />} />
       <View style={styles.tabs}>{tabs.map(t => <Chip key={t} label={`${t}`} active={tab === t} onPress={() => setTab(t)} />)}</View>
+      {status === 'signedOut' ? (
+        <EmptyState title="Sign in to see your leads" actionLabel="Sign In" onAction={() => nav.navigate('Login')} />
+      ) : null}
+      {status === 'signedIn' && error ? <EmptyState title="Could not load your leads" body={error.message} actionLabel="Retry" onAction={reload} /> : null}
+      {status === 'signedIn' && !loading && !error && list.length === 0 ? <EmptyState title="No leads yet" body="New enquiries will appear here." /> : null}
       {list.map(l => (
         <View key={l.id} style={styles.row}>
           <View style={styles.avatar}><Text style={styles.initials}>{l.initials}</Text></View>

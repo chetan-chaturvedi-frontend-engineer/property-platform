@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
+import { Image, StyleProp, StyleSheet, Text, View, ViewStyle } from 'react-native';
 import { colors, radius } from '../theme';
 import { Icon, IconName } from './Icon';
 
@@ -7,15 +7,21 @@ interface PropertyPhotoProps {
   icon?: IconName;
   label?: string;
   tone?: number;
+  /** Remote photo; the tinted placeholder shows while absent. */
+  uri?: string;
   style?: StyleProp<ViewStyle>;
 }
 
-/** Placeholder for property photography. Replace with <Image/> once the API returns image URLs. */
-export function PropertyPhoto({ icon = 'business', label, tone = 0, style }: PropertyPhotoProps) {
+/** Property photo: remote image when `uri` is given, otherwise a tinted placeholder. */
+export function PropertyPhoto({ icon = 'business', label, tone = 0, uri, style }: PropertyPhotoProps) {
   const bg = colors.photoTones[tone % colors.photoTones.length];
   return (
     <View style={[styles.box, { backgroundColor: bg }, style]} accessibilityRole="image">
-      <Icon name={icon} size={36} color={colors.overlayLight} />
+      {uri ? (
+        <Image source={{ uri }} style={StyleSheet.absoluteFill} resizeMode="cover" accessibilityIgnoresInvertColors />
+      ) : (
+        <Icon name={icon} size={36} color={colors.overlayLight} />
+      )}
       {label ? (
         <View style={styles.label}>
           <Text style={styles.labelText}>{label}</Text>

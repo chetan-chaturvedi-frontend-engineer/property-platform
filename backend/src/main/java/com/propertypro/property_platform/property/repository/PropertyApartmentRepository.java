@@ -4,6 +4,7 @@ import com.propertypro.property_platform.property.domain.PropertyApartment;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -11,6 +12,9 @@ import java.util.Optional;
 public interface PropertyApartmentRepository extends JpaRepository<PropertyApartment, Long> {
 
 	List<PropertyApartment> findByPropertyProjectIdOrderByDisplayOrderAscIdAsc(Long propertyProjectId);
+
+	/** Batch lookup for list views, so a page of properties costs one query instead of one each. */
+	List<PropertyApartment> findByPropertyProjectIdInOrderByDisplayOrderAscIdAsc(Collection<Long> propertyProjectIds);
 
 	/** Scoped to the parent, so an apartment id of another property is never found. */
 	Optional<PropertyApartment> findByIdAndPropertyProjectId(Long id, Long propertyProjectId);

@@ -14,7 +14,7 @@ import java.util.List;
  * A published property for the public website and app. Leaves out internal ids of the owner, GST
  * number, contact email and phone (enquiries go through leads), workflow and audit data.
  */
-public record PublicPropertyResponse(String slug, PropertyType propertyType, String projectName,
+public record PublicPropertyResponse(Long id, String slug, PropertyType propertyType, String projectName,
 		String builderCompanyName, String reraNumber, PropertyResponse.Location location,
 		List<ApartmentResponse> apartments, Integer totalTowersBlocks, Integer totalUnitsFlats,
 		ProjectStatus projectStatus, LegalApprovalStatus legalApprovalStatus, BigDecimal landArea,

@@ -16,10 +16,10 @@ export function CompareScreen() {
   const rows: [string, (i: number) => string][] = [
     ['Price', i => `${selected[i].price} onwards`],
     ['Configuration', i => selected[i].config.replace(' Apartments', '')],
-    ['Super Built-up', i => selected[i].sqft],
+    ['Super Built-up', i => selected[i].sqft || '—'],
     ['Possession Date', i => selected[i].possession],
     ['RERA Status', () => 'Registered'],
-    ['Builder Rating', i => `★ ${selected[i].rating}`],
+    ['Builder Rating', i => (selected[i].rating ? `★ ${selected[i].rating}` : '—')],
   ];
 
   return (
@@ -31,7 +31,7 @@ export function CompareScreen() {
             <View style={styles.label} />
             {selected.map(p => (
               <View key={p.id} style={styles.col}>
-                <PropertyPhoto tone={p.tone} style={styles.photo} />
+                <PropertyPhoto tone={p.tone} uri={p.coverUrl} style={styles.photo} />
                 <Pressable onPress={() => remove(p.id)} accessibilityRole="button" accessibilityLabel={`Remove ${p.name}`}>
                   <Text style={styles.remove}>Remove</Text>
                 </Pressable>

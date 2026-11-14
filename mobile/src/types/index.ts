@@ -1,7 +1,12 @@
 export type PossessionStatus = 'Ready to Move' | 'Under Construction' | 'New Launch';
 
 export interface Property {
+  /** Public slug: the route param and the key for the detail endpoint. */
   id: string;
+  /** Numeric backend id, required when booking a site visit. */
+  propertyId: number;
+  /** Cover photo URL; the tinted placeholder shows when absent. */
+  coverUrl?: string;
   name: string;
   area: string;
   config: string;
@@ -10,7 +15,8 @@ export interface Property {
   facing: string;
   status: PossessionStatus;
   possession: string;
-  rating: number;
+  /** The backend has no ratings yet. */
+  rating?: number;
   photos: number;
   tone: number;
 }
@@ -32,7 +38,10 @@ export type BookingStatus = 'Upcoming' | 'Completed' | 'Cancelled';
 export type VisitType = 'Site Visit' | 'Video Call' | 'Virtual Tour';
 
 export interface Booking {
+  /** Visit code shown to the user, e.g. SV-100012. */
   id: string;
+  /** Numeric backend id, used to cancel. */
+  visitId: number;
   name: string;
   config: string;
   area: string;
@@ -69,9 +78,10 @@ export interface SellerListing {
   sqft: string;
   purpose: ListingPurpose;
   status: 'Active' | 'Incomplete' | 'Under Review' | 'Inactive';
-  views: number;
-  leads: number;
-  saves: number;
+  /** Engagement counters are not tracked by the backend yet, so they are absent. */
+  views?: number;
+  leads?: number;
+  saves?: number;
 }
 
 export interface SellerLead {
@@ -90,14 +100,17 @@ export interface VisitSlot {
 }
 
 export interface VisitRequest {
-  propertyId: string;
+  /** Numeric backend id of the property (not the slug). */
+  propertyId: number;
   type: VisitType;
+  /** yyyy-MM-dd, local date at the property. */
   date: string;
+  /** HH:mm, 24-hour. */
   time: string;
   fullName: string;
   mobile: string;
   email: string;
-  people: string;
+  people: number;
   notes?: string;
 }
 
@@ -119,3 +132,13 @@ export interface FilterState {
   bhk: string;
   possession: PossessionStatus | null;
 }
+
+export interface User {
+  id: number;
+  fullName: string;
+  email: string;
+  phone: string;
+  verified: boolean;
+}
+
+export type OtpPurpose = 'email_verification' | 'phone_verification';

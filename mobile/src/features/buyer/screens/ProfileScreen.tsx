@@ -6,6 +6,7 @@ import { useRootNavigation } from '../../../navigation/useRootNavigation';
 import { RootStackParamList } from '../../../navigation/types';
 import { colors, radius, typography } from '../../../theme';
 import { initialsOf } from '../../../utils/format';
+import { useAuth } from '../../auth/AuthProvider';
 
 const activity: { icon: IconName; n: string; l: string }[] = [
   { icon: 'heart-outline', n: '12', l: 'Shortlisted' },
@@ -27,6 +28,7 @@ const items: { icon: IconName; title: string; sub: string; badge?: string; to?: 
 
 export function ProfileScreen() {
   const nav = useRootNavigation();
+  const { status, user, signOut } = useAuth();
   return (
     <Screen>
       <Header
@@ -40,17 +42,29 @@ export function ProfileScreen() {
           </View>
         }
       />
-      <Card style={styles.profile}>
-        <View style={styles.row}>
-          <View style={styles.avatar}><Text style={styles.avatarText}>{initialsOf('Rohan Mehta')}</Text></View>
-          <View style={styles.flex}>
-            <View style={styles.row}><Text style={typography.h2}>Rohan Mehta</Text><Tag label="Verified" tone="success" /></View>
-            <Text style={typography.muted}>+91 98765 43210</Text>
-            <Text style={typography.muted}>rohanmehta@gmail.com</Text>
+      {user ? (
+        <Card style={styles.profile}>
+          <View style={styles.row}>
+            <View style={styles.avatar}><Text style={styles.avatarText}>{initialsOf(user.fullName)}</Text></View>
+            <View style={styles.flex}>
+              <View style={styles.row}><Text style={typography.h2}>{user.fullName}</Text>{user.verified ? <Tag label="Verified" tone="success" /> : null}</View>
+              {user.phone ? <Text style={typography.muted}>{user.phone}</Text> : null}
+              <Text style={typography.muted}>{user.email}</Text>
+            </View>
           </View>
-          <View><Tag label="Gold Member" tone="warning" /><Text style={typography.tiny}>Since Jan 2024</Text></View>
-        </View>
-      </Card>
+        </Card>
+      ) : (
+        <Card style={styles.profile}>
+          <Text style={typography.h3}>{status === 'loading' ? 'Loading your account…' : 'You are browsing as a guest'}</Text>
+          <Text style={typography.muted}>Sign in to book site visits and list properties.</Text>
+          {status === 'signedOut' ? (
+            <View style={[styles.row, styles.authRow]}>
+              <Button small label="Sign In" onPress={() => nav.navigate('Login')} style={styles.flex} />
+              <Button small variant="outline" label="Create Account" onPress={() => nav.navigate('Register')} style={styles.flex} />
+            </View>
+          ) : null}
+        </Card>
+      )}
 
       <SectionTitle title="My Activity" action="View All" />
       <View style={[styles.row, styles.pad]}>
@@ -83,6 +97,7 @@ export function ProfileScreen() {
         </View>
         <Button small label="List Your Property" onPress={() => nav.navigate('SellerRegistration')} />
       </Card>
+      {user ? <Button variant="outline" label="Sign Out" onPress={signOut} style={styles.signOut} /> : null}
     </Screen>
   );
 }
@@ -94,6 +109,8 @@ const styles = StyleSheet.create({
   profile: { marginHorizontal: 16, backgroundColor: colors.primaryTint },
   avatar: { width: 56, height: 56, borderRadius: 28, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center' },
   avatarText: { color: colors.textInverse, fontWeight: '700', fontSize: 18 },
+  authRow: { marginTop: 10 },
+  signOut: { marginHorizontal: 16, marginTop: 14 },
   act: { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: radius.md, borderWidth: 1, borderColor: colors.border, gap: 2 },
   list: { marginHorizontal: 16, marginTop: 14, padding: 0 },
   sell: { flexDirection: 'row', alignItems: 'center', gap: 10, padding: 14, backgroundColor: colors.primaryTint },

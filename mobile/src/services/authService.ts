@@ -1,10 +1,58 @@
+import { OtpPurpose, User } from '../types';
+import { ApiMessage, ApiTokenResponse, ApiUser, ApiVerificationStatus } from '../types/api';
+import { apiClient } from './api/apiClient';
+import { getAccessToken } from './api/tokenManager';
 import { secureStorage } from './storage/secureStorage';
 
+export interface RegisterInput {
+  fullName: string;
+  email: string;
+  /** E.164, e.g. +919876543210. */
+  phone: string;
+  password: string;
+}
+
+export function toUser(u: ApiUser): User {
+  return {
+    id: u.id,
+    fullName: u.fullName,
+    email: u.email,
+    phone: u.phone ?? '',
+    verified: u.emailVerified || u.phoneVerified,
+  };
+}
+
 export const authService = {
-  /** Placeholder sign-in: persists a token to secure storage. Swap for apiClient.post('/auth/login'). */
-  async signIn(token: string): Promise<void> {
-    await secureStorage.saveToken(token);
+  register: (input: RegisterInput) =>
+    apiClient.post<ApiVerificationStatus>('/auth/register', { ...input, passwordConfirmation: input.password }, { auth: false }),
+
+  verifyOtp: (identifier: string, otp: string, purpose: OtpPurpose) =>
+    apiClient.post<ApiVerificationStatus>('/auth/verify-otp', { identifier, otp, purpose }, { auth: false }),
+
+  resendOtp: (identifier: string, purpose: OtpPurpose) =>
+    apiClient.post<ApiMessage>('/auth/resend-otp', { identifier, purpose }, { auth: false }),
+
+  async signIn(identifier: string, password: string): Promise<User> {
+    const tokens = await apiClient.post<ApiTokenResponse>('/auth/login', { identifier, password }, { auth: false });
+    await secureStorage.saveSession({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });
+    return toUser(tokens.user);
   },
-  signOut: () => secureStorage.clearToken(),
-  isSignedIn: async (): Promise<boolean> => (await secureStorage.getToken()) !== null,
+
+  /** Ends the server session (best effort) and always clears local credentials. */
+  async signOut(): Promise<void> {
+    try {
+      await apiClient.post<ApiMessage>('/auth/logout');
+    } catch {
+      // Offline or already expired: local sign-out must still succeed.
+    }
+    await secureStorage.clearSession();
+  },
+
+  /** The signed-in user, or null when there is no session (token refresh happens in the client). */
+  async currentUser(): Promise<User | null> {
+    if (!(await getAccessToken())) {
+      return null;
+    }
+    return toUser(await apiClient.get<ApiUser>('/auth/me'));
+  },
 };

@@ -1,6 +1,6 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Chip, IconButton, Screen, SectionTitle, TextField } from '../../../components';
+import { Button, Chip, IconButton, Screen, SectionTitle, TextField } from '../../../components';
 import { useRootNavigation } from '../../../navigation/useRootNavigation';
 import { colors, typography } from '../../../theme';
 import { PropertyListCard } from '../components/PropertyListCard';
@@ -8,7 +8,7 @@ import { useProperties } from '../hooks/useProperties';
 
 export function HomeScreen() {
   const nav = useRootNavigation();
-  const { data } = useProperties();
+  const { data, loading, error, reload } = useProperties();
   return (
     <Screen>
       <View style={styles.top}>
@@ -28,6 +28,16 @@ export function HomeScreen() {
         <Chip label="Bookings" icon="calendar-outline" onPress={() => nav.navigate('Bookings')} />
       </View>
       <SectionTitle title="Featured Projects" action="Recently Viewed" onAction={() => nav.navigate('RecentlyViewed')} />
+      {error ? (
+        <View style={styles.state}>
+          <Text style={typography.muted}>Could not load properties. Check your connection and try again.</Text>
+          <Button small variant="outline" label="Retry" onPress={reload} />
+        </View>
+      ) : null}
+      {loading && !data ? <Text style={[typography.muted, styles.state]}>Loading properties…</Text> : null}
+      {!loading && !error && data?.length === 0 ? (
+        <Text style={[typography.muted, styles.state]}>No properties are listed yet.</Text>
+      ) : null}
       {(data ?? []).map(p => (
         <PropertyListCard key={p.id} property={p} showActions />
       ))}
@@ -38,6 +48,7 @@ export function HomeScreen() {
 const styles = StyleSheet.create({
   top: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 16, paddingTop: 12 },
   flex: { flex: 1 },
+  state: { padding: 16, gap: 12 },
   search: { paddingHorizontal: 16, paddingTop: 12 },
   chips: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, paddingTop: 12, flexWrap: 'wrap', backgroundColor: colors.background },
 });

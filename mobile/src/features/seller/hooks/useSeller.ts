@@ -1,5 +1,14 @@
 import { useAsync } from '../../../hooks/useAsync';
 import { sellerService } from '../../../services/sellerService';
+import { useAuth } from '../../auth/AuthProvider';
 
-export const useSellerListings = () => useAsync(() => sellerService.listings());
-export const useSellerLeads = () => useAsync(() => sellerService.leads());
+/** Both lists need a signed-in user; they load (or reload) when the session appears. */
+export function useSellerListings() {
+  const { status } = useAuth();
+  return useAsync(() => (status === 'signedIn' ? sellerService.listings() : Promise.resolve([])), [status]);
+}
+
+export function useSellerLeads() {
+  const { status } = useAuth();
+  return useAsync(() => (status === 'signedIn' ? sellerService.leads() : Promise.resolve([])), [status]);
+}

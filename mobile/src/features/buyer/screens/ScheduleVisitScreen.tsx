@@ -20,22 +20,25 @@ const types: { type: VisitType; icon: IconName; sub: string }[] = [
 export function ScheduleVisitScreen({ navigation, route }: RootScreenProps<'ScheduleVisit'>) {
   const { id } = route.params;
   const { data: p } = useProperty(id);
-  const f = useScheduleVisit(id);
+  const f = useScheduleVisit(p);
 
   async function confirm() {
-    if (await f.submit()) {
-      Alert.alert('Visit scheduled', 'You will receive a confirmation shortly.', [{ text: 'OK', onPress: () => navigation.navigate('Bookings') }]);
+    const result = await f.submit();
+    if (result.outcome === 'booked') {
+      Alert.alert('Visit scheduled', `Your booking ID is ${result.bookingId}.`, [{ text: 'OK', onPress: () => navigation.navigate('Bookings') }]);
+    } else if (result.outcome === 'needsLogin') {
+      navigation.navigate('Login');
     } else {
-      Alert.alert('Check your details', 'Enter a name, 10-digit mobile number and a valid email.');
+      Alert.alert(result.outcome === 'invalid' ? 'Check your details' : 'Could not book the visit', result.message);
     }
   }
 
   return (
-    <Screen footer={<Button label="Confirm Visit" onPress={confirm} />}>
+    <Screen footer={<Button label={f.submitting ? 'Booking…' : 'Confirm Visit'} onPress={confirm} disabled={f.submitting} />}>
       <Header title="Schedule Visit" />
       <Card style={styles.card}>
         <View style={styles.row}>
-          <PropertyPhoto tone={p?.tone ?? 0} style={styles.photo} />
+          <PropertyPhoto tone={p?.tone ?? 0} uri={p?.coverUrl} style={styles.photo} />
           <View style={styles.flex}>
             <Text style={typography.h3}>{p?.name}</Text>
             <Text style={typography.muted}>{p?.config}</Text>
@@ -60,7 +63,7 @@ export function ScheduleVisitScreen({ navigation, route }: RootScreenProps<'Sche
       </View>
 
       <SectionTitle title="Select Date" />
-      <DateStrip selected={f.dayIndex} onSelect={f.setDayIndex} />
+      <DateStrip days={f.days} selected={f.dayIndex} onSelect={f.setDayIndex} />
       <SectionTitle title="Select Time Slot" />
       <TimeSlotGrid slots={TIME_SLOTS} selected={f.time} onSelect={f.setTime} />
 
