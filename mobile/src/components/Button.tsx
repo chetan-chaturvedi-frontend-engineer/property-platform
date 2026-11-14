@@ -11,6 +11,8 @@ interface ButtonProps {
   variant?: Variant;
   icon?: IconName;
   small?: boolean;
+  /** Blocks presses and dims the button, e.g. while a request is in flight. */
+  disabled?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -21,16 +23,18 @@ const variants: Record<Variant, { bg: string; fg: string; border: string }> = {
   danger: { bg: colors.background, fg: colors.danger, border: colors.danger },
 };
 
-export function Button({ label, onPress, variant = 'primary', icon, small, style }: ButtonProps) {
+export function Button({ label, onPress, variant = 'primary', icon, small, disabled, style }: ButtonProps) {
   const v = variants[variant];
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
+      disabled={disabled}
+      accessibilityState={{ disabled: !!disabled }}
       style={({ pressed }) => [
         styles.button,
-        { backgroundColor: v.bg, borderColor: v.border, paddingVertical: small ? 8 : 14, opacity: pressed ? 0.85 : 1 },
+        { backgroundColor: v.bg, borderColor: v.border, paddingVertical: small ? 8 : 14, opacity: disabled ? 0.5 : pressed ? 0.85 : 1 },
         style,
       ]}>
       {icon ? <Icon name={icon} size={small ? 14 : 16} color={v.fg} /> : null}

@@ -1,10 +1,15 @@
 import { env } from '../../config/env';
-import { secureStorage } from '../storage/secureStorage';
+import { ApiProblem } from '../../types/api';
+import { getAccessToken, refreshAccessToken } from './tokenManager';
 
 export class ApiError extends Error {
   constructor(
     message: string,
     public readonly status: number,
+    /** Stable backend error code, e.g. `verification_required`. */
+    public readonly code?: string,
+    /** Per-field validation messages from a 400 response. */
+    public readonly fieldErrors: Record<string, string> = {},
   ) {
     super(message);
     this.name = 'ApiError';
@@ -13,12 +18,31 @@ export class ApiError extends Error {
 
 type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 
-async function request<T>(method: Method, path: string, body?: unknown): Promise<T> {
-  const token = await secureStorage.getToken();
+interface RequestOptions {
+  /** false for login/register/OTP: no bearer header and no refresh-and-retry on 401. */
+  auth?: boolean;
+}
+
+/** Backend errors are RFC 9457 problem details; prefer their fields, never leak raw bodies. */
+async function toApiError(response: Response): Promise<ApiError> {
+  let problem: ApiProblem = {};
+  try {
+    problem = ((await response.json()) ?? {}) as ApiProblem;
+  } catch {
+    // Non-JSON error body: fall through to the generic message.
+  }
+  const message =
+    typeof problem.detail === 'string' && problem.detail.length > 0
+      ? problem.detail
+      : `Request failed (${response.status})`;
+  return new ApiError(message, response.status, problem.code, problem.errors);
+}
+
+async function send(method: Method, path: string, body: unknown, token: string | null): Promise<Response> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), env.requestTimeoutMs);
   try {
-    const response = await fetch(`${env.apiBaseUrl}${path}`, {
+    return await fetch(`${env.apiBaseUrl}${path}`, {
       method,
       signal: controller.signal,
       headers: {
@@ -28,20 +52,33 @@ async function request<T>(method: Method, path: string, body?: unknown): Promise
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
-    if (!response.ok) {
-      throw new ApiError(`Request failed (${response.status})`, response.status);
-    }
-    return (await response.json()) as T;
   } finally {
     clearTimeout(timer);
   }
 }
 
-/** Centralized HTTP client: base URL, auth header, timeout and error mapping live here only. */
+async function request<T>(method: Method, path: string, body?: unknown, options: RequestOptions = {}): Promise<T> {
+  const useAuth = options.auth !== false;
+  const token = useAuth ? await getAccessToken() : null;
+  let response = await send(method, path, body, token);
+  if (response.status === 401 && token) {
+    const fresh = await refreshAccessToken();
+    if (fresh) {
+      response = await send(method, path, body, fresh);
+    }
+  }
+  if (!response.ok) {
+    throw await toApiError(response);
+  }
+  // 204 No Content (e.g. DELETE) has no body to parse.
+  return (response.status === 204 ? undefined : await response.json()) as T;
+}
+
+/** Centralized HTTP client: base URL, auth header, token refresh, timeout and error mapping live here only. */
 export const apiClient = {
-  get: <T>(path: string) => request<T>('GET', path),
-  post: <T>(path: string, body?: unknown) => request<T>('POST', path, body),
-  put: <T>(path: string, body?: unknown) => request<T>('PUT', path, body),
-  patch: <T>(path: string, body?: unknown) => request<T>('PATCH', path, body),
-  delete: <T>(path: string) => request<T>('DELETE', path),
+  get: <T>(path: string, options?: RequestOptions) => request<T>('GET', path, undefined, options),
+  post: <T>(path: string, body?: unknown, options?: RequestOptions) => request<T>('POST', path, body, options),
+  put: <T>(path: string, body?: unknown, options?: RequestOptions) => request<T>('PUT', path, body, options),
+  patch: <T>(path: string, body?: unknown, options?: RequestOptions) => request<T>('PATCH', path, body, options),
+  delete: <T>(path: string, options?: RequestOptions) => request<T>('DELETE', path, undefined, options),
 };

@@ -15,6 +15,9 @@ import { ScheduleVisitScreen } from '../features/buyer/screens/ScheduleVisitScre
 import { SettingsScreen } from '../features/buyer/screens/SettingsScreen';
 import { SiteVisitScreen } from '../features/buyer/screens/SiteVisitScreen';
 import { VirtualTourScreen } from '../features/buyer/screens/VirtualTourScreen';
+import { LoginScreen } from '../features/auth/screens/LoginScreen';
+import { RegisterScreen } from '../features/auth/screens/RegisterScreen';
+import { VerifyOtpScreen } from '../features/auth/screens/VerifyOtpScreen';
 import { ChatScreen } from '../features/chat/screens/ChatScreen';
 import { AddPropertyScreen } from '../features/seller/screens/AddPropertyScreen';
 import { PreviewListingScreen } from '../features/seller/screens/PreviewListingScreen';
@@ -35,6 +38,10 @@ export function RootNavigator() {
       <Stack.Navigator initialRouteName="BuyerTabs" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="BuyerTabs" component={BuyerTabs} />
         <Stack.Screen name="SellerTabs" component={SellerTabs} />
+
+        <Stack.Screen name="Login" component={LoginScreen} />
+        <Stack.Screen name="Register" component={RegisterScreen} />
+        <Stack.Screen name="VerifyOtp" component={VerifyOtpScreen} />
 
         <Stack.Screen name="PropertyDetails" component={PropertyDetailsScreen} />
         <Stack.Screen name="ApartmentDetails" component={ApartmentDetailsScreen} />

@@ -19,7 +19,7 @@ export function PropertyListCard({ property: p, liked, onToggleLike, showActions
   return (
     <Card style={styles.card}>
       <Pressable onPress={open} accessibilityRole="button" accessibilityLabel={`Open ${p.name}`} style={styles.row}>
-        <PropertyPhoto tone={p.tone} label={`${p.photos} Photos`} style={styles.photo} />
+        <PropertyPhoto tone={p.tone} uri={p.coverUrl} label={p.photos > 0 ? `${p.photos} ${p.photos === 1 ? 'Photo' : 'Photos'}` : undefined} style={styles.photo} />
         <View style={styles.flex}>
           <View style={styles.titleRow}>
             <Text style={[typography.h3, styles.flex]} numberOfLines={1}>{p.name}</Text>
@@ -32,7 +32,7 @@ export function PropertyListCard({ property: p, liked, onToggleLike, showActions
           <Text style={typography.muted} numberOfLines={1}>{p.area}</Text>
           <Text style={typography.muted}>{p.config}</Text>
           <View style={styles.tags}>
-            <Tag label={p.sqft} />
+            {p.sqft ? <Tag label={p.sqft} /> : null}
             <Tag label={p.status} tone={p.status === 'Ready to Move' ? 'success' : 'primary'} />
           </View>
           <Text style={styles.price}>{p.price} <Text style={typography.muted}>onwards</Text></Text>

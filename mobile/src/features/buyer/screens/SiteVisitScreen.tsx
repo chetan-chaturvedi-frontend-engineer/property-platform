@@ -12,31 +12,34 @@ import { TIME_SLOTS, useScheduleVisit } from '../hooks/useScheduleVisit';
 export function SiteVisitScreen({ navigation, route }: RootScreenProps<'SiteVisit'>) {
   const { id } = route.params;
   const { data: p } = useProperty(id);
-  const f = useScheduleVisit(id);
+  const f = useScheduleVisit(p);
 
   async function confirm() {
-    if (await f.submit()) {
-      Alert.alert('Site visit confirmed', 'You will receive a confirmation call shortly.', [{ text: 'OK', onPress: () => navigation.popToTop() }]);
+    const result = await f.submit();
+    if (result.outcome === 'booked') {
+      Alert.alert('Site visit confirmed', `Your booking ID is ${result.bookingId}.`, [{ text: 'OK', onPress: () => navigation.popToTop() }]);
+    } else if (result.outcome === 'needsLogin') {
+      navigation.navigate('Login');
     } else {
-      Alert.alert('Check your details', 'Enter a name, 10-digit mobile number and a valid email.');
+      Alert.alert(result.outcome === 'invalid' ? 'Check your details' : 'Could not book the visit', result.message);
     }
   }
 
   return (
-    <Screen footer={<Button icon="calendar-outline" label="Confirm Site Visit" onPress={confirm} />}>
+    <Screen footer={<Button icon="calendar-outline" label={f.submitting ? 'Booking…' : 'Confirm Site Visit'} onPress={confirm} disabled={f.submitting} />}>
       <Header title="Schedule Site Visit" subtitle="Book a free site visit and explore your future home" right={<IconButton name="help-circle-outline" accessibilityLabel="Help" />} />
       <View style={styles.hero}>
-        <PropertyPhoto tone={p?.tone ?? 0} style={styles.photo} label="12 Photos" />
+        <PropertyPhoto tone={p?.tone ?? 0} uri={p?.coverUrl} style={styles.photo} label={p && p.photos > 0 ? `${p.photos} Photos` : undefined} />
         <View style={styles.flex}>
           <Text style={typography.h2}>{p?.name}</Text>
           <Text style={typography.muted}>{p?.area}</Text>
           <Text style={typography.muted}>{p?.config}</Text>
-          <View style={styles.tags}><Tag label={p?.sqft ?? ''} /><Tag label={`Possession ${p?.possession}`} tone="success" /></View>
+          <View style={styles.tags}>{p?.sqft ? <Tag label={p.sqft} /> : null}{p?.possession ? <Tag label={`Possession ${p.possession}`} tone="success" /> : null}</View>
         </View>
       </View>
       <InfoBanner icon="shield-checkmark-outline" title="100% Free Visit" body="No charges, no obligations. Get expert guidance and personalized assistance." />
       <SectionTitle title="Select Date & Time" />
-      <DateStrip selected={f.dayIndex} onSelect={f.setDayIndex} />
+      <DateStrip days={f.days} selected={f.dayIndex} onSelect={f.setDayIndex} />
       <View style={styles.gap} />
       <TimeSlotGrid slots={TIME_SLOTS.slice(0, 7)} selected={f.time} onSelect={f.setTime} />
       <SectionTitle title="Your Details" />
