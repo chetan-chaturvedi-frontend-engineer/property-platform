@@ -2,6 +2,7 @@ package com.propertypro.property_platform.user.repository;
 
 import com.propertypro.property_platform.user.domain.User;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 /** Derived queries exclude soft-deleted users; native queries state their own policy. */
-public interface UserRepository extends JpaRepository<User, Long> {
+public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
 
 	/** {@code email} must already be normalized (trimmed, lowercase). */
 	Optional<User> findByEmail(String email);
@@ -22,6 +23,29 @@ public interface UserRepository extends JpaRepository<User, Long> {
 	/** Includes soft-deleted users: their email and phone stay reserved. */
 	@Query(value = "SELECT EXISTS (SELECT 1 FROM users WHERE email = :email OR phone = :phone)", nativeQuery = true)
 	boolean existsByEmailOrPhoneIncludingDeleted(String email, String phone);
+
+	/** Includes soft-deleted users (their email stays reserved); {@code excludeId} may be null. */
+	@Query(value = "SELECT EXISTS (SELECT 1 FROM users WHERE email = :email AND id IS DISTINCT FROM :excludeId)",
+			nativeQuery = true)
+	boolean existsByEmailIncludingDeleted(String email, Long excludeId);
+
+	/** Includes soft-deleted users (their phone stays reserved); {@code excludeId} may be null. */
+	@Query(value = "SELECT EXISTS (SELECT 1 FROM users WHERE phone = :phone AND id IS DISTINCT FROM :excludeId)",
+			nativeQuery = true)
+	boolean existsByPhoneIncludingDeleted(String phone, Long excludeId);
+
+	/** Non-deleted users per status, in one aggregate query (idx_users_status). */
+	@Query(value = "SELECT status, count(*) AS total FROM users WHERE deleted_at IS NULL GROUP BY status",
+			nativeQuery = true)
+	List<StatusCount> countByStatus();
+
+	interface StatusCount {
+
+		String getStatus();
+
+		long getTotal();
+
+	}
 
 	/** Includes soft-deleted users, whom audit views must still identify. Only ever select non-sensitive columns. */
 	@Query(value = """

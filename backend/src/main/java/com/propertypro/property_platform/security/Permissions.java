@@ -104,6 +104,20 @@ public final class Permissions {
 	/** Accept or reject an invitation to another builder's team. */
 	public static final String BUILDER_TEAM_MEMBERSHIP_RESPOND = "BUILDER_TEAM_MEMBERSHIP_RESPOND";
 
+	// User management (admin dashboard): every account in the users table, admins and app users alike. A caller
+	// only manages users whose role permissions they all hold, and only assigns such roles (see AdminUserService).
+	/** List users, the status counts and the role options. */
+	public static final String USER_LIST = "USER_LIST";
+	public static final String USER_VIEW = "USER_VIEW";
+	/** Create accounts; a status other than pending also needs {@link #USER_CHANGE_STATUS}. */
+	public static final String USER_CREATE = "USER_CREATE";
+	/** Edit name, email, phone and role; changing status also needs {@link #USER_CHANGE_STATUS}. */
+	public static final String USER_UPDATE = "USER_UPDATE";
+	/** Additionally required to set or change an account's status (activate, suspend, ...). */
+	public static final String USER_CHANGE_STATUS = "USER_CHANGE_STATUS";
+	/** Soft delete. */
+	public static final String USER_DELETE = "USER_DELETE";
+
 	// User settings: only the caller's own settings, so there is no _ANY variant.
 	public static final String USER_SETTING_VIEW = "USER_SETTING_VIEW";
 	public static final String USER_SETTING_CREATE = "USER_SETTING_CREATE";

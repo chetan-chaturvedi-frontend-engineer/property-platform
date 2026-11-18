@@ -25,6 +25,9 @@ const ActivityLogPage = lazy(() =>
     default: m.ActivityLogPage,
   })),
 );
+const UsersPage = lazy(() =>
+  import('@/features/users/pages/UsersPage').then((m) => ({ default: m.UsersPage })),
+);
 const ProfilePage = lazy(() =>
   import('@/features/profile/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 );
@@ -73,6 +76,10 @@ export const routes: RouteObject[] = [
               {
                 element: <ProtectedRoute requiredPermissions={[PERMISSIONS.systemLogList]} />,
                 children: [{ path: ROUTES.activity, element: <ActivityLogPage /> }],
+              },
+              {
+                element: <ProtectedRoute requiredPermissions={[PERMISSIONS.userList]} />,
+                children: [{ path: ROUTES.users, element: <UsersPage /> }],
               },
             ],
           },

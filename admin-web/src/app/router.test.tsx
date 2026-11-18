@@ -1,7 +1,10 @@
 import { screen, within } from '@testing-library/react';
+import { http, HttpResponse } from 'msw';
 
 import { useAuthStore } from '@/store/authStore';
+import { apiPath } from '@/tests/handlers/problem';
 import { MOCK_PASSWORD, mockUsers } from '@/tests/mocks/mockDb';
+import { server } from '@/tests/mocks/server';
 import { renderRoutes, signInAs } from '@/tests/utils/testUtils';
 
 import { routes } from './router';
@@ -57,6 +60,43 @@ describe('app routes', () => {
     expect(await screen.findByRole('heading', { name: /welcome back, mira/i })).toBeInTheDocument();
     expect(screen.queryByRole('link', { name: /activity log/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/recent activity/i)).not.toBeInTheDocument();
+  });
+
+  it('opens user management from the grouped sidebar and marks the link active', async () => {
+    signInAs(mockUsers.admin);
+    const { user, router } = renderRoutes(routes, { initialPath: '/dashboard' });
+
+    const nav = await screen.findByRole('navigation', { name: /main navigation/i });
+    expect(within(nav).getByText('Management')).toBeInTheDocument();
+    await user.click(within(nav).getByRole('link', { name: 'Users' }));
+
+    expect(await screen.findByRole('heading', { name: 'Users' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/users');
+    expect(within(nav).getByRole('link', { name: 'Users' })).toHaveClass('active');
+  });
+
+  it('blocks direct URL access to user management without USER_LIST', async () => {
+    const noUserAccess = { ...mockUsers.manager, permissions: ['ADMIN_PANEL_ACCESS'] };
+    signInAs(noUserAccess);
+    server.use(http.get(apiPath('/admin/me'), () => HttpResponse.json(noUserAccess)));
+    const { router } = renderRoutes(routes, { initialPath: '/users' });
+
+    expect(await screen.findByRole('heading', { name: 'Access denied' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/unauthorized');
+    expect(screen.queryByRole('link', { name: 'Users' })).not.toBeInTheDocument();
+  });
+
+  it('collapses the desktop sidebar to icons and remembers it', async () => {
+    signInAs(mockUsers.admin);
+    const { user } = renderRoutes(routes, { initialPath: '/dashboard' });
+
+    await user.click(await screen.findByRole('button', { name: 'Collapse sidebar' }));
+
+    const nav = screen.getByRole('navigation', { name: /main navigation/i });
+    expect(within(nav).queryByText('Management')).not.toBeInTheDocument();
+    expect(within(nav).getByRole('link', { name: 'Users' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Expand sidebar' })).toBeInTheDocument();
+    expect(window.localStorage.getItem('admin-web:sidebar-collapsed')).toBe('true');
   });
 
   it('sends signed-in users away from the login page', async () => {

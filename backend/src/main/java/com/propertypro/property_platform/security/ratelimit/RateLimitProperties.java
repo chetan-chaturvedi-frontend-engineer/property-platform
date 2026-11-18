@@ -46,5 +46,7 @@ public record RateLimitProperties(
 		/** Builder team writes other than invitations: update, delete, accept and reject. */
 		RateLimit builderTeamWriteUser,
 		/** Creation and updates of the caller's own settings. */
-		RateLimit userSettingWriteUser) {
+		RateLimit userSettingWriteUser,
+		/** Admin user management writes: create, update and delete. */
+		RateLimit userManagementWriteUser) {
 }

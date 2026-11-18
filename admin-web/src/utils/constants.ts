@@ -4,6 +4,7 @@ export const ROUTES = {
   register: '/register',
   dashboard: '/dashboard',
   activity: '/activity',
+  users: '/users',
   profile: '/profile',
   unauthorized: '/unauthorized',
 } as const;
@@ -16,10 +17,18 @@ export const PERMISSIONS = {
   adminPanelAccess: 'ADMIN_PANEL_ACCESS',
   systemLogList: 'SYSTEM_LOG_LIST',
   systemLogView: 'SYSTEM_LOG_VIEW',
+  userList: 'USER_LIST',
+  userView: 'USER_VIEW',
+  userCreate: 'USER_CREATE',
+  userUpdate: 'USER_UPDATE',
+  userChangeStatus: 'USER_CHANGE_STATUS',
+  userDelete: 'USER_DELETE',
 } as const;
 
 export const STORAGE_KEYS = {
   activityPageSize: 'admin-web:activity-page-size',
+  usersPageSize: 'admin-web:users-page-size',
+  sidebarCollapsed: 'admin-web:sidebar-collapsed',
 } as const;
 
 export const PAGINATION = {
@@ -30,6 +39,7 @@ export const PAGINATION = {
 
 export const LAYOUT = {
   sidebarWidth: 260,
+  sidebarCollapsedWidth: 76,
   navbarHeight: 64,
 } as const;
 
