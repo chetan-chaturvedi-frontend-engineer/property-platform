@@ -378,8 +378,7 @@ class AdminSystemLogApiTests extends AbstractIntegrationTest {
 	}
 
 	private String token(String email) throws Exception {
-		return json(postJson("/api/v1/admin/login", "{\"identifier\":\"%s\",\"password\":\"%s\"}".formatted(email, PASSWORD))
-			.andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), "$.accessToken");
+		return accessToken(postJson("/api/v1/admin/login", "{\"identifier\":\"%s\",\"password\":\"%s\"}".formatted(email, PASSWORD)));
 	}
 
 	/** A logged-in staff member whose new role holds exactly these permissions. */

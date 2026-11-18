@@ -375,8 +375,7 @@ class UserSettingsApiTests extends AbstractIntegrationTest {
 	}
 
 	private String token(String loginPath, String email) throws Exception {
-		return json(postJson(loginPath, "{\"identifier\":\"%s\",\"password\":\"%s\"}".formatted(email, PASSWORD))
-			.andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), "$.accessToken");
+		return accessToken(postJson(loginPath, "{\"identifier\":\"%s\",\"password\":\"%s\"}".formatted(email, PASSWORD)));
 	}
 
 	private ResultActions send(MockHttpServletRequestBuilder request, String token, String body) throws Exception {

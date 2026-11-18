@@ -4,7 +4,6 @@ import com.propertypro.property_platform.activitylog.service.SystemLogEntry;
 import com.propertypro.property_platform.activitylog.service.SystemLogModules;
 import com.propertypro.property_platform.activitylog.service.SystemLogService;
 import com.propertypro.property_platform.auth.dto.AdminLoginRequest;
-import com.propertypro.property_platform.auth.dto.AdminTokenResponse;
 import com.propertypro.property_platform.auth.dto.AdminUserResponse;
 import com.propertypro.property_platform.auth.exception.AuthExceptions;
 import com.propertypro.property_platform.common.exception.ApiException;
@@ -65,7 +64,7 @@ public class AdminAuthService {
 	 * the account exists), then account state and admin access, which are only revealed to callers who
 	 * know the password. A session is created only after every check passed.
 	 */
-	public AdminTokenResponse login(AdminLoginRequest request, String clientIp) {
+	public AdminSession login(AdminLoginRequest request, String clientIp) {
 		rateLimiter.acquire("admin-login:ip:" + clientIp, limits.adminLoginIp());
 		Identifier identifier = accountResolver.parseOrReject(request.identifier());
 		String failureKey = "admin-login:failures:" + identifier.value();
@@ -97,14 +96,14 @@ public class AdminAuthService {
 		IssuedTokens tokens = tokenService.startSession(account.getId());
 		log.info("Admin login succeeded ip={} userId={} role={}", clientIp, account.getId(), role.slug());
 		systemLog.record(SystemLogEntry.success(SystemLogModules.AUTHENTICATION, "Admin logged in").withUserId(account.getId()));
-		return AdminTokenResponse.of(tokens, AdminUserResponse.of(account, role));
+		return new AdminSession(tokens, AdminUserResponse.of(account, role));
 	}
 
 	/**
 	 * Rotates the refresh token like the app refresh, then requires admin access again: if it was
 	 * revoked, the new session tokens are revoked at once and the caller gets 403.
 	 */
-	public AdminTokenResponse refresh(String rawRefreshToken) {
+	public AdminSession refresh(String rawRefreshToken) {
 		IssuedTokens tokens = tokenService.refresh(rawRefreshToken);
 		Optional<ResolvedRole> role = rolePermissionService.roleOfUser(tokens.userId())
 			.filter(r -> r.grants(Permissions.ADMIN_PANEL_ACCESS));
@@ -116,7 +115,7 @@ public class AdminAuthService {
 				.withUserId(tokens.userId()));
 			throw AuthExceptions.adminAccessDenied();
 		}
-		return AdminTokenResponse.of(tokens, AdminUserResponse.of(user.get(), role.get()));
+		return new AdminSession(tokens, AdminUserResponse.of(user.get(), role.get()));
 	}
 
 	/** The signed-in user; the caller's admin access was already checked for this request. */

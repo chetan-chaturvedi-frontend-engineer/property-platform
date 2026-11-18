@@ -5,7 +5,7 @@ Monorepo for the property listing platform.
 | Folder | App | Tech |
 |---|---|---|
 | [`backend/`](backend/) | REST API (`/api/v1`) | Java 17, Spring Boot 4, PostgreSQL, Flyway |
-| [`admin-web/`](admin-web/) | Admin dashboard | React.js |
+| [`admin-web/`](admin-web/) | Admin dashboard | React 19, TypeScript, Vite, MUI, Tailwind CSS |
 | [`mobile/`](mobile/) | User app | React Native |
 
 ## Getting started
@@ -15,8 +15,15 @@ cd backend
 ./mvnw spring-boot:run -Dspring-boot.run.profiles=dev   # http://localhost:8080
 ```
 
+```bash
+cd admin-web
+npm install
+npm run dev        # http://localhost:5173, proxies /api to the backend (or: npm run dev:mock without it)
+```
+
 See [`backend/CLAUDE.md`](backend/CLAUDE.md) for API conventions, security rules and the database workflow,
-and [`backend/docs/api`](backend/docs/api) for endpoint docs used by the clients.
+[`backend/docs/api`](backend/docs/api) for endpoint docs used by the clients, and
+[`admin-web/README.md`](admin-web/README.md) for the dashboard.
 
 ## Git workflow
 

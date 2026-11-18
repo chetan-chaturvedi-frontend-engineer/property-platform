@@ -546,7 +546,8 @@ class AdminBannerApiTests extends AbstractIntegrationTest {
 		void requiresAuthentication() throws Exception {
 			createBanner();
 			for (String endpoint : ENDPOINTS) {
-				mvc.perform(endpoint(endpoint)).andExpect(status().isUnauthorized());
+				// With a valid CSRF token: without one, the CSRF check answers 403 before authentication.
+				mvc.perform(withCsrf(endpoint(endpoint))).andExpect(status().isUnauthorized());
 				mvc.perform(endpoint(endpoint).header(HttpHeaders.AUTHORIZATION, "Bearer not-a-token"))
 					.andExpect(status().isUnauthorized());
 			}
@@ -740,8 +741,7 @@ class AdminBannerApiTests extends AbstractIntegrationTest {
 	}
 
 	private String adminToken(String email) throws Exception {
-		return json(postJson("/api/v1/admin/login", "{\"identifier\":\"%s\",\"password\":\"%s\"}".formatted(email, PASSWORD))
-			.andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), "$.accessToken");
+		return accessToken(postJson("/api/v1/admin/login", "{\"identifier\":\"%s\",\"password\":\"%s\"}".formatted(email, PASSWORD)));
 	}
 
 	private void insert(String title, String type, String placement, String status, String linkType, String link,

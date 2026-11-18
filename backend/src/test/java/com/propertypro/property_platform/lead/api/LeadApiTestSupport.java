@@ -87,8 +87,7 @@ abstract class LeadApiTestSupport extends AbstractIntegrationTest {
 	String token(String email) throws Exception {
 		String userType = jdbc.queryForObject("SELECT user_type FROM users WHERE email = ?", String.class, email);
 		String path = "user".equals(userType) ? "/api/v1/auth/login" : "/api/v1/admin/login";
-		return json(postJson(path, "{\"identifier\":\"%s\",\"password\":\"%s\"}".formatted(email, PASSWORD))
-			.andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), "$.accessToken");
+		return accessToken(postJson(path, "{\"identifier\":\"%s\",\"password\":\"%s\"}".formatted(email, PASSWORD)));
 	}
 
 	ResultActions send(MockHttpServletRequestBuilder request, String token, String body) throws Exception {

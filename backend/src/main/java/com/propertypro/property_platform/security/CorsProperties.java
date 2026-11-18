@@ -10,6 +10,10 @@ public record CorsProperties(List<String> allowedOrigins) {
 
 	public CorsProperties {
 		allowedOrigins = allowedOrigins == null ? List.of() : List.copyOf(allowedOrigins);
+		// Credentials (the admin session cookies) are allowed, so every origin must be listed explicitly.
+		if (allowedOrigins.stream().anyMatch(origin -> origin.contains("*"))) {
+			throw new IllegalStateException("app.security.cors.allowed-origins must list explicit origins, not '*'");
+		}
 	}
 
 }

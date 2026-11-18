@@ -1,0 +1,39 @@
+/*
+ * Cascade order: Tailwind theme < base < MUI < components < Tailwind utilities.
+ * MUI styles (StyledEngineProvider enableCssLayer) go to the `mui` layer, so Tailwind utilities can
+ * override them. Tailwind's Preflight is not imported: MUI's CssBaseline is the single CSS reset.
+ */
+@layer theme, base, mui, components, utilities;
+
+@import 'tailwindcss/theme.css' layer(theme);
+@import 'tailwindcss/utilities.css' layer(utilities);
+@import './globals.css';
+
+/* Follow MUI's color scheme class instead of prefers-color-scheme. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Tailwind colors backed by the MUI palette, so utilities follow the theme and dark mode. */
+@theme inline {
+  --color-primary: var(--mui-palette-primary-main);
+  /* Full primary scale (#eebe7f = 500): bg-primary-100, text-primary-800, border-primary-300, ... */
+  --color-primary-50: var(--mui-palette-primary-50);
+  --color-primary-100: var(--mui-palette-primary-100);
+  --color-primary-200: var(--mui-palette-primary-200);
+  --color-primary-300: var(--mui-palette-primary-300);
+  --color-primary-400: var(--mui-palette-primary-400);
+  --color-primary-500: var(--mui-palette-primary-500);
+  --color-primary-600: var(--mui-palette-primary-600);
+  --color-primary-700: var(--mui-palette-primary-700);
+  --color-primary-800: var(--mui-palette-primary-800);
+  --color-primary-900: var(--mui-palette-primary-900);
+  /* Text on a primary background, and primary text on a surface (adapts to dark mode). */
+  --color-primary-contrast: var(--mui-palette-primary-contrastText);
+  --color-primary-strong: var(--app-primary-strong);
+  --color-secondary: var(--mui-palette-secondary-main);
+  --color-canvas: var(--mui-palette-background-default);
+  --color-surface: var(--mui-palette-background-paper);
+  --color-fg: var(--mui-palette-text-primary);
+  --color-muted: var(--mui-palette-text-secondary);
+  --color-line: var(--mui-palette-divider);
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
