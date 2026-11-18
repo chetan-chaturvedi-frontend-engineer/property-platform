@@ -107,15 +107,17 @@ Rules:
 - Authentication: **stateless JWT** (HS256 access token, 15 min, claims `sub` + `sid` only) plus a rotating
   refresh token stored as a SHA-256 hash. Every request checks the session (`ActiveSessionValidator`), so logout,
   password reset and blocking a user take effect immediately. Reusing a refresh token revokes its session.
-  Mobile and admin send `Authorization: Bearer <token>`. Call `TokenService.revokeAllSessions` whenever an admin
-  blocks a user or credentials change.
+  Mobile sends `Authorization: Bearer <token>`. The admin dashboard gets both tokens as HttpOnly, SameSite=Strict
+  cookies (`auth/web/AdminSessionCookies`, never in response bodies); cookie requests that change state need the
+  CSRF token from `GET /api/v1/admin/csrf` in `X-XSRF-TOKEN` (see `docs/api/admin-auth.md`). Call
+  `TokenService.revokeAllSessions` whenever an admin blocks a user or credentials change.
 - Rate limits use `RateLimiter`; the current `InMemoryRateLimiter` is per instance. Replace it with a shared
   store (Redis) before running more than one instance.
 - Passwords: BCrypt. OTPs: random 6 digits, stored hashed, 5-minute expiry, max attempts, resend cooldown.
 - Rate limit `/auth/**`, OTP and lead-submit endpoints.
 - Validate every request DTO with Bean Validation (`@Valid`); set `@Size` on every string and collection.
 - File uploads: allow-list MIME types and extensions, enforce size limits, store outside the app (object storage, S3-compatible), random object keys, serve via signed/CDN URLs. Never trust client filenames.
-- CORS: explicit allow-list of the admin dashboard origin(s). No `*` with credentials.
+- CORS: explicit allow-list of the admin dashboard origin(s), with credentials (session cookies). Never `*`.
 - Secrets only from env vars / secret manager. Never log passwords, tokens, OTPs or document numbers.
 - Sensitive admin actions (user/role/settings/transaction changes) must write an activity log entry. Successful
   API writes and 403s are logged automatically (`activitylog/web/SystemLogInterceptor`); add `@SystemLogged` to

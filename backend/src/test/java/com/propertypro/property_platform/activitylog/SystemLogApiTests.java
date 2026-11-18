@@ -268,10 +268,8 @@ class SystemLogApiTests extends AbstractIntegrationTest {
 				INSERT INTO users (email, password_hash, full_name, status, user_type, email_verified)
 				VALUES ('staff@example.com', ?, 'Staff Member', 'active', ?, now())""",
 				passwordEncoder.encode(PASSWORD), role);
-		String body = postJson("/api/v1/admin/login",
-				"{\"identifier\":\"staff@example.com\",\"password\":\"%s\"}".formatted(PASSWORD))
-			.andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
-		return json(body, "$.accessToken");
+		return accessToken(postJson("/api/v1/admin/login",
+				"{\"identifier\":\"staff@example.com\",\"password\":\"%s\"}".formatted(PASSWORD)));
 	}
 
 }

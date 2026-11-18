@@ -23,7 +23,8 @@ class BuilderTeamAdminApiTests extends BuilderTeamApiTestSupport {
 	@Test
 	void unauthenticatedAndAppUsersAreRejected() throws Exception {
 		mvc.perform(get(ADMIN)).andExpect(status().isUnauthorized());
-		mvc.perform(post(ADMIN).contentType(MediaType.APPLICATION_JSON).content(create(bobId, aliceId, "")))
+		// With a valid CSRF token (without one, the CSRF check answers 403 first).
+		mvc.perform(withCsrf(post(ADMIN)).contentType(MediaType.APPLICATION_JSON).content(create(bobId, aliceId, "")))
 			.andExpect(status().isUnauthorized());
 		getAs(ADMIN, bob).andExpect(status().isForbidden());
 		postAs(ADMIN, bob, create(bobId, aliceId, "")).andExpect(status().isForbidden());

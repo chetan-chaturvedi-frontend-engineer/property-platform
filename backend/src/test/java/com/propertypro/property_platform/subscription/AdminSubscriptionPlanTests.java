@@ -565,7 +565,8 @@ class AdminSubscriptionPlanTests extends AbstractIntegrationTest {
 		@Test
 		void requiresAuthentication() throws Exception {
 			for (MockHttpServletRequestBuilder request : allEndpoints()) {
-				mvc.perform(request).andExpect(status().isUnauthorized());
+				// With a valid CSRF token: without one, the CSRF check answers 403 before authentication.
+				mvc.perform(withCsrf(request)).andExpect(status().isUnauthorized());
 			}
 			mvc.perform(get(BASE).header(HttpHeaders.AUTHORIZATION, "Bearer not-a-token"))
 				.andExpect(status().isUnauthorized());

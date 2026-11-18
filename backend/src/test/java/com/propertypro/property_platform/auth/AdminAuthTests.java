@@ -11,7 +11,10 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.test.system.OutputCaptureExtension;
+import jakarta.servlet.http.Cookie;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.ResultActions;
 
@@ -28,12 +31,14 @@ import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
  * Admin-panel login with real accounts, passwords and tokens. Access depends only on the role's
- * {@code admin_panel.access} permission (users.user_type = roles.slug), never on the role's name.
+ * {@code admin_panel.access} permission (users.user_type = roles.slug), never on the role's name. The
+ * session lives in HttpOnly cookies; cookie requests that change state need a CSRF token.
  */
 @ExtendWith(OutputCaptureExtension.class)
 class AdminAuthTests extends AbstractIntegrationTest {
@@ -42,6 +47,7 @@ class AdminAuthTests extends AbstractIntegrationTest {
 	private static final String ME = "/api/v1/admin/me";
 	private static final String LOGOUT = "/api/v1/admin/logout";
 	private static final String REFRESH = "/api/v1/admin/refresh";
+	private static final String CSRF = "/api/v1/admin/csrf";
 	private static final String ADMIN_PLANS = "/api/v1/admin/subscription-plans";
 	private static final String ADMIN_EMAIL = "admin@example.com";
 	private static final List<String> SEEDED_ROLES = List.of("super-admin", "admin", "user");
@@ -71,11 +77,12 @@ class AdminAuthTests extends AbstractIntegrationTest {
 	void adminWithAdminPanelAccessLogsIn() throws Exception {
 		long adminId = account(ADMIN_EMAIL, "admin");
 
-		adminLogin(ADMIN_EMAIL, PASSWORD)
+		MockHttpServletResponse response = adminLogin(ADMIN_EMAIL, PASSWORD)
 			.andExpect(status().isOk())
-			.andExpect(jsonPath("$.tokenType").value("Bearer"))
-			.andExpect(jsonPath("$.accessToken").isNotEmpty())
-			.andExpect(jsonPath("$.refreshToken").isNotEmpty())
+			// Tokens only travel in HttpOnly cookies, never in a body that scripts can read.
+			.andExpect(jsonPath("$.accessToken").doesNotExist())
+			.andExpect(jsonPath("$.refreshToken").doesNotExist())
+			.andExpect(jsonPath("$.refreshTokenExpiresAt").isNotEmpty())
 			.andExpect(jsonPath("$.expiresIn").value(900))
 			.andExpect(jsonPath("$.user.id").value(adminId))
 			.andExpect(jsonPath("$.user.email").value(ADMIN_EMAIL))
@@ -83,9 +90,15 @@ class AdminAuthTests extends AbstractIntegrationTest {
 			.andExpect(jsonPath("$.user.permissions", hasItem("ADMIN_PANEL_ACCESS")))
 			.andExpect(jsonPath("$.user.permissions", hasItem("SUBSCRIPTION_PLAN_CREATE")))
 			.andExpect(content().string(not(containsString("passwordHash"))))
-			.andExpect(content().string(not(containsString("$2a$"))));
+			.andExpect(content().string(not(containsString("$2a$"))))
+			.andReturn().getResponse();
 		assertThat(jdbc.queryForObject("SELECT count(*) FROM auth_sessions WHERE user_id = ?", Integer.class, adminId))
 			.isEqualTo(1);
+		assertThat(setCookie(response, ADMIN_ACCESS_COOKIE))
+			.contains("HttpOnly", "Secure", "SameSite=Strict", "Path=/api/v1/admin;", "Max-Age=900");
+		assertThat(setCookie(response, ADMIN_REFRESH_COOKIE))
+			.contains("HttpOnly", "Secure", "SameSite=Strict", "Path=/api/v1/admin/refresh")
+			.containsPattern("Max-Age=259[12]\\d{3};");
 	}
 
 	@Test
@@ -120,7 +133,8 @@ class AdminAuthTests extends AbstractIntegrationTest {
 			.andExpect(status().isForbidden())
 			.andExpect(jsonPath("$.code").value("admin_access_denied"))
 			.andExpect(jsonPath("$.detail").value("You do not have permission to access the admin panel."))
-			.andExpect(jsonPath("$.accessToken").doesNotExist());
+			.andExpect(jsonPath("$.accessToken").doesNotExist())
+			.andExpect(header().doesNotExist(HttpHeaders.SET_COOKIE));
 		assertThat(sessions(userId)).isZero();
 	}
 
@@ -268,7 +282,7 @@ class AdminAuthTests extends AbstractIntegrationTest {
 	@Test
 	void protectedAdminEndpointsNeedAuthentication() throws Exception {
 		mvc.perform(get(ME)).andExpect(status().isUnauthorized());
-		mvc.perform(post(LOGOUT)).andExpect(status().isUnauthorized());
+		mvc.perform(withCsrf(post(LOGOUT))).andExpect(status().isUnauthorized());
 		mvc.perform(get(ADMIN_PLANS)).andExpect(status().isUnauthorized());
 		mvc.perform(get(ME).header(HttpHeaders.AUTHORIZATION, "Bearer not-a-jwt")).andExpect(status().isUnauthorized());
 	}
@@ -339,14 +353,19 @@ class AdminAuthTests extends AbstractIntegrationTest {
 	@Test
 	void logoutRevokesAccessAndRefreshTokens() throws Exception {
 		account(ADMIN_EMAIL, "admin");
-		String body = adminLogin(ADMIN_EMAIL, PASSWORD).andReturn().getResponse().getContentAsString();
-		String token = json(body, "$.accessToken");
+		MockHttpServletResponse login = adminLogin(ADMIN_EMAIL, PASSWORD).andReturn().getResponse();
+		Cookie access = login.getCookie(ADMIN_ACCESS_COOKIE);
+		Cookie refresh = login.getCookie(ADMIN_REFRESH_COOKIE);
 
-		withToken(post(LOGOUT), token).andExpect(status().isOk()).andExpect(jsonPath("$.message").value("Logged out."));
+		MockHttpServletResponse logout = mvc.perform(withCsrf(post(LOGOUT)).cookie(access))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.message").value("Logged out."))
+			.andReturn().getResponse();
 
-		withToken(get(ME), token).andExpect(status().isUnauthorized());
-		postJson(REFRESH, "{\"refreshToken\":\"%s\"}".formatted(json(body, "$.refreshToken")))
-			.andExpect(status().isUnauthorized());
+		assertThat(setCookie(logout, ADMIN_ACCESS_COOKIE)).contains("Max-Age=0", "Path=/api/v1/admin;");
+		assertThat(setCookie(logout, ADMIN_REFRESH_COOKIE)).contains("Max-Age=0", "Path=/api/v1/admin/refresh");
+		mvc.perform(get(ME).cookie(access)).andExpect(status().isUnauthorized());
+		refresh(refresh).andExpect(status().isUnauthorized());
 	}
 
 	@Test
@@ -364,21 +383,24 @@ class AdminAuthTests extends AbstractIntegrationTest {
 	void refreshRotatesTokensAndRechecksAdminAccess() throws Exception {
 		role("manager", "{\"admin_panel\": {\"access\": true}}");
 		account("manager@example.com", "manager");
-		String body = adminLogin("manager@example.com", PASSWORD).andReturn().getResponse().getContentAsString();
-		String firstRefresh = json(body, "$.refreshToken");
+		Cookie firstRefresh = adminLogin("manager@example.com", PASSWORD).andReturn().getResponse()
+			.getCookie(ADMIN_REFRESH_COOKIE);
 
-		String refreshed = postJson(REFRESH, "{\"refreshToken\":\"%s\"}".formatted(firstRefresh))
+		MockHttpServletResponse refreshed = refresh(firstRefresh)
 			.andExpect(status().isOk())
 			.andExpect(jsonPath("$.user.role.slug").value("manager"))
-			.andReturn().getResponse().getContentAsString();
-		assertThat(json(refreshed, "$.refreshToken")).isNotEqualTo(firstRefresh);
-		// A used refresh token is rejected (and revokes the session).
-		postJson(REFRESH, "{\"refreshToken\":\"%s\"}".formatted(firstRefresh)).andExpect(status().isUnauthorized());
+			.andExpect(jsonPath("$.refreshToken").doesNotExist())
+			.andReturn().getResponse();
+		assertThat(refreshed.getCookie(ADMIN_REFRESH_COOKIE).getValue()).isNotEqualTo(firstRefresh.getValue());
+		mvc.perform(get(ME).cookie(refreshed.getCookie(ADMIN_ACCESS_COOKIE))).andExpect(status().isOk());
+		// A used refresh token is rejected (and revokes the session); the dead cookies are deleted.
+		MockHttpServletResponse reused = refresh(firstRefresh).andExpect(status().isUnauthorized()).andReturn().getResponse();
+		assertThat(setCookie(reused, ADMIN_REFRESH_COOKIE)).contains("Max-Age=0");
 
-		String second = json(adminLogin("manager@example.com", PASSWORD).andReturn().getResponse().getContentAsString(),
-				"$.refreshToken");
+		Cookie second = adminLogin("manager@example.com", PASSWORD).andReturn().getResponse()
+			.getCookie(ADMIN_REFRESH_COOKIE);
 		jdbc.update("UPDATE roles SET permissions = '{}' WHERE slug = 'manager'");
-		postJson(REFRESH, "{\"refreshToken\":\"%s\"}".formatted(second))
+		refresh(second)
 			.andExpect(status().isForbidden())
 			.andExpect(jsonPath("$.code").value("admin_access_denied"))
 			.andExpect(jsonPath("$.accessToken").doesNotExist());
@@ -422,13 +444,97 @@ class AdminAuthTests extends AbstractIntegrationTest {
 	void credentialsNeverAppearInLogs(CapturedOutput output) throws Exception {
 		account(ADMIN_EMAIL, "admin");
 		adminLogin(ADMIN_EMAIL, "Wrong!Secret9").andExpect(status().isUnauthorized());
-		String body = adminLogin(ADMIN_EMAIL, PASSWORD).andReturn().getResponse().getContentAsString();
-		String token = json(body, "$.accessToken");
+		MockHttpServletResponse login = adminLogin(ADMIN_EMAIL, PASSWORD).andReturn().getResponse();
+		String token = login.getCookie(ADMIN_ACCESS_COOKIE).getValue();
 		withToken(post(LOGOUT), token).andExpect(status().isOk());
 
 		assertThat(output.getAll())
 			.contains("Admin login failed", "Admin login succeeded")
-			.doesNotContain(PASSWORD, "Wrong!Secret9", token, json(body, "$.refreshToken"));
+			.doesNotContain(PASSWORD, "Wrong!Secret9", token, login.getCookie(ADMIN_REFRESH_COOKIE).getValue());
+	}
+
+	// ---- Cookie session and CSRF ----
+
+	@Test
+	void accessCookieAuthenticatesAdminRequestsOnly() throws Exception {
+		account(ADMIN_EMAIL, "admin");
+		Cookie access = adminLogin(ADMIN_EMAIL, PASSWORD).andReturn().getResponse().getCookie(ADMIN_ACCESS_COOKIE);
+
+		mvc.perform(get(ME).cookie(access)).andExpect(status().isOk()).andExpect(jsonPath("$.email").value(ADMIN_EMAIL));
+		// Outside /api/v1/admin the cookie is not a credential (browsers do not even send it there).
+		mvc.perform(get("/api/v1/auth/me").cookie(access)).andExpect(status().isUnauthorized());
+	}
+
+	@Test
+	void cookieWritesNeedACsrfTokenButBearerRequestsDoNot() throws Exception {
+		account(ADMIN_EMAIL, "admin");
+		Cookie access = adminLogin(ADMIN_EMAIL, PASSWORD).andReturn().getResponse().getCookie(ADMIN_ACCESS_COOKIE);
+
+		mvc.perform(post(LOGOUT).cookie(access))
+			.andExpect(status().isForbidden())
+			.andExpect(jsonPath("$.code").value("csrf_invalid"));
+		mvc.perform(post(LOGIN).contentType(MediaType.APPLICATION_JSON)
+				.content("{\"identifier\":\"%s\",\"password\":\"%s\"}".formatted(ADMIN_EMAIL, PASSWORD)))
+			.andExpect(status().isForbidden())
+			.andExpect(jsonPath("$.code").value("csrf_invalid"));
+		mvc.perform(post(REFRESH)).andExpect(status().isForbidden()).andExpect(jsonPath("$.code").value("csrf_invalid"));
+		assertThat(jdbc.queryForObject("SELECT count(*) FROM auth_sessions WHERE revoked_at IS NULL", Integer.class))
+			.isEqualTo(1);
+
+		// A forged request cannot set Authorization, so header-authenticated requests are exempt.
+		withToken(post(LOGOUT), access.getValue()).andExpect(status().isOk());
+	}
+
+	@Test
+	void csrfEndpointIssuesADoubleSubmitToken() throws Exception {
+		long adminId = account(ADMIN_EMAIL, "admin");
+		MockHttpServletResponse csrfResponse = mvc.perform(get(CSRF))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.headerName").value("X-XSRF-TOKEN"))
+			.andExpect(jsonPath("$.token").isNotEmpty())
+			.andReturn().getResponse();
+		Cookie csrfCookie = csrfResponse.getCookie("XSRF-TOKEN");
+		assertThat(csrfCookie.isHttpOnly()).isTrue();
+		assertThat(csrfCookie.getPath()).isEqualTo("/");
+		assertThat(csrfCookie.getAttribute("SameSite")).isEqualTo("Strict");
+		String token = json(csrfResponse.getContentAsString(), "$.token");
+
+		// The same flow as the dashboard: cookie sent by the browser, token echoed in the header.
+		mvc.perform(post(LOGIN).cookie(csrfCookie).header("X-XSRF-TOKEN", token)
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"identifier\":\"%s\",\"password\":\"%s\"}".formatted(ADMIN_EMAIL, PASSWORD)))
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.user.id").value(adminId));
+		// A token that does not match the cookie is refused.
+		mvc.perform(post(LOGIN).cookie(csrfCookie).header("X-XSRF-TOKEN", "forged")
+				.contentType(MediaType.APPLICATION_JSON)
+				.content("{\"identifier\":\"%s\",\"password\":\"%s\"}".formatted(ADMIN_EMAIL, PASSWORD)))
+			.andExpect(status().isForbidden())
+			.andExpect(jsonPath("$.code").value("csrf_invalid"));
+	}
+
+	@Test
+	void staleAccessCookieNeverBlocksLoginOrRefresh() throws Exception {
+		account(ADMIN_EMAIL, "admin");
+		Cookie stale = new Cookie(ADMIN_ACCESS_COOKIE, "expired.or.revoked");
+
+		Cookie refresh = mvc.perform(withCsrf(post(LOGIN)).cookie(stale).contentType(MediaType.APPLICATION_JSON)
+				.content("{\"identifier\":\"%s\",\"password\":\"%s\"}".formatted(ADMIN_EMAIL, PASSWORD)))
+			.andExpect(status().isOk())
+			.andReturn().getResponse().getCookie(ADMIN_REFRESH_COOKIE);
+		mvc.perform(withCsrf(post(REFRESH)).cookie(stale, refresh)).andExpect(status().isOk());
+		mvc.perform(get(CSRF).cookie(stale)).andExpect(status().isOk());
+	}
+
+	@Test
+	void refreshWithoutCookieIsRejectedAndClearsCookies() throws Exception {
+		MockHttpServletResponse response = mvc.perform(withCsrf(post(REFRESH)))
+			.andExpect(status().isUnauthorized())
+			.andExpect(jsonPath("$.code").value("invalid_token"))
+			.andReturn().getResponse();
+
+		assertThat(setCookie(response, ADMIN_ACCESS_COOKIE)).contains("Max-Age=0");
+		assertThat(setCookie(response, ADMIN_REFRESH_COOKIE)).contains("Max-Age=0");
 	}
 
 	// ---- Helpers ----
@@ -455,8 +561,16 @@ class AdminAuthTests extends AbstractIntegrationTest {
 		return mvc.perform(request.header(HttpHeaders.AUTHORIZATION, "Bearer " + token));
 	}
 
-	private static String accessToken(ResultActions login) throws Exception {
-		return json(login.andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), "$.accessToken");
+	private ResultActions refresh(Cookie refreshCookie) throws Exception {
+		return mvc.perform(withCsrf(post(REFRESH)).cookie(refreshCookie));
+	}
+
+	/** The raw Set-Cookie header for {@code name}, to check its attributes. */
+	private static String setCookie(MockHttpServletResponse response, String name) {
+		return response.getHeaders(HttpHeaders.SET_COOKIE).stream()
+			.filter(value -> value.startsWith(name + "="))
+			.findFirst()
+			.orElseThrow(() -> new AssertionError("No Set-Cookie for " + name));
 	}
 
 	private int sessions(long userId) {

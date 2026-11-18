@@ -9,6 +9,7 @@ import org.springframework.security.oauth2.server.resource.web.BearerTokenAuthen
 import org.springframework.security.oauth2.server.resource.web.access.BearerTokenAccessDeniedHandler;
 import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.csrf.CsrfException;
 
 import java.io.IOException;
 
@@ -33,6 +34,12 @@ final class ProblemDetailSecurityHandlers {
 		BearerTokenAccessDeniedHandler delegate = new BearerTokenAccessDeniedHandler();
 		return (request, response, ex) -> {
 			delegate.handle(request, response, ex);
+			if (ex instanceof CsrfException) {
+				// The dashboard fetches a fresh token from GET /api/v1/admin/csrf and retries once.
+				write(response, 403, "Forbidden", "The CSRF token is missing or invalid.", "csrf_invalid");
+				systemLog.record(SystemLogEntry.warning(SystemLogModules.PERMISSIONS, "Request rejected: missing or invalid CSRF token"));
+				return;
+			}
 			write(response, 403, "Forbidden", "Access denied.", "forbidden");
 			systemLog.record(SystemLogEntry.warning(SystemLogModules.PERMISSIONS, "Access denied by security policy"));
 		};

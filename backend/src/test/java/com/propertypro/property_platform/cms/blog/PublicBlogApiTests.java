@@ -333,8 +333,8 @@ class PublicBlogApiTests extends AbstractIntegrationTest {
 		jdbc.update("""
 				INSERT INTO users (email, password_hash, full_name, status, user_type, email_verified)
 				VALUES ('admin@example.com', ?, 'Admin', 'active', 'admin', now())""", passwordEncoder.encode(PASSWORD));
-		return json(postJson("/api/v1/admin/login", "{\"identifier\":\"admin@example.com\",\"password\":\"%s\"}"
-			.formatted(PASSWORD)).andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), "$.accessToken");
+		return accessToken(postJson("/api/v1/admin/login", "{\"identifier\":\"admin@example.com\",\"password\":\"%s\"}"
+			.formatted(PASSWORD)));
 	}
 
 	private ResultActions patchJson(long id, String json, String token) throws Exception {

@@ -106,8 +106,7 @@ abstract class BuilderTeamApiTestSupport extends AbstractIntegrationTest {
 				SELECT coalesce((r.permissions -> 'admin_panel' ->> 'access')::boolean, false)
 				FROM users u JOIN roles r ON r.slug = u.user_type WHERE u.email = ?""", Boolean.class, email);
 		String path = Boolean.TRUE.equals(staff) ? "/api/v1/admin/login" : "/api/v1/auth/login";
-		return json(postJson(path, "{\"identifier\":\"%s\",\"password\":\"%s\"}".formatted(email, PASSWORD))
-			.andExpect(status().isOk()).andReturn().getResponse().getContentAsString(), "$.accessToken");
+		return accessToken(postJson(path, "{\"identifier\":\"%s\",\"password\":\"%s\"}".formatted(email, PASSWORD)));
 	}
 
 	/** An active subscription in force with the given team member limit. */
