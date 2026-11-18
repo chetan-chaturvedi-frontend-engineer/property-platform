@@ -1,0 +1,2 @@
+# Husky runs hooks from the repository root; this app lives in admin-web/.
+cd admin-web && npx --no-install lint-staged

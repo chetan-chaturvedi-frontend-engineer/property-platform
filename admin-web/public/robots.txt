@@ -1,0 +1,3 @@
+# Private admin dashboard: no crawling or indexing of any page.
+User-agent: *
+Disallow: /

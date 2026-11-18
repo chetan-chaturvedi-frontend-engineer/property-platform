@@ -1,0 +1,47 @@
+@layer base {
+  /* Primary for text and borders on surfaces (see theme.ts PRIMARY_STRONG): readable in both schemes. */
+  :root {
+    --app-primary-strong: var(--mui-palette-primary-800);
+  }
+  .dark {
+    --app-primary-strong: var(--mui-palette-primary-400);
+  }
+
+  /* The one part of Preflight Tailwind's border utilities rely on. MUI sets its own borders. */
+  *,
+  ::before,
+  ::after {
+    border-width: 0;
+    border-style: solid;
+    border-color: var(--mui-palette-divider, currentColor);
+  }
+
+  html,
+  body,
+  #root {
+    min-height: 100%;
+  }
+
+  #root {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+  }
+
+  img,
+  svg,
+  video {
+    max-width: 100%;
+    height: auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
+}
