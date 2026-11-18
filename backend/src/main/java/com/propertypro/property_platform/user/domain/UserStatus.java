@@ -19,6 +19,11 @@ public enum UserStatus implements PersistableEnum {
 	INACTIVE("inactive"),
 	CLOSED("closed");
 
+	/** Accepted request values, for {@code @Pattern}. */
+	public static final String VALUES = "pending|active|suspended|rejected|inactive|closed";
+	/** Statuses an admin may give a new account. */
+	public static final String CREATABLE_VALUES = "pending|active|inactive";
+
 	private final String value;
 
 	public static UserStatus fromValue(String value) {

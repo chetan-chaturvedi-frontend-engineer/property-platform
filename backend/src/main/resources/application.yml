@@ -155,6 +155,8 @@ app:
     builder-team-write-user: { max-requests: 300, window: 1h }
     # Creation and updates of the caller's own settings.
     user-setting-write-user: { max-requests: 120, window: 1h }
+    # Admin user management: create, update and delete.
+    user-management-write-user: { max-requests: 120, window: 1h }
   banner:
     # Accepted banner types and placements; adding one needs no migration (lowercase snake_case).
     types: promotion, announcement, offer
