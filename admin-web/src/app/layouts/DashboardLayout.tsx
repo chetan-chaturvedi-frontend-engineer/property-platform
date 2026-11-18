@@ -6,13 +6,19 @@ import { Loader } from '@/components/common/Loader/Loader';
 import { Navbar } from '@/components/navigation/Navbar/Navbar';
 import { Sidebar } from '@/components/navigation/Sidebar/Sidebar';
 import { useCurrentUser } from '@/features/auth/hooks/useCurrentUser';
-import { LAYOUT } from '@/utils/constants';
+import { useLocalStorage } from '@/hooks/useLocalStorage';
+import { LAYOUT, STORAGE_KEYS } from '@/utils/constants';
 
 /** Signed-in shell. A failing page is contained by the boundary; navigation keeps working. */
 export function DashboardLayout() {
   const location = useLocation();
   // Keeps the user's permissions in sync with the server while they work.
   useCurrentUser();
+  const [sidebarCollapsed, setSidebarCollapsed] = useLocalStorage(
+    STORAGE_KEYS.sidebarCollapsed,
+    false,
+  );
+  const sidebarWidth = sidebarCollapsed ? LAYOUT.sidebarCollapsedWidth : LAYOUT.sidebarWidth;
 
   return (
     <div className="flex min-h-dvh bg-canvas">
@@ -22,8 +28,11 @@ export function DashboardLayout() {
       >
         Skip to content
       </a>
-      <Navbar />
-      <Sidebar />
+      <Navbar sidebarWidth={sidebarWidth} />
+      <Sidebar
+        collapsed={sidebarCollapsed}
+        onToggleCollapsed={() => setSidebarCollapsed((current) => !current)}
+      />
       <main
         id="main-content"
         tabIndex={-1}

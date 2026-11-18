@@ -25,13 +25,17 @@ by default `http://localhost:8080/api/v1`, so the browser calls the backend dire
 
 **Mock accounts** (`dev:mock` only, password `Admin@1234` for all):
 
-| Email                 | Role          | Sees                                      |
-| --------------------- | ------------- | ----------------------------------------- |
-| `admin@example.com`   | Administrator | dashboard, activity log, profile          |
-| `manager@example.com` | Manager       | dashboard, profile (no `SYSTEM_LOG_LIST`) |
-| `user@example.com`    | app user      | login refused: `admin_access_denied`      |
+| Email                 | Role          | Sees                                                         |
+| --------------------- | ------------- | ------------------------------------------------------------ |
+| `admin@example.com`   | Administrator | dashboard, users (full CRUD), activity log, profile          |
+| `manager@example.com` | Manager       | dashboard, users (view only), profile (no `SYSTEM_LOG_LIST`) |
+| `editor@example.com`  | User Editor   | users: add and edit, but no status changes or deletes        |
+| `user@example.com`    | app user      | login refused: `admin_access_denied`                         |
 
 With the real backend, sign in with an account whose role grants `ADMIN_PANEL_ACCESS`.
+
+> **Users page:** backed by `/api/v1/admin/users` ([`admin-users.md`](../backend/docs/api/admin-users.md)).
+> The seeded admin and super-admin roles get every `USER_*` permission from migration `V202611181000`.
 
 ## Scripts
 

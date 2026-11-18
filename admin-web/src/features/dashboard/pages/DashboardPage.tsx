@@ -10,7 +10,7 @@ import { PERMISSIONS } from '@/utils/constants';
 import { formatNumber } from '@/utils/formatters';
 
 import { RecentActivityCard } from '../components/RecentActivityCard';
-import { StatCard } from '../components/StatCard';
+import { StatCard } from '@/components/common/StatCard/StatCard';
 import { useSystemLogs } from '../hooks/useSystemLogs';
 
 const TOTAL_ONLY = { page: 0, size: 1 } as const;

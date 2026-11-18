@@ -1,17 +1,40 @@
-import Dashboard from '@mui/icons-material/Dashboard';
-import History from '@mui/icons-material/History';
-import Person from '@mui/icons-material/Person';
+import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
+import GroupOutlined from '@mui/icons-material/GroupOutlined';
+import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
+import PersonOutline from '@mui/icons-material/PersonOutline';
 
-import type { NavItem } from '@/types/common.types';
+import type { NavSection } from '@/types/common.types';
 import { PERMISSIONS, ROUTES } from '@/utils/constants';
 
-export const NAV_ITEMS: readonly NavItem[] = [
-  { label: 'Dashboard', path: ROUTES.dashboard, icon: <Dashboard /> },
+/** Every route the dashboard has. A section with no visible items is hidden. */
+export const NAV_SECTIONS: readonly NavSection[] = [
   {
-    label: 'Activity log',
-    path: ROUTES.activity,
-    icon: <History />,
-    requiredPermissions: [PERMISSIONS.systemLogList],
+    items: [{ label: 'Dashboard', path: ROUTES.dashboard, icon: <DashboardOutlined /> }],
   },
-  { label: 'Profile', path: ROUTES.profile, icon: <Person /> },
+  {
+    title: 'Management',
+    items: [
+      {
+        label: 'Users',
+        path: ROUTES.users,
+        icon: <GroupOutlined />,
+        requiredPermissions: [PERMISSIONS.userList],
+      },
+    ],
+  },
+  {
+    title: 'Monitoring',
+    items: [
+      {
+        label: 'Activity log',
+        path: ROUTES.activity,
+        icon: <HistoryOutlined />,
+        requiredPermissions: [PERMISSIONS.systemLogList],
+      },
+    ],
+  },
+  {
+    title: 'Account',
+    items: [{ label: 'Profile', path: ROUTES.profile, icon: <PersonOutline /> }],
+  },
 ];

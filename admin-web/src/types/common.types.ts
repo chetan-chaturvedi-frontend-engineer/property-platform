@@ -16,3 +16,9 @@ export interface NavItem {
   /** The item is shown only when the user holds every listed permission. */
   requiredPermissions?: readonly string[];
 }
+
+export interface NavSection {
+  /** Visible heading; the first section may have none. */
+  title?: string;
+  items: readonly NavItem[];
+}

@@ -6,6 +6,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TablePagination from '@mui/material/TablePagination';
 import TableRow from '@mui/material/TableRow';
+import TableSortLabel from '@mui/material/TableSortLabel';
 import type { ReactNode } from 'react';
 
 import { EmptyState } from '../Feedback/EmptyState';
@@ -18,6 +19,16 @@ export interface DataTableColumn<TRow> {
   cell: (row: TRow) => ReactNode;
   align?: 'left' | 'right' | 'center';
   width?: number | string;
+  /** API sort field; the header becomes a sort toggle when the table has `sort`. */
+  sortField?: string;
+}
+
+export type SortDirection = 'asc' | 'desc';
+
+export interface DataTableSort {
+  field: string;
+  direction: SortDirection;
+  onChange: (field: string, direction: SortDirection) => void;
 }
 
 export interface DataTablePagination {
@@ -40,7 +51,10 @@ interface DataTableProps<TRow> {
   onRetry?: () => void;
   emptyMessage?: string;
   pagination?: DataTablePagination;
+  sort?: DataTableSort;
   skeletonRows?: number;
+  /** Lets wide tables scroll horizontally instead of squeezing columns on small screens. */
+  minWidth?: number;
 }
 
 /** Generic table with loading, empty, error states and server-side pagination. */
@@ -54,7 +68,9 @@ export function DataTable<TRow>({
   onRetry,
   emptyMessage = 'No records found.',
   pagination,
+  sort,
   skeletonRows = 5,
+  minWidth,
 }: DataTableProps<TRow>) {
   if (error && !rows?.length) {
     return <ErrorState message={error.message} onRetry={onRetry} />;
@@ -66,15 +82,39 @@ export function DataTable<TRow>({
   return (
     <>
       <TableContainer>
-        <Table size="small" aria-busy={isLoading || undefined}>
+        <Table size="small" aria-busy={isLoading || undefined} sx={{ minWidth }}>
           <caption className="sr-only">{caption}</caption>
           <TableHead>
             <TableRow>
-              {columns.map((column) => (
-                <TableCell key={column.id} align={column.align} style={{ width: column.width }}>
-                  {column.header}
-                </TableCell>
-              ))}
+              {columns.map((column) => {
+                const isSorted = Boolean(sort && column.sortField === sort.field);
+                return (
+                  <TableCell
+                    key={column.id}
+                    align={column.align}
+                    style={{ width: column.width }}
+                    sortDirection={isSorted && sort ? sort.direction : false}
+                  >
+                    {sort && column.sortField ? (
+                      <TableSortLabel
+                        active={isSorted}
+                        direction={isSorted ? sort.direction : 'asc'}
+                        onClick={() => {
+                          const field = column.sortField ?? sort.field;
+                          sort.onChange(
+                            field,
+                            isSorted && sort.direction === 'asc' ? 'desc' : 'asc',
+                          );
+                        }}
+                      >
+                        {column.header}
+                      </TableSortLabel>
+                    ) : (
+                      column.header
+                    )}
+                  </TableCell>
+                );
+              })}
             </TableRow>
           </TableHead>
           <TableBody>

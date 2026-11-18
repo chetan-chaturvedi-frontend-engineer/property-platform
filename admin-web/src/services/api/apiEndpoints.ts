@@ -16,4 +16,10 @@ export const API_ENDPOINTS = {
     list: '/admin/system-logs',
     detail: (id: EntityId) => `/admin/system-logs/${id}`,
   },
+  users: {
+    list: '/admin/users',
+    stats: '/admin/users/stats',
+    roles: '/admin/users/roles',
+    detail: (id: EntityId) => `/admin/users/${id}`,
+  },
 } as const;
