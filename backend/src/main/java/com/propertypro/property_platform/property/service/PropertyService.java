@@ -7,6 +7,7 @@ import com.propertypro.property_platform.common.web.PageResponse;
 import com.propertypro.property_platform.media.config.MediaProperties;
 import com.propertypro.property_platform.media.service.MediaUploadService;
 import com.propertypro.property_platform.property.domain.AreaUnit;
+import com.propertypro.property_platform.property.domain.LegalApprovalStatus;
 import com.propertypro.property_platform.property.domain.ProjectStatus;
 import com.propertypro.property_platform.property.domain.PropertyProject;
 import com.propertypro.property_platform.property.domain.PropertyProjectSummary;
@@ -16,6 +17,7 @@ import com.propertypro.property_platform.property.domain.StatusChangeAction;
 import com.propertypro.property_platform.property.dto.CreatePropertyRequest;
 import com.propertypro.property_platform.property.dto.PropertyFilter;
 import com.propertypro.property_platform.property.dto.PropertyResponse;
+import com.propertypro.property_platform.property.dto.PropertyStatsResponse;
 import com.propertypro.property_platform.property.dto.PropertySummaryResponse;
 import com.propertypro.property_platform.property.dto.UpdateMediaSettingsRequest;
 import com.propertypro.property_platform.property.dto.UpdateProjectInfoRequest;
@@ -32,6 +34,7 @@ import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -43,8 +46,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Function;
@@ -79,6 +84,7 @@ public class PropertyService {
 	private final PhoneNumberNormalizer phoneNumberNormalizer;
 	private final MediaUploadService mediaUploadService;
 	private final MediaProperties mediaProperties;
+	private final PropertyListExtras listExtras;
 
 	/**
 	 * Creates a draft from step 1. With an {@code idempotencyKey}, a retry returns the property the
@@ -156,7 +162,33 @@ public class PropertyService {
 		if (filter.ownerId() != null) {
 			spec = spec.and((root, query, cb) -> cb.equal(root.get("userId"), filter.ownerId()));
 		}
-		return list(spec, pageable, PropertySummaryResponse::forAdmin);
+		Page<PropertyProjectSummary> found = summaryRepository.findAll(spec, pageRequest(pageable));
+		return PageResponse.of(found, listExtras.adminSummaries(found.getContent()));
+	}
+
+	/** Counts for the admin dashboard; requires {@code PROPERTY_LIST_ANY} (checked by the controller). */
+	@Transactional(readOnly = true)
+	public PropertyStatsResponse stats() {
+		Map<String, Long> byPublication = new LinkedHashMap<>();
+		for (PublicationStatus status : PublicationStatus.values()) {
+			byPublication.put(status.getValue(), 0L);
+		}
+		Map<String, Long> byLegal = new LinkedHashMap<>();
+		for (LegalApprovalStatus status : LegalApprovalStatus.values()) {
+			byLegal.put(status.getValue(), 0L);
+		}
+		long total = 0;
+		long deleted = 0;
+		for (PropertyProjectSummaryRepository.StatusCount count : summaryRepository.countByStatus()) {
+			if (count.isDeleted()) {
+				deleted += count.getTotal();
+				continue;
+			}
+			total += count.getTotal();
+			byPublication.merge(count.getPublicationStatus(), count.getTotal(), Long::sum);
+			byLegal.merge(count.getLegalApprovalStatus(), count.getTotal(), Long::sum);
+		}
+		return new PropertyStatsResponse(total, byPublication, byLegal, deleted);
 	}
 
 	/** Step 1. The slug stays the same when the project name changes, so published URLs keep working. */
@@ -311,9 +343,11 @@ public class PropertyService {
 
 	private PageResponse<PropertySummaryResponse> list(Specification<PropertyProjectSummary> spec, Pageable pageable,
 			Function<PropertyProjectSummary, PropertySummaryResponse> mapping) {
-		PageRequest page = PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(),
-				stableSort(pageable.getSort()));
-		return PageResponse.of(summaryRepository.findAll(spec, page), mapping);
+		return PageResponse.of(summaryRepository.findAll(spec, pageRequest(pageable)), mapping);
+	}
+
+	private static PageRequest pageRequest(Pageable pageable) {
+		return PageRequest.of(pageable.getPageNumber(), pageable.getPageSize(), stableSort(pageable.getSort()));
 	}
 
 	private static void requirePermission(CurrentActor actor, String permission) {

@@ -5,6 +5,8 @@ export const ROUTES = {
   dashboard: '/dashboard',
   activity: '/activity',
   users: '/users',
+  properties: '/properties',
+  propertyNew: '/properties/new',
   profile: '/profile',
   unauthorized: '/unauthorized',
 } as const;
@@ -23,11 +25,29 @@ export const PERMISSIONS = {
   userUpdate: 'USER_UPDATE',
   userChangeStatus: 'USER_CHANGE_STATUS',
   userDelete: 'USER_DELETE',
+  propertyCreate: 'PROPERTY_CREATE',
+  propertyListAny: 'PROPERTY_LIST_ANY',
+  propertyViewAny: 'PROPERTY_VIEW_ANY',
+  propertyUpdateAny: 'PROPERTY_UPDATE_ANY',
+  propertyDeleteAny: 'PROPERTY_DELETE_ANY',
+  propertyRestoreAny: 'PROPERTY_RESTORE_ANY',
+  propertyReview: 'PROPERTY_REVIEW',
+  propertyPublish: 'PROPERTY_PUBLISH',
+  propertySuspend: 'PROPERTY_SUSPEND',
+  propertyLegalReview: 'PROPERTY_LEGAL_REVIEW',
+} as const;
+
+/** Property routes with an id. */
+export const propertyRoutes = {
+  detail: (id: number) => `${ROUTES.properties}/${id}`,
+  edit: (id: number, step?: number) =>
+    `${ROUTES.properties}/${id}/edit${step ? `?step=${step}` : ''}`,
 } as const;
 
 export const STORAGE_KEYS = {
   activityPageSize: 'admin-web:activity-page-size',
   usersPageSize: 'admin-web:users-page-size',
+  propertiesPageSize: 'admin-web:properties-page-size',
   sidebarCollapsed: 'admin-web:sidebar-collapsed',
 } as const;
 

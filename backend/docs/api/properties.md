@@ -229,13 +229,56 @@ curl -X POST "$API/api/v1/properties/101/media" -H "Authorization: Bearer $TOKEN
 
 ### Admin — `/api/v1/admin/properties` (needs `ADMIN_PANEL_ACCESS`)
 
-| Method | Path | Permission | Description |
-|---|---|---|---|
-| GET | `/admin/properties` | `PROPERTY_LIST_ANY` | all owners; extra filters `ownerId`, `deleted` = exclude (default), only, include; items include `ownerId`, `deletedAt` |
-| GET | `/admin/properties/{id}` | `PROPERTY_VIEW_ANY` | adds `owner` (name, email, phone) and status history actors |
-| POST | `/admin/properties/{id}/restore` | `PROPERTY_RESTORE_ANY` | undo a soft delete; needs a free slot in the owner's subscription |
+The admin dashboard's HttpOnly session cookie is only sent to `/api/v1/admin/**`, so the dashboard
+uses these routes. They call the same services as `/api/v1/properties/...`: ownership, editability,
+workflow, subscription and rate-limit rules are identical. Writes from the cookie session need the
+CSRF header (see `admin-auth.md`); `If-Match` and `Idempotency-Key` work as above.
 
-Admins edit, review and publish through the `/api/v1/properties/{id}/...` endpoints above.
+Every route also needs `PROPERTY_VIEW_ANY`, because every property response here is the **admin
+view**: it adds `owner` (id, name, email, phone) and `statusHistory[].actorUserId`, and media `url`s
+point at the admin content routes below. Writes return the whole admin view of the property (not
+the single child item), so the dashboard gets the new `version` in one response.
+
+| Method | Path | Extra permission | Description |
+|---|---|---|---|
+| GET | `/admin/properties` | `PROPERTY_LIST_ANY` (not `_VIEW_ANY`) | all owners; extra filters `ownerId`, `deleted` = exclude (default), only, include. Items add `ownerId`, `deletedAt`, and the display extras `startingPrice` (lowest configuration price), `apartmentTypes` (distinct, display order) and `coverUrl` (primary photo, else the first; admin content path). Extras without a value are omitted |
+| GET | `/admin/properties/stats` | `PROPERTY_LIST_ANY` (not `_VIEW_ANY`) | counts, see below |
+| POST | `/admin/properties` | `PROPERTY_CREATE` | create a draft owned by the signed-in admin (201; 200 for an idempotent retry) |
+| GET | `/admin/properties/{id}` | | admin view |
+| PATCH | `/admin/properties/{id}` | (service: `PROPERTY_UPDATE_ANY` or owner) | several steps at once |
+| DELETE | `/admin/properties/{id}` | (service: `PROPERTY_DELETE_ANY`) | soft delete (204) |
+| POST | `/admin/properties/{id}/restore` | `PROPERTY_RESTORE_ANY` (not `_VIEW_ANY`) | undo a soft delete; needs a free slot in the owner's subscription |
+| GET | `/admin/properties/{id}/wizard` | | step completion |
+| PATCH | `/admin/properties/{id}/steps/1`, `/2`, `/4`, `/6` | (service: `PROPERTY_UPDATE_ANY`) | save one step |
+| GET | `/admin/properties/{id}/preview` | | admin view incl. missing fields; preview rate limit |
+| POST | `/admin/properties/{id}/submit` | (service: `PROPERTY_UPDATE_ANY`) | submit for review |
+| POST | `/admin/properties/{id}/publish` | `PROPERTY_PUBLISH` | publish an approved property |
+| PATCH | `/admin/properties/{id}/status` | (service: per action, see the lifecycle table) | `{"action": "...", "reason": "..."}` |
+| PATCH | `/admin/properties/{id}/legal-status` | `PROPERTY_LEGAL_REVIEW` | `{"status": "approved", "reason": "..."}` |
+| GET | `/admin/properties/amenities` | | active amenity catalog |
+| PUT | `/admin/properties/{id}/apartments` | (service: `PROPERTY_UPDATE_ANY`) | step 3, the complete set (as `PUT /properties/{id}/apartments`) |
+| PUT | `/admin/properties/{id}/amenities` | (service: `PROPERTY_UPDATE_ANY`) | step 5 |
+| PUT | `/admin/properties/{id}/nearby-places` | (service: `PROPERTY_UPDATE_ANY`) | nearby places |
+| POST | `/admin/properties/{id}/media` | (service: `PROPERTY_UPDATE_ANY`) | multipart upload, or JSON external video (201) |
+| PATCH / DELETE | `/admin/properties/{id}/media/{mediaId}` | (service: `PROPERTY_UPDATE_ANY`) | title, description, cover / delete |
+| PUT | `/admin/properties/{id}/media/order` | (service: `PROPERTY_UPDATE_ANY`) | reorder |
+| GET | `/admin/properties/{id}/media/{mediaId}/content` | | download (the admin view's media `url`) |
+| GET | `/admin/properties/{id}/apartments/{apartmentId}/media/{mediaId}/content` | | download a configuration's file |
+
+"(service: ...)" means the permission is checked in the service, as for the app routes: a visible
+property without it is 403 `property_action_forbidden`.
+
+**Statistics** (`GET /admin/properties/stats`, one aggregate query). `total` and both maps count
+non-deleted properties, so each map adds up to `total`; every status is present (0 when none).
+`deleted` counts soft-deleted properties separately.
+
+```json
+{ "total": 26,
+  "byPublicationStatus": { "draft": 4, "pending_review": 5, "approved": 5, "published": 6,
+                           "rejected": 2, "suspended": 2, "archived": 2 },
+  "byLegalApprovalStatus": { "pending": 7, "approved": 13, "rejected": 6, "not_applicable": 0 },
+  "deleted": 1 }
+```
 
 ### Public — `/api/v1/public/properties` (no login)
 
@@ -272,14 +315,18 @@ GET   /api/v1/properties/101/preview          -> wizard.readyToSubmit = true
 POST  /api/v1/properties/101/submit           -> publicationStatus "pending_review"
 ```
 
-**Administrator (dashboard)**
+**Administrator (dashboard, cookie session + X-XSRF-TOKEN)**
 
 ```http
+GET   /api/v1/admin/properties/stats
 GET   /api/v1/admin/properties?publicationStatus=pending_review&sort=updatedAt,asc
 GET   /api/v1/admin/properties/101
-PATCH /api/v1/properties/101/legal-status     { "status": "approved", "reason": "RERA verified" }
-PATCH /api/v1/properties/101/status           { "action": "approve" }
-POST  /api/v1/properties/101/publish          -> publicationStatus "published"
+PATCH /api/v1/admin/properties/101/legal-status   If-Match: "7"  { "status": "approved", "reason": "RERA verified" }
+PATCH /api/v1/admin/properties/101/status         If-Match: "8"  { "action": "approve" }
+POST  /api/v1/admin/properties/101/publish        If-Match: "9"  -> publicationStatus "published"
 # or
-PATCH /api/v1/properties/101/status           { "action": "reject", "reason": "Photos are blurry." }
+PATCH /api/v1/admin/properties/101/status         { "action": "reject", "reason": "Photos are blurry." }
 ```
+
+Publishing does not require `legalApprovalStatus = approved`; the dashboard warns before publishing
+when the legal review is still pending or rejected.

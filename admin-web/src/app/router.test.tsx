@@ -86,6 +86,36 @@ describe('app routes', () => {
     expect(screen.queryByRole('link', { name: 'Users' })).not.toBeInTheDocument();
   });
 
+  it('opens property management from the sidebar and keeps the link active on a property', async () => {
+    signInAs(mockUsers.admin);
+    const { user, router } = renderRoutes(routes, { initialPath: '/dashboard' });
+
+    const nav = await screen.findByRole('navigation', { name: /main navigation/i });
+    await user.click(within(nav).getByRole('link', { name: 'Properties' }));
+    expect(await screen.findByRole('heading', { name: 'Properties' })).toBeInTheDocument();
+
+    await user.click(await screen.findByRole('button', { name: 'View Dream Heights Apartments' }));
+    expect(await screen.findByRole('heading', { name: 'Property details' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/properties/1');
+    expect(within(nav).getByRole('link', { name: 'Properties' })).toHaveClass('active');
+  });
+
+  it('guards property routes by permission, not only by hiding the link', async () => {
+    signInAs(mockUsers.manager);
+    renderRoutes(routes, { initialPath: '/properties' });
+    expect(await screen.findByRole('heading', { name: 'Access denied' })).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Properties' })).not.toBeInTheDocument();
+  });
+
+  it('lets a view-only user see properties but not open the editor', async () => {
+    signInAs(mockUsers.propertyViewer);
+    server.use(http.get(apiPath('/admin/me'), () => HttpResponse.json(mockUsers.propertyViewer)));
+    const { router } = renderRoutes(routes, { initialPath: '/properties/1/edit' });
+
+    expect(await screen.findByRole('heading', { name: 'Access denied' })).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe('/unauthorized');
+  });
+
   it('collapses the desktop sidebar to icons and remembers it', async () => {
     signInAs(mockUsers.admin);
     const { user } = renderRoutes(routes, { initialPath: '/dashboard' });
