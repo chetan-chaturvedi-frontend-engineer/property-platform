@@ -28,6 +28,19 @@ const ActivityLogPage = lazy(() =>
 const UsersPage = lazy(() =>
   import('@/features/users/pages/UsersPage').then((m) => ({ default: m.UsersPage })),
 );
+const PropertiesPage = lazy(() =>
+  import('@/features/properties/pages/PropertiesPage').then((m) => ({ default: m.PropertiesPage })),
+);
+const PropertyDetailsPage = lazy(() =>
+  import('@/features/properties/pages/PropertyDetailsPage').then((m) => ({
+    default: m.PropertyDetailsPage,
+  })),
+);
+const PropertyWizardPage = lazy(() =>
+  import('@/features/properties/pages/PropertyWizardPage').then((m) => ({
+    default: m.PropertyWizardPage,
+  })),
+);
 const ProfilePage = lazy(() =>
   import('@/features/profile/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 );
@@ -80,6 +93,32 @@ export const routes: RouteObject[] = [
               {
                 element: <ProtectedRoute requiredPermissions={[PERMISSIONS.userList]} />,
                 children: [{ path: ROUTES.users, element: <UsersPage /> }],
+              },
+              {
+                element: <ProtectedRoute requiredPermissions={[PERMISSIONS.propertyListAny]} />,
+                children: [{ path: ROUTES.properties, element: <PropertiesPage /> }],
+              },
+              {
+                element: (
+                  <ProtectedRoute
+                    requiredPermissions={[PERMISSIONS.propertyCreate, PERMISSIONS.propertyViewAny]}
+                  />
+                ),
+                children: [{ path: ROUTES.propertyNew, element: <PropertyWizardPage /> }],
+              },
+              {
+                element: <ProtectedRoute requiredPermissions={[PERMISSIONS.propertyViewAny]} />,
+                children: [
+                  { path: `${ROUTES.properties}/:id`, element: <PropertyDetailsPage /> },
+                  {
+                    element: (
+                      <ProtectedRoute requiredPermissions={[PERMISSIONS.propertyUpdateAny]} />
+                    ),
+                    children: [
+                      { path: `${ROUTES.properties}/:id/edit`, element: <PropertyWizardPage /> },
+                    ],
+                  },
+                ],
               },
             ],
           },

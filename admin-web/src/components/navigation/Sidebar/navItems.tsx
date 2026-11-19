@@ -1,3 +1,4 @@
+import ApartmentOutlined from '@mui/icons-material/ApartmentOutlined';
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import GroupOutlined from '@mui/icons-material/GroupOutlined';
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
@@ -19,6 +20,12 @@ export const NAV_SECTIONS: readonly NavSection[] = [
         path: ROUTES.users,
         icon: <GroupOutlined />,
         requiredPermissions: [PERMISSIONS.userList],
+      },
+      {
+        label: 'Properties',
+        path: ROUTES.properties,
+        icon: <ApartmentOutlined />,
+        requiredPermissions: [PERMISSIONS.propertyListAny],
       },
     ],
   },

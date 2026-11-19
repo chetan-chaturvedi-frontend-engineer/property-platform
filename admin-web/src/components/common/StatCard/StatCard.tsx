@@ -3,7 +3,7 @@ import Skeleton from '@mui/material/Skeleton';
 import Typography from '@mui/material/Typography';
 import type { ReactNode } from 'react';
 
-export type StatCardTone = 'primary' | 'success' | 'warning' | 'neutral';
+export type StatCardTone = 'primary' | 'success' | 'warning' | 'error' | 'info' | 'neutral';
 
 /** Icon tile colors from the theme palette (primary scale and status colors). */
 const TONE_CLASSES: Record<StatCardTone, string> = {
@@ -12,6 +12,9 @@ const TONE_CLASSES: Record<StatCardTone, string> = {
     'bg-[rgba(var(--mui-palette-success-mainChannel)/0.12)] text-[var(--mui-palette-success-main)]',
   warning:
     'bg-[rgba(var(--mui-palette-warning-mainChannel)/0.12)] text-[var(--mui-palette-warning-main)]',
+  error:
+    'bg-[rgba(var(--mui-palette-error-mainChannel)/0.12)] text-[var(--mui-palette-error-main)]',
+  info: 'bg-[rgba(var(--mui-palette-info-mainChannel)/0.12)] text-[var(--mui-palette-info-main)]',
   neutral: 'bg-[var(--mui-palette-action-hover)] text-muted',
 };
 

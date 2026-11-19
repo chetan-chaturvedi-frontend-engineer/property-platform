@@ -2,6 +2,8 @@ import type { AdminSessionResponse, AdminUser } from '@/features/auth/types/auth
 import type { SystemLog, SystemLogLevel } from '@/features/dashboard/types/systemLog.types';
 import type { ManagedUser, UserStatus } from '@/features/users/types/user.types';
 
+import { buildProperties, type StoredProperty } from './propertyMockData';
+
 /** A `users` row as the mock stores it; the role is resolved from `roles` on every response. */
 export type StoredUser = Omit<ManagedUser, 'role'>;
 
@@ -41,6 +43,18 @@ const ADMIN_USER: AdminUser = {
     'USER_UPDATE',
     'USER_CHANGE_STATUS',
     'USER_DELETE',
+    // The seeded admin role's property module.
+    'PROPERTY_CREATE',
+    'PROPERTY_CREATE_WITHOUT_SUBSCRIPTION',
+    'PROPERTY_LIST_ANY',
+    'PROPERTY_VIEW_ANY',
+    'PROPERTY_UPDATE_ANY',
+    'PROPERTY_DELETE_ANY',
+    'PROPERTY_RESTORE_ANY',
+    'PROPERTY_REVIEW',
+    'PROPERTY_PUBLISH',
+    'PROPERTY_SUSPEND',
+    'PROPERTY_LEGAL_REVIEW',
   ],
 };
 
@@ -73,11 +87,22 @@ const EDITOR_USER: AdminUser = {
   permissions: ['ADMIN_PANEL_ACCESS', 'USER_LIST', 'USER_VIEW', 'USER_CREATE', 'USER_UPDATE'],
 };
 
+/** Browses properties but may not change them or act on the workflow. */
+const PROPERTY_VIEWER_USER: AdminUser = {
+  id: 6,
+  fullName: 'Vik Viewer',
+  email: 'viewer@example.com',
+  phone: null,
+  role: { slug: 'property-viewer', name: 'Property Viewer' },
+  permissions: ['ADMIN_PANEL_ACCESS', 'PROPERTY_LIST_ANY', 'PROPERTY_VIEW_ANY'],
+};
+
 export const mockUsers = {
   admin: ADMIN_USER,
   manager: MANAGER_USER,
   appUser: APP_USER,
   editor: EDITOR_USER,
+  propertyViewer: PROPERTY_VIEWER_USER,
 } as const;
 
 /** Mirrors the seeded roles plus two custom ones. Permissions match the sign-in accounts above. */
@@ -249,6 +274,7 @@ function createState() {
       [MANAGER_USER.email ?? '', { user: MANAGER_USER, password: MOCK_PASSWORD }],
       [APP_USER.email ?? '', { user: APP_USER, password: MOCK_PASSWORD }],
       [EDITOR_USER.email ?? '', { user: EDITOR_USER, password: MOCK_PASSWORD }],
+      [PROPERTY_VIEWER_USER.email ?? '', { user: PROPERTY_VIEWER_USER, password: MOCK_PASSWORD }],
     ]),
     jar: readJar(),
     csrfToken: 'mock-csrf-token-1',
@@ -257,6 +283,13 @@ function createState() {
     managedUsers: buildManagedUsers(33),
     roles: buildRoles(),
     nextUserId: 1000,
+    properties: buildProperties(26),
+    nextPropertyId: 500,
+    nextMediaId: 90_000,
+    nextApartmentId: 9_000,
+    nextPlaceId: 700,
+    /** Idempotency-Key -> created property id, per owner. */
+    createKeys: new Map<string, number>(),
   };
 }
 
@@ -373,5 +406,36 @@ export const mockDb = {
 
   deleteManagedUser(id: number): void {
     state.managedUsers = state.managedUsers.filter((user) => user.id !== id);
+  },
+
+  /** Every `property_projects` row, soft-deleted ones included. */
+  properties(): StoredProperty[] {
+    return state.properties;
+  },
+
+  findProperty(id: number): StoredProperty | undefined {
+    return state.properties.find((property) => property.id === id);
+  },
+
+  saveProperty(property: StoredProperty): void {
+    const exists = state.properties.some((row) => row.id === property.id);
+    state.properties = exists
+      ? state.properties.map((row) => (row.id === property.id ? property : row))
+      : [property, ...state.properties];
+  },
+
+  nextId(kind: 'property' | 'media' | 'apartment' | 'place'): number {
+    if (kind === 'property') return state.nextPropertyId++;
+    if (kind === 'media') return state.nextMediaId++;
+    if (kind === 'apartment') return state.nextApartmentId++;
+    return state.nextPlaceId++;
+  },
+
+  createdWithKey(key: string): number | undefined {
+    return state.createKeys.get(key);
+  },
+
+  rememberCreateKey(key: string, id: number): void {
+    state.createKeys.set(key, id);
   },
 };
