@@ -39,6 +39,8 @@ public class PropertyResponseMapper {
 
 	private static final String PRIVATE_BASE = "/api/v1/properties/";
 	private static final String PUBLIC_BASE = "/api/v1/public/properties/";
+	/** The admin dashboard's session cookie is only sent to /api/v1/admin, so its media URLs live there. */
+	private static final String ADMIN_BASE = "/api/v1/admin/properties/";
 
 	private final PropertyApartmentRepository apartmentRepository;
 	private final PropertyApartmentMediaRepository apartmentMediaRepository;
@@ -68,6 +70,12 @@ public class PropertyResponseMapper {
 				p.getProjectDescription(), copy(p.getProjectHighlights()),
 				amenityRepository.findLinkedToProject(p.getId()).stream().map(AmenityResponse::from).toList(),
 				projectMedia(p, base), p.getThreeDTourUrl(), nearbyPlaces(p), p.getPublishedAt());
+	}
+
+	/** Admin URL of a project photo: its external URL, or the admin content path of an uploaded file. */
+	public String toAdminMediaUrl(Long projectId, PropertyProjectMedia media) {
+		return media.getExternalUrl() != null ? media.getExternalUrl()
+				: ADMIN_BASE + projectId + "/media/" + media.getId() + "/content";
 	}
 
 	/** Public URL of a project photo: its external URL, or the public content path of an uploaded file. */
@@ -107,7 +115,7 @@ public class PropertyResponseMapper {
 	}
 
 	private PropertyResponse toResponse(PropertyProject p, boolean admin) {
-		String base = PRIVATE_BASE + p.getId();
+		String base = (admin ? ADMIN_BASE : PRIVATE_BASE) + p.getId();
 		UserSummary owner = admin ? userAccountService.findSummaries(List.of(p.getUserId())).get(p.getUserId()) : null;
 		List<StatusChangeResponse> history = statusChangeRepository
 			.findByPropertyProjectIdOrderByCreatedAtAscIdAsc(p.getId()).stream()
