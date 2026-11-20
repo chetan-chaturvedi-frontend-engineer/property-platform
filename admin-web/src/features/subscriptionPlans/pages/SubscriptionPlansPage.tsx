@@ -16,6 +16,7 @@ import Typography from '@mui/material/Typography';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
 
+import { ActiveFilterChips } from '@/components/common/ActiveFilterChips';
 import { BulkActionsBar } from '@/components/common/BulkActionsBar';
 import { Button } from '@/components/common/Button';
 import { DataTable } from '@/components/common/DataTable/DataTable';
@@ -24,7 +25,6 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { ROUTES, SEARCH_DEBOUNCE_MS, STORAGE_KEYS } from '@/utils/constants';
 import { formatNumber } from '@/utils/formatters';
 
-import { ActiveFilterChips } from '../components/ActiveFilterChips';
 import { buildPlanColumns } from '../components/planColumns';
 import { type ActivePlanDialog, PlanDialogs } from '../components/PlanDialogs';
 import { PlanFiltersPanel } from '../components/PlanFiltersPanel';

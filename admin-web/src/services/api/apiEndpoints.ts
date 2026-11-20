@@ -41,6 +41,14 @@ export const API_ENDPOINTS = {
     detail: (id: EntityId) => `/admin/subscription-plans/${id}`,
     status: (id: EntityId) => `/admin/subscription-plans/${id}/status`,
   },
+  banners: {
+    list: '/admin/banners',
+    detail: (id: EntityId) => `/admin/banners/${id}`,
+    image: (id: EntityId) => `/admin/banners/${id}/image`,
+  },
+  pages: {
+    list: '/admin/pages',
+  },
   properties: {
     list: '/admin/properties',
     stats: '/admin/properties/stats',
