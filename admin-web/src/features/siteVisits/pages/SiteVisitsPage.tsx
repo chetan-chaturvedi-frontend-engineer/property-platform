@@ -25,7 +25,7 @@ import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { ROUTES, SEARCH_DEBOUNCE_MS, STORAGE_KEYS } from '@/utils/constants';
 import { formatNumber } from '@/utils/formatters';
 
-import { BulkActionsBar } from '../components/BulkActionsBar';
+import { BulkActionsBar } from '@/components/common/BulkActionsBar';
 import { DonutChartCard } from '../components/DonutChartCard';
 import { QuickActionsCard, type QuickAction } from '../components/QuickActionsCard';
 import { RecentVisitsCard } from '../components/RecentVisitsCard';

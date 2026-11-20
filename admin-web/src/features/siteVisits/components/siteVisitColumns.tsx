@@ -22,7 +22,7 @@ import {
   userName,
 } from '../utils/siteVisitDisplay';
 
-import { type RowMenuAction, SiteVisitRowMenu } from './SiteVisitRowMenu';
+import { RowMenu, type RowMenuAction } from '@/components/common/RowMenu';
 import { SiteVisitStatusChip, SiteVisitTypeChip } from './SiteVisitStatusChip';
 
 /** Handlers for the row menu; only the actions the viewer is permitted to use are passed in. */
@@ -196,10 +196,7 @@ export function buildSiteVisitColumns(handlers: SiteVisitRowActions): SiteVisitC
       header: 'Action',
       align: 'right',
       cell: (visit) => (
-        <SiteVisitRowMenu
-          label={`Actions for ${visit.visitCode}`}
-          actions={rowActions(visit, handlers)}
-        />
+        <RowMenu label={`Actions for ${visit.visitCode}`} actions={rowActions(visit, handlers)} />
       ),
     },
   ];

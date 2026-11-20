@@ -17,14 +17,14 @@ export interface RowMenuAction {
   tone?: 'default' | 'danger';
 }
 
-interface SiteVisitRowMenuProps {
+interface RowMenuProps {
   /** Accessible name of the menu button, e.g. "Actions for SV-100012". */
   label: string;
   actions: readonly RowMenuAction[];
 }
 
 /** The three-dot action menu of a table row. Renders nothing when no action is available. */
-export function SiteVisitRowMenu({ label, actions }: SiteVisitRowMenuProps) {
+export function RowMenu({ label, actions }: RowMenuProps) {
   const [anchor, setAnchor] = useState<HTMLElement | null>(null);
   const menuId = useId();
   if (actions.length === 0) return null;

@@ -2,6 +2,7 @@ import { authHandlers } from './authHandlers';
 import { leadHandlers } from './leadHandlers';
 import { propertyHandlers } from './propertyHandlers';
 import { siteVisitHandlers } from './siteVisitHandlers';
+import { subscriptionPlanHandlers } from './subscriptionPlanHandlers';
 import { systemLogHandlers } from './systemLogHandlers';
 import { userHandlers } from './userHandlers';
 
@@ -12,4 +13,5 @@ export const handlers = [
   ...propertyHandlers,
   ...leadHandlers,
   ...siteVisitHandlers,
+  ...subscriptionPlanHandlers,
 ];

@@ -4,10 +4,12 @@ import type { ManagedUser, UserStatus } from '@/features/users/types/user.types'
 
 import type { Lead } from '@/features/leads/types/lead.types';
 import type { SiteVisit } from '@/features/siteVisits/types/siteVisit.types';
+import type { SubscriptionPlan } from '@/features/subscriptionPlans/types/subscriptionPlan.types';
 
 import { buildLeads } from './leadMockData';
 import { buildProperties, type StoredProperty } from './propertyMockData';
 import { buildSiteVisits } from './siteVisitMockData';
+import { buildSubscriptionPlans } from './subscriptionPlanMockData';
 
 /** A `users` row as the mock stores it; the role is resolved from `roles` on every response. */
 export type StoredUser = Omit<ManagedUser, 'role'>;
@@ -76,6 +78,12 @@ const ADMIN_USER: AdminUser = {
     'SITE_VISIT_ASSIGN_ANY',
     'SITE_VISIT_UPDATE_STATUS_ANY',
     'SITE_VISIT_SUBMIT_REPORT_ANY',
+    // The seeded admin role's subscription plan module.
+    'SUBSCRIPTION_PLAN_LIST',
+    'SUBSCRIPTION_PLAN_VIEW',
+    'SUBSCRIPTION_PLAN_CREATE',
+    'SUBSCRIPTION_PLAN_UPDATE',
+    'SUBSCRIPTION_PLAN_CHANGE_STATUS',
   ],
 };
 
@@ -138,6 +146,16 @@ const SITE_VISIT_VIEWER_USER: AdminUser = {
   permissions: ['ADMIN_PANEL_ACCESS', 'SITE_VISIT_LIST_ANY'],
 };
 
+/** Lists plans but may not open or change them. */
+const PLAN_VIEWER_USER: AdminUser = {
+  id: 9,
+  fullName: 'Pia Plans',
+  email: 'plans@example.com',
+  phone: null,
+  role: { slug: 'plan-viewer', name: 'Plan Viewer' },
+  permissions: ['ADMIN_PANEL_ACCESS', 'SUBSCRIPTION_PLAN_LIST'],
+};
+
 export const mockUsers = {
   admin: ADMIN_USER,
   manager: MANAGER_USER,
@@ -146,6 +164,7 @@ export const mockUsers = {
   propertyViewer: PROPERTY_VIEWER_USER,
   leadViewer: LEAD_VIEWER_USER,
   siteVisitViewer: SITE_VISIT_VIEWER_USER,
+  planViewer: PLAN_VIEWER_USER,
 } as const;
 
 /** Mirrors the seeded roles plus two custom ones. Permissions match the sign-in accounts above. */
@@ -323,6 +342,7 @@ function createState() {
         SITE_VISIT_VIEWER_USER.email ?? '',
         { user: SITE_VISIT_VIEWER_USER, password: MOCK_PASSWORD },
       ],
+      [PLAN_VIEWER_USER.email ?? '', { user: PLAN_VIEWER_USER, password: MOCK_PASSWORD }],
     ]),
     jar: readJar(),
     csrfToken: 'mock-csrf-token-1',
@@ -340,6 +360,8 @@ function createState() {
     nextLeadId: 1000,
     siteVisits: buildSiteVisits(36),
     nextSiteVisitId: 2000,
+    subscriptionPlans: buildSubscriptionPlans(),
+    nextPlanId: 100,
     /** Idempotency-Key -> created property id, per owner. */
     createKeys: new Map<string, number>(),
   };
@@ -529,6 +551,25 @@ export const mockDb = {
 
   nextSiteVisitId(): number {
     return state.nextSiteVisitId++;
+  },
+
+  subscriptionPlans(): SubscriptionPlan[] {
+    return state.subscriptionPlans;
+  },
+
+  findSubscriptionPlan(id: number): SubscriptionPlan | undefined {
+    return state.subscriptionPlans.find((plan) => plan.id === id);
+  },
+
+  saveSubscriptionPlan(plan: SubscriptionPlan): void {
+    const exists = state.subscriptionPlans.some((row) => row.id === plan.id);
+    state.subscriptionPlans = exists
+      ? state.subscriptionPlans.map((row) => (row.id === plan.id ? plan : row))
+      : [...state.subscriptionPlans, plan];
+  },
+
+  nextSubscriptionPlanId(): number {
+    return state.nextPlanId++;
   },
 
   createdWithKey(key: string): number | undefined {

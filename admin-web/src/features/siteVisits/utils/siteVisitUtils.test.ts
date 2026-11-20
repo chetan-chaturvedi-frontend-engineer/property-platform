@@ -1,7 +1,9 @@
 import type { SiteVisit } from '../types/siteVisit.types';
 
 import { calendarWeeks, monthRange, shiftMonth } from './calendar';
-import { csvCell, toSiteVisitCsv } from './siteVisitCsv';
+import { csvCell } from '@/utils/csv';
+
+import { toSiteVisitCsv } from './siteVisitCsv';
 import { addDays, isDue, propertyNow, scheduleError } from './siteVisitDisplay';
 import { toSiteVisitFormValues, toUpdateRequest } from './siteVisitForm';
 import { statusOptionsFor, transitionBlocker } from './siteVisitStatus';

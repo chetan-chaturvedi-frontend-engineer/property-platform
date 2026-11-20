@@ -2,10 +2,11 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 
 import { toApiError } from '@/services/api/apiError';
 import { notify } from '@/store/notificationStore';
+import { downloadCsv } from '@/utils/csv';
 
 import { siteVisitService } from '../services/siteVisitService';
 import type { SiteVisitFilters } from '../types/siteVisit.types';
-import { downloadCsv, toSiteVisitCsv } from '../utils/siteVisitCsv';
+import { toSiteVisitCsv } from '../utils/siteVisitCsv';
 import { propertyNow } from '../utils/siteVisitDisplay';
 
 /** Rows per export; there is no export endpoint, so rows are fetched page by page (100 each). */

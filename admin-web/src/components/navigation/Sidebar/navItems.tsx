@@ -3,6 +3,7 @@ import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import EventAvailableOutlined from '@mui/icons-material/EventAvailableOutlined';
 import GroupOutlined from '@mui/icons-material/GroupOutlined';
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
+import Inventory2Outlined from '@mui/icons-material/Inventory2Outlined';
 import PersonOutline from '@mui/icons-material/PersonOutline';
 import SupportAgentOutlined from '@mui/icons-material/SupportAgentOutlined';
 
@@ -40,6 +41,12 @@ export const NAV_SECTIONS: readonly NavSection[] = [
         path: ROUTES.siteVisits,
         icon: <EventAvailableOutlined />,
         requiredPermissions: [PERMISSIONS.siteVisitListAny],
+      },
+      {
+        label: 'Packages & plans',
+        path: ROUTES.subscriptionPlans,
+        icon: <Inventory2Outlined />,
+        requiredPermissions: [PERMISSIONS.subscriptionPlanList],
       },
     ],
   },
