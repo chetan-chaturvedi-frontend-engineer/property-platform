@@ -3,9 +3,17 @@ package com.propertypro.property_platform.lead.api;
 import com.propertypro.property_platform.activitylog.web.SystemLogged;
 import com.propertypro.property_platform.common.web.PageResponse;
 import com.propertypro.property_platform.config.OpenApiConfig;
+import com.propertypro.property_platform.lead.dto.AssignLeadRequest;
+import com.propertypro.property_platform.lead.dto.CreateLeadRequest;
 import com.propertypro.property_platform.lead.dto.LeadFilter;
+import com.propertypro.property_platform.lead.dto.LeadResponse;
+import com.propertypro.property_platform.lead.dto.LeadStatsResponse;
 import com.propertypro.property_platform.lead.dto.LeadSummaryResponse;
+import com.propertypro.property_platform.lead.dto.UpdateLeadRequest;
 import com.propertypro.property_platform.lead.service.LeadService;
+import com.propertypro.property_platform.security.CurrentActor;
+import com.propertypro.property_platform.security.ratelimit.RateLimitProperties;
+import com.propertypro.property_platform.security.ratelimit.RateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -14,16 +22,25 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.SortDefault;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
  * Admin dashboard: every lead. {@code ADMIN_PANEL_ACCESS} is required for the whole path by
- * {@code SecurityConfig}. Details, edits, assignment, schedules and interactions use
- * {@code /api/v1/leads/{id}/...} with the {@code _ANY} and lead permissions.
+ * {@code SecurityConfig}. The dashboard's session cookie is only sent to {@code /api/v1/admin}, so the
+ * lead endpoints of {@link LeadController} are mirrored here over the same service: permissions,
+ * ownership, validation, status rules and rate limits are identical.
  */
 @RestController
 @RequestMapping(path = "/api/v1/admin/leads", produces = MediaType.APPLICATION_JSON_VALUE)
@@ -33,6 +50,8 @@ import org.springframework.web.bind.annotation.RestController;
 public class AdminLeadController {
 
 	private final LeadService leadService;
+	private final RateLimiter rateLimiter;
+	private final RateLimitProperties limits;
 
 	@Operation(summary = "List all leads", description = "Same filters and sorting as GET /api/v1/leads.")
 	@GetMapping
@@ -41,6 +60,50 @@ public class AdminLeadController {
 	public PageResponse<LeadSummaryResponse> list(@Valid LeadFilter filter,
 			@SortDefault(sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable) {
 		return leadService.listAll(filter, pageable);
+	}
+
+	@Operation(summary = "Counts per status and source", description = """
+			Non-deleted leads in total, per status and per source (every value present, 0 when none).""")
+	@GetMapping("/stats")
+	@PreAuthorize("hasAuthority('LEAD_LIST_ANY')")
+	public LeadStatsResponse stats() {
+		return leadService.stats();
+	}
+
+	@Operation(summary = "Create a lead", description = "As POST /api/v1/leads: LEAD_CREATE, assignedTo also needs LEAD_ASSIGN.")
+	@PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
+	@ResponseStatus(HttpStatus.CREATED)
+	public LeadResponse create(CurrentActor actor, @Valid @RequestBody CreateLeadRequest request) {
+		rateLimiter.acquire("lead:create:user:" + actor.userId(), limits.leadCreateUser());
+		return leadService.create(actor, request);
+	}
+
+	@Operation(summary = "Lead details (LEAD_VIEW own, LEAD_VIEW_ANY any)")
+	@GetMapping("/{id}")
+	public LeadResponse get(CurrentActor actor, @PathVariable Long id) {
+		return leadService.get(id, actor);
+	}
+
+	@Operation(summary = "Update fields (LEAD_UPDATE own, LEAD_UPDATE_ANY any)", description = "As PATCH /api/v1/leads/{id}.")
+	@PatchMapping(path = "/{id}", consumes = MediaType.APPLICATION_JSON_VALUE)
+	public LeadResponse update(CurrentActor actor, @PathVariable Long id, @Valid @RequestBody UpdateLeadRequest request) {
+		rateLimiter.acquire("lead:write:user:" + actor.userId(), limits.leadWriteUser());
+		return leadService.update(id, actor, request);
+	}
+
+	@Operation(summary = "Delete (soft delete; LEAD_DELETE creator, LEAD_DELETE_ANY any)")
+	@DeleteMapping("/{id}")
+	public ResponseEntity<Void> delete(CurrentActor actor, @PathVariable Long id) {
+		rateLimiter.acquire("lead:write:user:" + actor.userId(), limits.leadWriteUser());
+		leadService.delete(id, actor);
+		return ResponseEntity.noContent().build();
+	}
+
+	@Operation(summary = "Assign or unassign (LEAD_ASSIGN)", description = "As PATCH /api/v1/leads/{id}/assign.")
+	@PatchMapping(path = "/{id}/assign", consumes = MediaType.APPLICATION_JSON_VALUE)
+	public LeadResponse assign(CurrentActor actor, @PathVariable Long id, @Valid @RequestBody AssignLeadRequest request) {
+		rateLimiter.acquire("lead:write:user:" + actor.userId(), limits.leadWriteUser());
+		return leadService.assign(id, actor, request);
 	}
 
 }

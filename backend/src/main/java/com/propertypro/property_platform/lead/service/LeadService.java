@@ -17,6 +17,7 @@ import com.propertypro.property_platform.lead.dto.AssignLeadRequest;
 import com.propertypro.property_platform.lead.dto.CreateLeadRequest;
 import com.propertypro.property_platform.lead.dto.LeadFilter;
 import com.propertypro.property_platform.lead.dto.LeadResponse;
+import com.propertypro.property_platform.lead.dto.LeadStatsResponse;
 import com.propertypro.property_platform.lead.dto.LeadSummaryResponse;
 import com.propertypro.property_platform.lead.dto.UpdateLeadRequest;
 import com.propertypro.property_platform.lead.exception.LeadExceptions;
@@ -40,9 +41,11 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -148,6 +151,26 @@ public class LeadService {
 	@Transactional(readOnly = true)
 	public PageResponse<LeadSummaryResponse> listAll(LeadFilter filter, Pageable pageable) {
 		return page(matching(filter), pageable);
+	}
+
+	/** Counts per status and source over every lead; requires {@code LEAD_LIST_ANY} (checked by the controller). */
+	@Transactional(readOnly = true)
+	public LeadStatsResponse stats() {
+		Map<String, Long> byStatus = new LinkedHashMap<>();
+		for (LeadStatus status : LeadStatus.values()) {
+			byStatus.put(status.getValue(), 0L);
+		}
+		Map<String, Long> bySource = new LinkedHashMap<>();
+		for (LeadSource source : LeadSource.values()) {
+			bySource.put(source.getValue(), 0L);
+		}
+		long total = 0;
+		for (LeadRepository.StatusSourceCount count : leadRepository.countByStatusAndSource()) {
+			total += count.getTotal();
+			byStatus.merge(count.getStatus().getValue(), count.getTotal(), Long::sum);
+			bySource.merge(count.getSource().getValue(), count.getTotal(), Long::sum);
+		}
+		return new LeadStatsResponse(total, byStatus, bySource);
 	}
 
 	@Transactional

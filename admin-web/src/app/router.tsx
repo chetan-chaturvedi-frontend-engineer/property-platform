@@ -41,6 +41,12 @@ const PropertyWizardPage = lazy(() =>
     default: m.PropertyWizardPage,
   })),
 );
+const LeadsPage = lazy(() =>
+  import('@/features/leads/pages/LeadsPage').then((m) => ({ default: m.LeadsPage })),
+);
+const LeadDetailsPage = lazy(() =>
+  import('@/features/leads/pages/LeadDetailsPage').then((m) => ({ default: m.LeadDetailsPage })),
+);
 const ProfilePage = lazy(() =>
   import('@/features/profile/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 );
@@ -93,6 +99,15 @@ export const routes: RouteObject[] = [
               {
                 element: <ProtectedRoute requiredPermissions={[PERMISSIONS.userList]} />,
                 children: [{ path: ROUTES.users, element: <UsersPage /> }],
+              },
+              {
+                // The list is the admin view of every lead; a lead's own permissions (view own or
+                // any) are checked by the backend on the details route.
+                element: <ProtectedRoute requiredPermissions={[PERMISSIONS.leadListAny]} />,
+                children: [
+                  { path: ROUTES.leads, element: <LeadsPage /> },
+                  { path: `${ROUTES.leads}/:id`, element: <LeadDetailsPage /> },
+                ],
               },
               {
                 element: <ProtectedRoute requiredPermissions={[PERMISSIONS.propertyListAny]} />,

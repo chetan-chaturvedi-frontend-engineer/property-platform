@@ -22,6 +22,12 @@ export const API_ENDPOINTS = {
     roles: '/admin/users/roles',
     detail: (id: EntityId) => `/admin/users/${id}`,
   },
+  leads: {
+    list: '/admin/leads',
+    stats: '/admin/leads/stats',
+    detail: (id: EntityId) => `/admin/leads/${id}`,
+    assign: (id: EntityId) => `/admin/leads/${id}/assign`,
+  },
   properties: {
     list: '/admin/properties',
     stats: '/admin/properties/stats',

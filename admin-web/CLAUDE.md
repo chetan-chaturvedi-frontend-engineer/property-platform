@@ -31,6 +31,7 @@ npm run typecheck && npm run lint && npm test && npm run build   # all must pass
   to `VITE_*` variables.
 - Lazy-load pages in `app/router.tsx`. Prefer MUI components for widgets, Tailwind for layout/spacing.
 - No `any`. Named exports. Comments only where intent is not obvious.
+- Components must be reusable; follow the React best practices in `src/CLAUDE.md`.
 
 ## Tests
 

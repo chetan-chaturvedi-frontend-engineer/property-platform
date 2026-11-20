@@ -2,6 +2,9 @@ import type { AdminSessionResponse, AdminUser } from '@/features/auth/types/auth
 import type { SystemLog, SystemLogLevel } from '@/features/dashboard/types/systemLog.types';
 import type { ManagedUser, UserStatus } from '@/features/users/types/user.types';
 
+import type { Lead } from '@/features/leads/types/lead.types';
+
+import { buildLeads } from './leadMockData';
 import { buildProperties, type StoredProperty } from './propertyMockData';
 
 /** A `users` row as the mock stores it; the role is resolved from `roles` on every response. */
@@ -55,6 +58,13 @@ const ADMIN_USER: AdminUser = {
     'PROPERTY_PUBLISH',
     'PROPERTY_SUSPEND',
     'PROPERTY_LEGAL_REVIEW',
+    // The seeded admin role's lead module.
+    'LEAD_CREATE',
+    'LEAD_LIST_ANY',
+    'LEAD_VIEW_ANY',
+    'LEAD_UPDATE_ANY',
+    'LEAD_DELETE_ANY',
+    'LEAD_ASSIGN',
   ],
 };
 
@@ -97,12 +107,23 @@ const PROPERTY_VIEWER_USER: AdminUser = {
   permissions: ['ADMIN_PANEL_ACCESS', 'PROPERTY_LIST_ANY', 'PROPERTY_VIEW_ANY'],
 };
 
+/** Browses every lead but may not change them. */
+const LEAD_VIEWER_USER: AdminUser = {
+  id: 7,
+  fullName: 'Lia Leads',
+  email: 'leads@example.com',
+  phone: null,
+  role: { slug: 'lead-viewer', name: 'Lead Viewer' },
+  permissions: ['ADMIN_PANEL_ACCESS', 'LEAD_LIST_ANY', 'LEAD_VIEW_ANY'],
+};
+
 export const mockUsers = {
   admin: ADMIN_USER,
   manager: MANAGER_USER,
   appUser: APP_USER,
   editor: EDITOR_USER,
   propertyViewer: PROPERTY_VIEWER_USER,
+  leadViewer: LEAD_VIEWER_USER,
 } as const;
 
 /** Mirrors the seeded roles plus two custom ones. Permissions match the sign-in accounts above. */
@@ -275,6 +296,7 @@ function createState() {
       [APP_USER.email ?? '', { user: APP_USER, password: MOCK_PASSWORD }],
       [EDITOR_USER.email ?? '', { user: EDITOR_USER, password: MOCK_PASSWORD }],
       [PROPERTY_VIEWER_USER.email ?? '', { user: PROPERTY_VIEWER_USER, password: MOCK_PASSWORD }],
+      [LEAD_VIEWER_USER.email ?? '', { user: LEAD_VIEWER_USER, password: MOCK_PASSWORD }],
     ]),
     jar: readJar(),
     csrfToken: 'mock-csrf-token-1',
@@ -288,6 +310,8 @@ function createState() {
     nextMediaId: 90_000,
     nextApartmentId: 9_000,
     nextPlaceId: 700,
+    leads: buildLeads(28),
+    nextLeadId: 1000,
     /** Idempotency-Key -> created property id, per owner. */
     createKeys: new Map<string, number>(),
   };
@@ -429,6 +453,30 @@ export const mockDb = {
     if (kind === 'media') return state.nextMediaId++;
     if (kind === 'apartment') return state.nextApartmentId++;
     return state.nextPlaceId++;
+  },
+
+  /** `leads` rows that are not soft-deleted. */
+  leads(): Lead[] {
+    return state.leads;
+  },
+
+  findLead(id: number): Lead | undefined {
+    return state.leads.find((lead) => lead.id === id);
+  },
+
+  saveLead(lead: Lead): void {
+    const exists = state.leads.some((row) => row.id === lead.id);
+    state.leads = exists
+      ? state.leads.map((row) => (row.id === lead.id ? lead : row))
+      : [lead, ...state.leads];
+  },
+
+  deleteLead(id: number): void {
+    state.leads = state.leads.filter((lead) => lead.id !== id);
+  },
+
+  nextLeadId(): number {
+    return state.nextLeadId++;
   },
 
   createdWithKey(key: string): number | undefined {
