@@ -35,6 +35,26 @@
     height: auto;
   }
 
+  /* Printing a panel marked data-print-root (e.g. site visit details) prints only that panel. Dialogs
+     and drawers are portals directly under <body>, so every other top-level element is hidden. */
+  @media print {
+    body:has([data-print-root]) > :not(:has([data-print-root])) {
+      display: none !important;
+    }
+    body:has([data-print-root]) .MuiBackdrop-root,
+    [data-print-hide] {
+      display: none !important;
+    }
+    body:has([data-print-root]) .MuiDrawer-paper {
+      position: static !important;
+      box-shadow: none !important;
+      overflow: visible !important;
+    }
+    [data-print-root] {
+      width: 100% !important;
+    }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     *,
     ::before,

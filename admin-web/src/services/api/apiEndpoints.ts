@@ -28,6 +28,14 @@ export const API_ENDPOINTS = {
     detail: (id: EntityId) => `/admin/leads/${id}`,
     assign: (id: EntityId) => `/admin/leads/${id}/assign`,
   },
+  siteVisits: {
+    list: '/admin/site-visits',
+    stats: '/admin/site-visits/stats',
+    detail: (id: EntityId) => `/admin/site-visits/${id}`,
+    assign: (id: EntityId) => `/admin/site-visits/${id}/assign`,
+    status: (id: EntityId) => `/admin/site-visits/${id}/status`,
+    report: (id: EntityId) => `/admin/site-visits/${id}/report`,
+  },
   properties: {
     list: '/admin/properties',
     stats: '/admin/properties/stats',

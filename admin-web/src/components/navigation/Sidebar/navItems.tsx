@@ -1,5 +1,6 @@
 import ApartmentOutlined from '@mui/icons-material/ApartmentOutlined';
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
+import EventAvailableOutlined from '@mui/icons-material/EventAvailableOutlined';
 import GroupOutlined from '@mui/icons-material/GroupOutlined';
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
 import PersonOutline from '@mui/icons-material/PersonOutline';
@@ -33,6 +34,12 @@ export const NAV_SECTIONS: readonly NavSection[] = [
         path: ROUTES.leads,
         icon: <SupportAgentOutlined />,
         requiredPermissions: [PERMISSIONS.leadListAny],
+      },
+      {
+        label: 'Site visits',
+        path: ROUTES.siteVisits,
+        icon: <EventAvailableOutlined />,
+        requiredPermissions: [PERMISSIONS.siteVisitListAny],
       },
     ],
   },
