@@ -75,6 +75,30 @@ in the client. Dates (`moveInDate`) are `yyyy-MM-dd`. Errors are RFC 9457 proble
 | DELETE | `/leads/{id}` | `LEAD_DELETE` creator / `LEAD_DELETE_ANY` | soft delete (204) |
 | PATCH | `/leads/{id}/assign` | `LEAD_ASSIGN` + visible lead | `{"assignedTo": 12}`; `null` unassigns |
 | GET | `/admin/leads` | `ADMIN_PANEL_ACCESS` + `LEAD_LIST_ANY` | all leads (same parameters) |
+| GET | `/admin/leads/stats` | `ADMIN_PANEL_ACCESS` + `LEAD_LIST_ANY` | counts per status and source |
+
+### Admin dashboard routes
+
+The admin dashboard's session cookie is only sent to `/api/v1/admin/**`, so the lead endpoints are
+mirrored there over the same service. Permissions, ownership (404 for leads out of scope), validation,
+status rules and rate limits are identical to the `/leads` routes; cookie requests that change state
+need the CSRF header (see `admin-auth.md`). Every route also needs `ADMIN_PANEL_ACCESS`.
+
+| Method | Path | Same as |
+|---|---|---|
+| POST | `/admin/leads` | `POST /leads` (201) |
+| GET | `/admin/leads/{id}` | `GET /leads/{id}` |
+| PATCH | `/admin/leads/{id}` | `PATCH /leads/{id}` |
+| DELETE | `/admin/leads/{id}` | `DELETE /leads/{id}` (204) |
+| PATCH | `/admin/leads/{id}/assign` | `PATCH /leads/{id}/assign` |
+
+`GET /admin/leads/stats` counts non-deleted leads; every status and source is a key (0 when none), and
+each map adds up to `total`:
+
+```json
+{ "total": 256, "byStatus": { "new": 78, "contacted": 40, "...": 0, "converted": 52, "lost": 30 },
+  "bySource": { "website": 96, "facebook": 28, "...": 0, "other": 12 } }
+```
 
 ### Fields
 

@@ -1,6 +1,8 @@
 package com.propertypro.property_platform.lead.repository;
 
 import com.propertypro.property_platform.lead.domain.Lead;
+import com.propertypro.property_platform.lead.domain.LeadSource;
+import com.propertypro.property_platform.lead.domain.LeadStatus;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -20,5 +22,19 @@ public interface LeadRepository extends JpaRepository<Lead, Long>, JpaSpecificat
 	@Lock(LockModeType.PESSIMISTIC_WRITE)
 	@Query("select l from Lead l where l.id = :id")
 	Optional<Lead> findByIdForUpdate(Long id);
+
+	/** Non-deleted leads per status and source, for the admin dashboard counts. */
+	@Query("select l.status as status, l.source as source, count(l) as total from Lead l group by l.status, l.source")
+	List<StatusSourceCount> countByStatusAndSource();
+
+	interface StatusSourceCount {
+
+		LeadStatus getStatus();
+
+		LeadSource getSource();
+
+		long getTotal();
+
+	}
 
 }
