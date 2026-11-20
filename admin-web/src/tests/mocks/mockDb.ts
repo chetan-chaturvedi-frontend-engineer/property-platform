@@ -6,6 +6,7 @@ import type { Lead } from '@/features/leads/types/lead.types';
 import type { SiteVisit } from '@/features/siteVisits/types/siteVisit.types';
 import type { SubscriptionPlan } from '@/features/subscriptionPlans/types/subscriptionPlan.types';
 
+import { buildBanners, type StoredBanner } from './bannerMockData';
 import { buildLeads } from './leadMockData';
 import { buildProperties, type StoredProperty } from './propertyMockData';
 import { buildSiteVisits } from './siteVisitMockData';
@@ -84,6 +85,14 @@ const ADMIN_USER: AdminUser = {
     'SUBSCRIPTION_PLAN_CREATE',
     'SUBSCRIPTION_PLAN_UPDATE',
     'SUBSCRIPTION_PLAN_CHANGE_STATUS',
+    // The seeded admin role's banner module (V202610251710__grant_banner_permissions).
+    'BANNER_LIST',
+    'BANNER_VIEW',
+    'BANNER_CREATE',
+    'BANNER_UPDATE',
+    'BANNER_CHANGE_STATUS',
+    'BANNER_DELETE',
+    'PAGE_VIEW',
   ],
 };
 
@@ -156,6 +165,22 @@ const PLAN_VIEWER_USER: AdminUser = {
   permissions: ['ADMIN_PANEL_ACCESS', 'SUBSCRIPTION_PLAN_LIST'],
 };
 
+/** Creates and edits banners, but may neither change their status nor delete them. */
+const BANNER_EDITOR_USER: AdminUser = {
+  id: 10,
+  fullName: 'Bea Banners',
+  email: 'banners@example.com',
+  phone: null,
+  role: { slug: 'banner-editor', name: 'Banner Editor' },
+  permissions: [
+    'ADMIN_PANEL_ACCESS',
+    'BANNER_LIST',
+    'BANNER_VIEW',
+    'BANNER_CREATE',
+    'BANNER_UPDATE',
+  ],
+};
+
 export const mockUsers = {
   admin: ADMIN_USER,
   manager: MANAGER_USER,
@@ -165,6 +190,7 @@ export const mockUsers = {
   leadViewer: LEAD_VIEWER_USER,
   siteVisitViewer: SITE_VISIT_VIEWER_USER,
   planViewer: PLAN_VIEWER_USER,
+  bannerEditor: BANNER_EDITOR_USER,
 } as const;
 
 /** Mirrors the seeded roles plus two custom ones. Permissions match the sign-in accounts above. */
@@ -343,6 +369,7 @@ function createState() {
         { user: SITE_VISIT_VIEWER_USER, password: MOCK_PASSWORD },
       ],
       [PLAN_VIEWER_USER.email ?? '', { user: PLAN_VIEWER_USER, password: MOCK_PASSWORD }],
+      [BANNER_EDITOR_USER.email ?? '', { user: BANNER_EDITOR_USER, password: MOCK_PASSWORD }],
     ]),
     jar: readJar(),
     csrfToken: 'mock-csrf-token-1',
@@ -362,9 +389,17 @@ function createState() {
     nextSiteVisitId: 2000,
     subscriptionPlans: buildSubscriptionPlans(),
     nextPlanId: 100,
+    ...bannerState(),
+    nextBannerId: 100,
+    nextLogId: 10_000,
     /** Idempotency-Key -> created property id, per owner. */
     createKeys: new Map<string, number>(),
   };
+}
+
+function bannerState() {
+  const { banners, images } = buildBanners();
+  return { banners, deletedBannerIds: new Set<number>(), bannerImages: images };
 }
 
 let state = createState();
@@ -570,6 +605,67 @@ export const mockDb = {
 
   nextSubscriptionPlanId(): number {
     return state.nextPlanId++;
+  },
+
+  /** Banners that are not soft-deleted. */
+  banners(): StoredBanner[] {
+    return state.banners.filter((banner) => !state.deletedBannerIds.has(banner.id));
+  },
+
+  findBanner(id: number): StoredBanner | undefined {
+    return this.banners().find((banner) => banner.id === id);
+  },
+
+  saveBanner(banner: StoredBanner): void {
+    const exists = state.banners.some((row) => row.id === banner.id);
+    state.banners = exists
+      ? state.banners.map((row) => (row.id === banner.id ? banner : row))
+      : [...state.banners, banner];
+  },
+
+  /** Soft delete: the row and its image stay, the banner is hidden everywhere. */
+  softDeleteBanner(id: number): void {
+    state.deletedBannerIds.add(id);
+  },
+
+  nextBannerId(): number {
+    return state.nextBannerId++;
+  },
+
+  bannerImage(fileName: string): Uint8Array | undefined {
+    return state.bannerImages.get(fileName);
+  },
+
+  storeBannerImage(fileName: string, bytes: Uint8Array): void {
+    state.bannerImages.set(fileName, bytes);
+  },
+
+  /** Appends an audit entry, as the backend's SystemLogInterceptor does for every admin write. */
+  recordLog(entry: Pick<SystemLog, 'module' | 'action' | 'referenceId' | 'referenceType'>): void {
+    const user = this.sessionUser();
+    state.logs = [
+      {
+        id: state.nextLogId++,
+        user: user
+          ? {
+              ...user,
+              status: 'active',
+              userType: user.role.slug,
+              deleted: false,
+              createdAt: '2026-10-01T08:00:00Z',
+            }
+          : null,
+        logLevel: 'success',
+        ipAddress: '203.0.113.5',
+        userAgent: 'Mozilla/5.0',
+        requestMethod: 'POST',
+        requestUrl: `/api/v1/admin/${entry.module}`,
+        additionalData: null,
+        createdAt: new Date().toISOString(),
+        ...entry,
+      },
+      ...state.logs,
+    ];
   },
 
   createdWithKey(key: string): number | undefined {

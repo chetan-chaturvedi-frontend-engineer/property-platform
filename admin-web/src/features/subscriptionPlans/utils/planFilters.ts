@@ -1,3 +1,5 @@
+import type { FilterChip } from '@/components/common/ActiveFilterChips';
+
 import type { BillingInterval } from '../types/subscriptionPlan.types';
 
 import { BILLING_INTERVAL_LABELS } from './planDisplay';
@@ -33,12 +35,6 @@ export const SORT_OPTIONS = [
   { value: 'createdAt,asc', label: 'Oldest first' },
   { value: 'updatedAt,desc', label: 'Recently updated' },
 ] as const;
-
-export interface FilterChip {
-  key: string;
-  label: string;
-  onRemove: () => void;
-}
 
 /**
  * The applied panel filters as chips; `remove` receives the URL keys to drop. A range is one chip, so

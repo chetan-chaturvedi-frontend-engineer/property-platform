@@ -57,6 +57,12 @@ const SubscriptionPlansPage = lazy(() =>
     default: m.SubscriptionPlansPage,
   })),
 );
+const BannersPage = lazy(() =>
+  import('@/features/banners/pages/BannersPage').then((m) => ({ default: m.BannersPage })),
+);
+const BannerFormPage = lazy(() =>
+  import('@/features/banners/pages/BannerFormPage').then((m) => ({ default: m.BannerFormPage })),
+);
 const ProfilePage = lazy(() =>
   import('@/features/profile/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 );
@@ -128,6 +134,25 @@ export const routes: RouteObject[] = [
                   <ProtectedRoute requiredPermissions={[PERMISSIONS.subscriptionPlanList]} />
                 ),
                 children: [{ path: ROUTES.subscriptionPlans, element: <SubscriptionPlansPage /> }],
+              },
+              {
+                element: <ProtectedRoute requiredPermissions={[PERMISSIONS.bannerList]} />,
+                children: [
+                  { path: ROUTES.banners, element: <BannersPage /> },
+                  {
+                    element: <ProtectedRoute requiredPermissions={[PERMISSIONS.bannerCreate]} />,
+                    children: [{ path: ROUTES.bannerNew, element: <BannerFormPage /> }],
+                  },
+                  {
+                    // The form loads the banner first, which needs the view permission.
+                    element: (
+                      <ProtectedRoute
+                        requiredPermissions={[PERMISSIONS.bannerUpdate, PERMISSIONS.bannerView]}
+                      />
+                    ),
+                    children: [{ path: `${ROUTES.banners}/:id/edit`, element: <BannerFormPage /> }],
+                  },
+                ],
               },
               {
                 element: <ProtectedRoute requiredPermissions={[PERMISSIONS.propertyListAny]} />,

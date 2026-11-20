@@ -21,11 +21,15 @@ export const systemLogHandlers = [
     const size = Math.min(Number(params.get('size') ?? 20), 100);
     const module = params.get('module');
     const logLevel = params.get('logLevel');
+    const referenceId = params.get('referenceId');
 
     const filtered = mockDb
       .logs()
       .filter(
-        (log) => (!module || log.module === module) && (!logLevel || log.logLevel === logLevel),
+        (log) =>
+          (!module || log.module === module) &&
+          (!logLevel || log.logLevel === logLevel) &&
+          (!referenceId || String(log.referenceId) === referenceId),
       );
     const body: PageResponse<SystemLog> = {
       content: filtered.slice(page * size, page * size + size),

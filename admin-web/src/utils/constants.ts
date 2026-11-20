@@ -10,6 +10,8 @@ export const ROUTES = {
   leads: '/leads',
   siteVisits: '/site-visits',
   subscriptionPlans: '/packages-plans',
+  banners: '/banners',
+  bannerNew: '/banners/new',
   profile: '/profile',
   unauthorized: '/unauthorized',
 } as const;
@@ -60,6 +62,13 @@ export const PERMISSIONS = {
   subscriptionPlanCreate: 'SUBSCRIPTION_PLAN_CREATE',
   subscriptionPlanUpdate: 'SUBSCRIPTION_PLAN_UPDATE',
   subscriptionPlanChangeStatus: 'SUBSCRIPTION_PLAN_CHANGE_STATUS',
+  bannerList: 'BANNER_LIST',
+  bannerView: 'BANNER_VIEW',
+  bannerCreate: 'BANNER_CREATE',
+  bannerUpdate: 'BANNER_UPDATE',
+  bannerChangeStatus: 'BANNER_CHANGE_STATUS',
+  bannerDelete: 'BANNER_DELETE',
+  pageView: 'PAGE_VIEW',
 } as const;
 
 /** Property routes with an id. */
@@ -67,6 +76,12 @@ export const propertyRoutes = {
   detail: (id: number) => `${ROUTES.properties}/${id}`,
   edit: (id: number, step?: number) =>
     `${ROUTES.properties}/${id}/edit${step ? `?step=${step}` : ''}`,
+} as const;
+
+/** Banner routes with an id. `duplicate` opens the create form prefilled from that banner. */
+export const bannerRoutes = {
+  edit: (id: number) => `${ROUTES.banners}/${id}/edit`,
+  duplicate: (id: number) => `${ROUTES.bannerNew}?from=${id}`,
 } as const;
 
 /** Lead routes with an id. */
@@ -81,6 +96,7 @@ export const STORAGE_KEYS = {
   leadsPageSize: 'admin-web:leads-page-size',
   siteVisitsPageSize: 'admin-web:site-visits-page-size',
   subscriptionPlansPageSize: 'admin-web:subscription-plans-page-size',
+  bannersPageSize: 'admin-web:banners-page-size',
   sidebarCollapsed: 'admin-web:sidebar-collapsed',
 } as const;
 

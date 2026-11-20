@@ -2,7 +2,12 @@ import Cancel from '@mui/icons-material/Cancel';
 import Chip from '@mui/material/Chip';
 import Typography from '@mui/material/Typography';
 
-import type { FilterChip } from '../utils/planFilters';
+/** One applied filter; removing it clears every URL key it covers. */
+export interface FilterChip {
+  key: string;
+  label: string;
+  onRemove: () => void;
+}
 
 interface ActiveFilterChipsProps {
   filters: readonly FilterChip[];
