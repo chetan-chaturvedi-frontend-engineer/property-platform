@@ -9,10 +9,9 @@ import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
 import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 
+import { FormSection } from '@/components/common/FormSection';
+import { ImageThumbnail } from '@/components/common/ImageThumbnail';
 import { cn } from '@/utils/helpers';
-
-import { BannerThumbnail } from './BannerThumbnail';
-import { FormSection } from './FormSection';
 
 type Device = 'desktop' | 'mobile';
 
@@ -69,7 +68,7 @@ export function BannerLivePreview({
         role="figure"
       >
         {imageSrc ? (
-          <BannerThumbnail src={imageSrc} alt={alt} className="w-full shadow-sm" eager />
+          <ImageThumbnail src={imageSrc} alt={alt} className="w-full shadow-sm" eager />
         ) : (
           <div className="flex aspect-[16/5] w-full flex-col items-center justify-center gap-1 rounded-lg bg-gradient-to-r from-primary-100 to-primary-50 px-4 text-center text-primary-800 dark:from-primary-500/20 dark:to-primary-500/5 dark:text-primary-200">
             <ImageOutlined aria-hidden />

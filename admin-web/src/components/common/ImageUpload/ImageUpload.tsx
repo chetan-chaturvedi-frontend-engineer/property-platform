@@ -8,15 +8,17 @@ import Typography from '@mui/material/Typography';
 import { type ChangeEvent, type DragEvent, useId, useRef, useState } from 'react';
 
 import { Button } from '@/components/common/Button';
+import { ImageThumbnail } from '@/components/common/ImageThumbnail';
 import { formatBytes } from '@/utils/formatters';
 import { cn } from '@/utils/helpers';
+import type { ImageDimensions } from '@/utils/image';
 
-import type { ImageDimensions } from '../types/banner.types';
-
-import { BannerThumbnail } from './BannerThumbnail';
-
-interface BannerImageUploadProps {
+interface ImageUploadProps {
   label: string;
+  /** Heading inside the empty drop zone. */
+  dropTitle?: string;
+  /** Tailwind aspect ratio class of the preview, matching the recommended size. */
+  aspectClassName?: string;
   /** Local preview (`data:`) of the picked file, or the saved image's API path. */
   previewSrc: string | null;
   /** Name and size of the picked file, when it is a new one. */
@@ -40,8 +42,10 @@ interface BannerImageUploadProps {
 }
 
 /** Drag-and-drop or "Choose file" image picker with preview, replace, remove and progress. */
-export function BannerImageUpload({
+export function ImageUpload({
   label,
+  dropTitle = 'Upload image',
+  aspectClassName,
   previewSrc,
   fileInfo,
   dimensions,
@@ -54,7 +58,7 @@ export function BannerImageUpload({
   progress = null,
   required = false,
   disabled = false,
-}: BannerImageUploadProps) {
+}: ImageUploadProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const inputId = useId();
   const errorId = useId();
@@ -110,7 +114,7 @@ export function BannerImageUpload({
       {previewSrc ? (
         <div
           role="group"
-          aria-label="Selected banner image"
+          aria-label={`Selected ${label.toLowerCase()}`}
           onDrop={handleDrop}
           onDragOver={handleDragOver}
           onDragLeave={() => setDragging(false)}
@@ -119,7 +123,13 @@ export function BannerImageUpload({
             dragging && 'border-[var(--mui-palette-primary-main)] bg-primary-50/50',
           )}
         >
-          <BannerThumbnail src={previewSrc} alt="Banner image preview" className="w-full" eager />
+          <ImageThumbnail
+            src={previewSrc}
+            alt={`${label} preview`}
+            aspectClassName={aspectClassName}
+            className="w-full"
+            eager
+          />
           <div className="flex flex-wrap items-center gap-2">
             <Typography variant="caption" color="text.secondary" className="mr-auto">
               {fileInfo ? `${fileInfo.name} · ${formatBytes(fileInfo.size)}` : 'Current image'}
@@ -163,7 +173,7 @@ export function BannerImageUpload({
           <div className="flex items-center gap-2">
             <CloudUploadOutlined color="primary" aria-hidden />
             <Typography variant="body2" fontWeight={600}>
-              Upload banner image
+              {dropTitle}
             </Typography>
           </div>
           <Typography variant="caption" color="text.secondary">
@@ -194,7 +204,7 @@ export function BannerImageUpload({
         <Alert severity="info" variant="outlined" className="py-0">
           {tooSmall
             ? `This image is small (${dimensions?.width ?? 0} px wide) and may look blurry on large screens.`
-            : 'This image is not close to the recommended 1920 × 600 ratio, so it may be cropped on some screens.'}
+            : `This image is not close to the recommended ${recommended.width} × ${recommended.height} ratio, so it may be cropped on some screens.`}
         </Alert>
       )}
       {error && (

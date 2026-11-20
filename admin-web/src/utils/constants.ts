@@ -12,6 +12,8 @@ export const ROUTES = {
   subscriptionPlans: '/packages-plans',
   banners: '/banners',
   bannerNew: '/banners/new',
+  blogs: '/blogs',
+  blogNew: '/blogs/new',
   profile: '/profile',
   unauthorized: '/unauthorized',
 } as const;
@@ -69,6 +71,12 @@ export const PERMISSIONS = {
   bannerChangeStatus: 'BANNER_CHANGE_STATUS',
   bannerDelete: 'BANNER_DELETE',
   pageView: 'PAGE_VIEW',
+  blogView: 'BLOG_VIEW',
+  blogCreate: 'BLOG_CREATE',
+  blogUpdate: 'BLOG_UPDATE',
+  blogDelete: 'BLOG_DELETE',
+  blogCategoryView: 'BLOG_CATEGORY_VIEW',
+  blogCategoryCreate: 'BLOG_CATEGORY_CREATE',
 } as const;
 
 /** Property routes with an id. */
@@ -84,6 +92,13 @@ export const bannerRoutes = {
   duplicate: (id: number) => `${ROUTES.bannerNew}?from=${id}`,
 } as const;
 
+/** Blog routes with an id. `duplicate` opens the create form prefilled from that blog. */
+export const blogRoutes = {
+  detail: (id: number) => `${ROUTES.blogs}/${id}`,
+  edit: (id: number) => `${ROUTES.blogs}/${id}/edit`,
+  duplicate: (id: number) => `${ROUTES.blogNew}?from=${id}`,
+} as const;
+
 /** Lead routes with an id. */
 export const leadRoutes = {
   detail: (id: number) => `${ROUTES.leads}/${id}`,
@@ -97,6 +112,7 @@ export const STORAGE_KEYS = {
   siteVisitsPageSize: 'admin-web:site-visits-page-size',
   subscriptionPlansPageSize: 'admin-web:subscription-plans-page-size',
   bannersPageSize: 'admin-web:banners-page-size',
+  blogsPageSize: 'admin-web:blogs-page-size',
   sidebarCollapsed: 'admin-web:sidebar-collapsed',
 } as const;
 

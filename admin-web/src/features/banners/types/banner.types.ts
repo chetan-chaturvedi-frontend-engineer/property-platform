@@ -104,14 +104,7 @@ export interface BannerCounts {
   live: number;
 }
 
-/** Pixel size of an image. */
-export interface ImageDimensions {
-  width: number;
-  height: number;
-}
-
-/** Upload progress callback: 0-100. */
-export type UploadProgressHandler = (percent: number) => void;
+export type { ImageDimensions, UploadProgressHandler } from '@/utils/image';
 
 /** A content page from `GET /admin/pages` (fields used here only). */
 export interface ContentPageOption {

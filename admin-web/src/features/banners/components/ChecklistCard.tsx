@@ -3,7 +3,7 @@ import CheckCircleOutline from '@mui/icons-material/CheckCircleOutline';
 import Typography from '@mui/material/Typography';
 import type { ReactNode } from 'react';
 
-import { FormSection } from './FormSection';
+import { FormSection } from '@/components/common/FormSection';
 
 export interface ChecklistItem {
   key: string;

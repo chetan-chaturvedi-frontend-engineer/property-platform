@@ -3,10 +3,10 @@ import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 
 import { ConfirmDialog } from '@/components/common/Modal';
+import { useSequentialRun } from '@/hooks/useSequentialRun';
 import { notify } from '@/store/notificationStore';
 
 import { useChangeBannerStatus } from '../hooks/useBanners';
-import { useSequentialRun } from '../hooks/useSequentialRun';
 import type { Banner, BannerStatus } from '../types/banner.types';
 
 interface BannerStatusDialogProps {

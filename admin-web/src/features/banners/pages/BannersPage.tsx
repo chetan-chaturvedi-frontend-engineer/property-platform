@@ -18,6 +18,7 @@ import { BulkActionsBar } from '@/components/common/BulkActionsBar';
 import { Button } from '@/components/common/Button';
 import { DataTable } from '@/components/common/DataTable/DataTable';
 import { EmptyState } from '@/components/common/Feedback/EmptyState';
+import { ListToolbar, type ToolbarSelect } from '@/components/common/ListToolbar';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { bannerRoutes, ROUTES, SEARCH_DEBOUNCE_MS, STORAGE_KEYS } from '@/utils/constants';
 
@@ -25,7 +26,6 @@ import { buildBannerColumns } from '../components/bannerColumns';
 import { type ActiveBannerDialog, BannerDialogs } from '../components/BannerDialogs';
 import { BannerFiltersPanel } from '../components/BannerFiltersPanel';
 import { BannerStatsCards } from '../components/BannerStatsCards';
-import { BannerToolbar, type ToolbarSelect } from '../components/BannerToolbar';
 import { useBannerCounts, useBanners } from '../hooks/useBanners';
 import { useBannerExport } from '../hooks/useBannerExport';
 import {
@@ -258,7 +258,7 @@ export function BannersPage() {
       />
 
       <Paper className="min-w-0 overflow-hidden">
-        <BannerToolbar
+        <ListToolbar
           search={searchInput}
           onSearchChange={handleSearchChange}
           searchLabel="Search banners"
@@ -268,6 +268,7 @@ export function BannersPage() {
           panelFilterCount={chips.length}
           onClear={hasFilters || sortChanged ? clearAll : undefined}
           onRefresh={refresh}
+          refreshLabel="Refresh banners"
           isRefreshing={isFetching}
         />
         <ActiveFilterChips filters={chips} />

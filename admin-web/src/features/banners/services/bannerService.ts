@@ -1,6 +1,5 @@
-import type { AxiosProgressEvent } from 'axios';
-
 import { API_ENDPOINTS } from '@/services/api/apiEndpoints';
+import { downloadApiImage, UPLOAD_OPTIONS, uploadProgress } from '@/services/api/assetDownload';
 import { apiClient } from '@/services/api/axiosInstance';
 import type { PageResponse } from '@/types/api.types';
 import type { EntityId } from '@/types/common.types';
@@ -15,7 +14,6 @@ import type {
   UpdateBannerRequest,
   UploadProgressHandler,
 } from '../types/banner.types';
-import { bannerAssetUrl } from '../utils/bannerDisplay';
 
 /** Drops empty filter values so they are not sent as `status=`. */
 function toParams(filters: object): Record<string, string | number | boolean> {
@@ -28,22 +26,6 @@ function toParams(filters: object): Record<string, string | number | boolean> {
 
 /** The API caps page size at 100. */
 export const MAX_PAGE_SIZE = 100;
-
-const progress = (onProgress?: UploadProgressHandler) =>
-  onProgress
-    ? (event: AxiosProgressEvent) => {
-        if (event.total) onProgress(Math.round((event.loaded / event.total) * 100));
-      }
-    : undefined;
-
-/** Up to 10 MB over a slow line takes longer than the default API timeout. */
-const UPLOAD_OPTIONS = { timeout: 0 } as const;
-
-const EXTENSIONS: Record<string, string> = {
-  'image/jpeg': 'jpg',
-  'image/png': 'png',
-  'image/webp': 'webp',
-};
 
 export const bannerService = {
   async list(filters: BannerFilters, signal?: AbortSignal): Promise<PageResponse<Banner>> {
@@ -115,7 +97,7 @@ export const bannerService = {
     }
     const { data } = await apiClient.post<Banner>(API_ENDPOINTS.banners.list, form, {
       ...UPLOAD_OPTIONS,
-      onUploadProgress: progress(onProgress),
+      onUploadProgress: uploadProgress(onProgress),
     });
     return data;
   },
@@ -134,7 +116,7 @@ export const bannerService = {
     form.append('image', image);
     const { data } = await apiClient.put<Banner>(API_ENDPOINTS.banners.image(id), form, {
       ...UPLOAD_OPTIONS,
-      onUploadProgress: progress(onProgress),
+      onUploadProgress: uploadProgress(onProgress),
     });
     return data;
   },
@@ -152,11 +134,7 @@ export const bannerService = {
     banner: Pick<Banner, 'id' | 'imageUrl'>,
     signal?: AbortSignal,
   ): Promise<File> {
-    const url = bannerAssetUrl(banner.imageUrl);
-    if (!url) throw new Error('The banner has no image URL.');
-    const { data } = await apiClient.get<Blob>(url, { responseType: 'blob', baseURL: '', signal });
-    const type = data.type || 'image/jpeg';
-    return new File([data], `banner-${banner.id}-copy.${EXTENSIONS[type] ?? 'jpg'}`, { type });
+    return downloadApiImage(banner.imageUrl, `banner-${banner.id}-copy`, signal);
   },
 
   /** Published content pages, as internal link targets (`/pages/{slug}`). Needs `PAGE_VIEW`. */

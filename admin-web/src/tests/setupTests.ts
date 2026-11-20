@@ -31,6 +31,16 @@ Object.defineProperty(window, 'matchMedia', {
 // jsdom does not implement scrolling; React Router's ScrollRestoration calls it on navigation.
 window.scrollTo = () => undefined;
 
+// jsdom has no layout. ProseMirror (the blog's rich text editor) measures ranges and hit-tests clicks;
+// without layout it falls back to the DOM selection, which is all the tests need.
+const noRects = (): DOMRectList => {
+  const rects: DOMRect[] = [];
+  return Object.assign(rects, { item: (index: number) => rects[index] ?? null });
+};
+Range.prototype.getClientRects = noRects;
+Range.prototype.getBoundingClientRect = () => new DOMRect();
+document.elementFromPoint = () => null;
+
 // Any request without a handler is a test bug, not a silent network call.
 beforeAll(() => server.listen({ onUnhandledRequest: 'error' }));
 

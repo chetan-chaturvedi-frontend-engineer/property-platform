@@ -8,6 +8,7 @@ import InputAdornment from '@mui/material/InputAdornment';
 import MenuItem from '@mui/material/MenuItem';
 import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
+import type { ReactNode } from 'react';
 
 import { Button } from '@/components/common/Button';
 
@@ -27,7 +28,7 @@ export interface ToolbarSelect {
   allLabel?: string;
 }
 
-interface BannerToolbarProps {
+interface ListToolbarProps {
   search: string;
   onSearchChange: (value: string) => void;
   /** Accessible name of the search box. */
@@ -38,13 +39,17 @@ interface BannerToolbarProps {
   panelFilterCount?: number;
   onClear?: () => void;
   onRefresh: () => void;
+  /** Accessible name of the refresh button, e.g. "Refresh banners". */
+  refreshLabel?: string;
   isRefreshing?: boolean;
+  /** Extra controls after the dropdowns. */
+  children?: ReactNode;
 }
 
 const SEARCH_MAX_LENGTH = 100;
 
-/** Filter button, quick dropdowns and search above a list, as in the banner design. */
-export function BannerToolbar({
+/** Filter button, quick dropdowns and search above a list. */
+export function ListToolbar({
   search,
   onSearchChange,
   searchLabel,
@@ -54,8 +59,10 @@ export function BannerToolbar({
   panelFilterCount = 0,
   onClear,
   onRefresh,
+  refreshLabel = 'Refresh',
   isRefreshing = false,
-}: BannerToolbarProps) {
+  children,
+}: ListToolbarProps) {
   return (
     <div className="flex flex-col gap-3 p-4 lg:flex-row lg:flex-wrap lg:items-center">
       <div className="flex flex-wrap items-center gap-3">
@@ -90,6 +97,7 @@ export function BannerToolbar({
             ))}
           </TextField>
         ))}
+        {children}
       </div>
       <div className="flex flex-1 flex-wrap items-center gap-2 lg:justify-end">
         <TextField
@@ -117,7 +125,7 @@ export function BannerToolbar({
         )}
         <Tooltip title="Refresh">
           <span>
-            <IconButton aria-label="Refresh banners" onClick={onRefresh} disabled={isRefreshing}>
+            <IconButton aria-label={refreshLabel} onClick={onRefresh} disabled={isRefreshing}>
               <Refresh />
             </IconButton>
           </span>
