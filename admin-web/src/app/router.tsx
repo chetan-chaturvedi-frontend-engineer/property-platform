@@ -52,6 +52,11 @@ const SiteVisitsPage = lazy(() =>
     default: m.SiteVisitsPage,
   })),
 );
+const SubscriptionPlansPage = lazy(() =>
+  import('@/features/subscriptionPlans/pages/SubscriptionPlansPage').then((m) => ({
+    default: m.SubscriptionPlansPage,
+  })),
+);
 const ProfilePage = lazy(() =>
   import('@/features/profile/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 );
@@ -117,6 +122,12 @@ export const routes: RouteObject[] = [
               {
                 element: <ProtectedRoute requiredPermissions={[PERMISSIONS.siteVisitListAny]} />,
                 children: [{ path: ROUTES.siteVisits, element: <SiteVisitsPage /> }],
+              },
+              {
+                element: (
+                  <ProtectedRoute requiredPermissions={[PERMISSIONS.subscriptionPlanList]} />
+                ),
+                children: [{ path: ROUTES.subscriptionPlans, element: <SubscriptionPlansPage /> }],
               },
               {
                 element: <ProtectedRoute requiredPermissions={[PERMISSIONS.propertyListAny]} />,

@@ -9,6 +9,7 @@ export const ROUTES = {
   propertyNew: '/properties/new',
   leads: '/leads',
   siteVisits: '/site-visits',
+  subscriptionPlans: '/packages-plans',
   profile: '/profile',
   unauthorized: '/unauthorized',
 } as const;
@@ -54,6 +55,11 @@ export const PERMISSIONS = {
   siteVisitAssignAny: 'SITE_VISIT_ASSIGN_ANY',
   siteVisitUpdateStatusAny: 'SITE_VISIT_UPDATE_STATUS_ANY',
   siteVisitSubmitReportAny: 'SITE_VISIT_SUBMIT_REPORT_ANY',
+  subscriptionPlanList: 'SUBSCRIPTION_PLAN_LIST',
+  subscriptionPlanView: 'SUBSCRIPTION_PLAN_VIEW',
+  subscriptionPlanCreate: 'SUBSCRIPTION_PLAN_CREATE',
+  subscriptionPlanUpdate: 'SUBSCRIPTION_PLAN_UPDATE',
+  subscriptionPlanChangeStatus: 'SUBSCRIPTION_PLAN_CHANGE_STATUS',
 } as const;
 
 /** Property routes with an id. */
@@ -74,6 +80,7 @@ export const STORAGE_KEYS = {
   propertiesPageSize: 'admin-web:properties-page-size',
   leadsPageSize: 'admin-web:leads-page-size',
   siteVisitsPageSize: 'admin-web:site-visits-page-size',
+  subscriptionPlansPageSize: 'admin-web:subscription-plans-page-size',
   sidebarCollapsed: 'admin-web:sidebar-collapsed',
 } as const;
 

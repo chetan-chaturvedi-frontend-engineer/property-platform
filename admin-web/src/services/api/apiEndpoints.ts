@@ -36,6 +36,11 @@ export const API_ENDPOINTS = {
     status: (id: EntityId) => `/admin/site-visits/${id}/status`,
     report: (id: EntityId) => `/admin/site-visits/${id}/report`,
   },
+  subscriptionPlans: {
+    list: '/admin/subscription-plans',
+    detail: (id: EntityId) => `/admin/subscription-plans/${id}`,
+    status: (id: EntityId) => `/admin/subscription-plans/${id}/status`,
+  },
   properties: {
     list: '/admin/properties',
     stats: '/admin/properties/stats',
