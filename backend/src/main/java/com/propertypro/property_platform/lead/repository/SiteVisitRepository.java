@@ -2,6 +2,7 @@ package com.propertypro.property_platform.lead.repository;
 
 import com.propertypro.property_platform.lead.domain.SiteVisit;
 import com.propertypro.property_platform.lead.domain.SiteVisitStatus;
+import com.propertypro.property_platform.lead.domain.SiteVisitType;
 import jakarta.persistence.LockModeType;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
@@ -11,6 +12,7 @@ import org.springframework.data.jpa.repository.Query;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 /** Derived and JPQL queries exclude soft-deleted visits. */
@@ -24,5 +26,19 @@ public interface SiteVisitRepository extends JpaRepository<SiteVisit, Long>, Jpa
 	/** Another booking of the same visitor for the same slot; backed by {@code uq_site_visits_active_booking}. */
 	boolean existsByUserIdAndPropertyIdAndVisitDateAndVisitTimeAndStatusInAndIdNot(Long userId, Long propertyId,
 			LocalDate visitDate, LocalTime visitTime, Collection<SiteVisitStatus> statuses, Long id);
+
+	/** Non-deleted visits per status and visit type, for the admin dashboard counts. */
+	@Query("select v.status as status, v.visitType as visitType, count(v) as total from SiteVisit v group by v.status, v.visitType")
+	List<StatusTypeCount> countByStatusAndVisitType();
+
+	interface StatusTypeCount {
+
+		SiteVisitStatus getStatus();
+
+		SiteVisitType getVisitType();
+
+		long getTotal();
+
+	}
 
 }
