@@ -2,15 +2,14 @@ import Alert from '@mui/material/Alert';
 import LinearProgress from '@mui/material/LinearProgress';
 import Typography from '@mui/material/Typography';
 
+import { ImageThumbnail } from '@/components/common/ImageThumbnail';
 import { ConfirmDialog } from '@/components/common/Modal';
+import { useSequentialRun } from '@/hooks/useSequentialRun';
 import { notify } from '@/store/notificationStore';
 
 import { useDeleteBanner } from '../hooks/useBanners';
-import { useSequentialRun } from '../hooks/useSequentialRun';
 import type { Banner } from '../types/banner.types';
 import { bannerPlacementLabel } from '../utils/bannerOptions';
-
-import { BannerThumbnail } from './BannerThumbnail';
 
 interface BannerDeleteDialogProps {
   banners: readonly Banner[];
@@ -71,7 +70,7 @@ export function BannerDeleteDialog({ banners, onClose, onDone }: BannerDeleteDia
         <div className="flex flex-col gap-3">
           {!isBulk && single && (
             <div className="flex flex-col gap-2">
-              <BannerThumbnail src={single.imageUrl} alt={single.title} className="w-full" />
+              <ImageThumbnail src={single.imageUrl} alt={single.title} className="w-full" />
               <Typography variant="body2" fontWeight={600}>
                 {single.title}
               </Typography>

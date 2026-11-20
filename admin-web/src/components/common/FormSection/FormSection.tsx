@@ -14,7 +14,7 @@ interface FormSectionProps extends Omit<PaperProps, 'title'> {
   children: ReactNode;
 }
 
-/** A white card with an icon heading, as used on the banner form and its side panels. */
+/** A white card with an icon heading, as used on the editor forms and their side panels. */
 export function FormSection({
   title,
   icon,

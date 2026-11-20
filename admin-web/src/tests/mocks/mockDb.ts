@@ -7,6 +7,12 @@ import type { SiteVisit } from '@/features/siteVisits/types/siteVisit.types';
 import type { SubscriptionPlan } from '@/features/subscriptionPlans/types/subscriptionPlan.types';
 
 import { buildBanners, type StoredBanner } from './bannerMockData';
+import {
+  buildBlogs,
+  MOCK_BLOG_CATEGORIES,
+  type StoredBlog,
+  type StoredBlogCategory,
+} from './blogMockData';
 import { buildLeads } from './leadMockData';
 import { buildProperties, type StoredProperty } from './propertyMockData';
 import { buildSiteVisits } from './siteVisitMockData';
@@ -93,6 +99,15 @@ const ADMIN_USER: AdminUser = {
     'BANNER_CHANGE_STATUS',
     'BANNER_DELETE',
     'PAGE_VIEW',
+    // The seeded admin role's blog modules (V202610251900, V202610252000).
+    'BLOG_VIEW',
+    'BLOG_CREATE',
+    'BLOG_UPDATE',
+    'BLOG_DELETE',
+    'BLOG_CATEGORY_VIEW',
+    'BLOG_CATEGORY_CREATE',
+    'BLOG_CATEGORY_UPDATE',
+    'BLOG_CATEGORY_DELETE',
   ],
 };
 
@@ -181,6 +196,26 @@ const BANNER_EDITOR_USER: AdminUser = {
   ],
 };
 
+/** Writes blogs but cannot list categories or delete. */
+const BLOG_WRITER_USER: AdminUser = {
+  id: 11,
+  fullName: 'Wren Writer',
+  email: 'blogs@example.com',
+  phone: null,
+  role: { slug: 'blog-writer', name: 'Blog Writer' },
+  permissions: ['ADMIN_PANEL_ACCESS', 'BLOG_VIEW', 'BLOG_CREATE', 'BLOG_UPDATE'],
+};
+
+/** Reads blogs only. */
+const BLOG_VIEWER_USER: AdminUser = {
+  id: 12,
+  fullName: 'Bo Reader',
+  email: 'blog-viewer@example.com',
+  phone: null,
+  role: { slug: 'blog-viewer', name: 'Blog Viewer' },
+  permissions: ['ADMIN_PANEL_ACCESS', 'BLOG_VIEW'],
+};
+
 export const mockUsers = {
   admin: ADMIN_USER,
   manager: MANAGER_USER,
@@ -191,6 +226,8 @@ export const mockUsers = {
   siteVisitViewer: SITE_VISIT_VIEWER_USER,
   planViewer: PLAN_VIEWER_USER,
   bannerEditor: BANNER_EDITOR_USER,
+  blogWriter: BLOG_WRITER_USER,
+  blogViewer: BLOG_VIEWER_USER,
 } as const;
 
 /** Mirrors the seeded roles plus two custom ones. Permissions match the sign-in accounts above. */
@@ -370,6 +407,8 @@ function createState() {
       ],
       [PLAN_VIEWER_USER.email ?? '', { user: PLAN_VIEWER_USER, password: MOCK_PASSWORD }],
       [BANNER_EDITOR_USER.email ?? '', { user: BANNER_EDITOR_USER, password: MOCK_PASSWORD }],
+      [BLOG_WRITER_USER.email ?? '', { user: BLOG_WRITER_USER, password: MOCK_PASSWORD }],
+      [BLOG_VIEWER_USER.email ?? '', { user: BLOG_VIEWER_USER, password: MOCK_PASSWORD }],
     ]),
     jar: readJar(),
     csrfToken: 'mock-csrf-token-1',
@@ -391,9 +430,22 @@ function createState() {
     nextPlanId: 100,
     ...bannerState(),
     nextBannerId: 100,
+    ...blogState(),
+    nextBlogId: 100,
+    nextBlogCategoryId: 100,
     nextLogId: 10_000,
     /** Idempotency-Key -> created property id, per owner. */
     createKeys: new Map<string, number>(),
+  };
+}
+
+function blogState() {
+  const { blogs, images } = buildBlogs();
+  return {
+    blogs,
+    deletedBlogIds: new Set<number>(),
+    blogImages: images,
+    blogCategories: [...MOCK_BLOG_CATEGORIES],
   };
 }
 
@@ -638,6 +690,53 @@ export const mockDb = {
 
   storeBannerImage(fileName: string, bytes: Uint8Array): void {
     state.bannerImages.set(fileName, bytes);
+  },
+
+  /** Every blog row, soft-deleted ones included (their slugs stay reserved). */
+  allBlogs(): StoredBlog[] {
+    return state.blogs;
+  },
+
+  /** Blogs that are not soft-deleted. */
+  blogs(): StoredBlog[] {
+    return state.blogs.filter((blog) => !state.deletedBlogIds.has(blog.id));
+  },
+
+  findBlog(id: number): StoredBlog | undefined {
+    return this.blogs().find((blog) => blog.id === id);
+  },
+
+  saveBlog(blog: StoredBlog): void {
+    const exists = state.blogs.some((row) => row.id === blog.id);
+    state.blogs = exists
+      ? state.blogs.map((row) => (row.id === blog.id ? blog : row))
+      : [...state.blogs, blog];
+  },
+
+  softDeleteBlog(id: number): void {
+    state.deletedBlogIds.add(id);
+  },
+
+  nextBlogId(): number {
+    return state.nextBlogId++;
+  },
+
+  blogImage(fileName: string): Uint8Array | undefined {
+    return state.blogImages.get(fileName);
+  },
+
+  storeBlogImage(fileName: string, bytes: Uint8Array): void {
+    state.blogImages.set(fileName, bytes);
+  },
+
+  blogCategories(): StoredBlogCategory[] {
+    return state.blogCategories;
+  },
+
+  addBlogCategory(category: Omit<StoredBlogCategory, 'id'>): StoredBlogCategory {
+    const created = { ...category, id: state.nextBlogCategoryId++ };
+    state.blogCategories = [...state.blogCategories, created];
+    return created;
   },
 
   /** Appends an audit entry, as the backend's SystemLogInterceptor does for every admin write. */

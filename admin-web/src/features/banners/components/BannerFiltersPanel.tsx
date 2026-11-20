@@ -6,6 +6,7 @@ import Typography from '@mui/material/Typography';
 import { useState } from 'react';
 
 import { Button } from '@/components/common/Button';
+import { DateRangeFields } from '@/components/common/DateRangeFields';
 
 import { BANNER_LINK_TYPES } from '../types/banner.types';
 import {
@@ -13,45 +14,6 @@ import {
   EMPTY_BANNER_PANEL,
   LINK_TYPE_LABELS,
 } from '../utils/bannerFilters';
-
-interface DateRangeProps {
-  legend: string;
-  from: string;
-  to: string;
-  onFromChange: (value: string) => void;
-  onToChange: (value: string) => void;
-}
-
-function DateRange({ legend, from, to, onFromChange, onToChange }: DateRangeProps) {
-  const invalid = from !== '' && to !== '' && to < from;
-  return (
-    <fieldset className="flex flex-col gap-2">
-      <Typography component="legend" variant="body2" fontWeight={600} className="mb-2">
-        {legend}
-      </Typography>
-      <div className="grid grid-cols-2 gap-2">
-        <TextField
-          size="small"
-          type="date"
-          label="From"
-          value={from}
-          onChange={(e) => onFromChange(e.target.value)}
-          slotProps={{ inputLabel: { shrink: true } }}
-        />
-        <TextField
-          size="small"
-          type="date"
-          label="To"
-          value={to}
-          onChange={(e) => onToChange(e.target.value)}
-          error={invalid}
-          helperText={invalid ? 'Before the start date' : undefined}
-          slotProps={{ inputLabel: { shrink: true }, htmlInput: { min: from || undefined } }}
-        />
-      </div>
-    </fieldset>
-  );
-}
 
 interface BannerFiltersPanelProps {
   /** The filters currently applied; the panel edits a draft copy. Remount (key) to reset it. */
@@ -90,14 +52,14 @@ export function BannerFiltersPanel({ applied, onApply, onReset }: BannerFiltersP
           </MenuItem>
         ))}
       </TextField>
-      <DateRange
+      <DateRangeFields
         legend="Starts between"
         from={draft.startFrom}
         to={draft.startTo}
         onFromChange={(value) => set('startFrom', value)}
         onToChange={(value) => set('startTo', value)}
       />
-      <DateRange
+      <DateRangeFields
         legend="Ends between"
         from={draft.endFrom}
         to={draft.endTo}

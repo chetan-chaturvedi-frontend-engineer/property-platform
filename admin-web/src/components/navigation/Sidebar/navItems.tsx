@@ -1,4 +1,5 @@
 import ApartmentOutlined from '@mui/icons-material/ApartmentOutlined';
+import ArticleOutlined from '@mui/icons-material/ArticleOutlined';
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import EventAvailableOutlined from '@mui/icons-material/EventAvailableOutlined';
 import GroupOutlined from '@mui/icons-material/GroupOutlined';
@@ -59,6 +60,12 @@ export const NAV_SECTIONS: readonly NavSection[] = [
         path: ROUTES.banners,
         icon: <PermMediaOutlined />,
         requiredPermissions: [PERMISSIONS.bannerList],
+      },
+      {
+        label: 'Blogs',
+        path: ROUTES.blogs,
+        icon: <ArticleOutlined />,
+        requiredPermissions: [PERMISSIONS.blogView],
       },
     ],
   },

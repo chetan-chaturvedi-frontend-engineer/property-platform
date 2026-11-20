@@ -46,6 +46,14 @@ export const API_ENDPOINTS = {
     detail: (id: EntityId) => `/admin/banners/${id}`,
     image: (id: EntityId) => `/admin/banners/${id}/image`,
   },
+  blogs: {
+    list: '/admin/blogs',
+    detail: (id: EntityId) => `/admin/blogs/${id}`,
+    featureImage: (id: EntityId) => `/admin/blogs/${id}/feature-image`,
+  },
+  blogCategories: {
+    list: '/admin/blog-categories',
+  },
   pages: {
     list: '/admin/pages',
   },

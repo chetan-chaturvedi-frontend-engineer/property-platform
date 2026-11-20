@@ -10,6 +10,7 @@ import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 import type { ReactNode } from 'react';
 
+import { ImageThumbnail } from '@/components/common/ImageThumbnail';
 import { Button } from '@/components/common/Button';
 import { ErrorState } from '@/components/common/Feedback/ErrorState';
 import type { EntityId } from '@/types/common.types';
@@ -23,7 +24,6 @@ import { LINK_TYPE_LABELS } from '../utils/bannerFilters';
 
 import { BannerActivity } from './BannerActivity';
 import { BannerStatusChip } from './BannerStatusChip';
-import { BannerThumbnail } from './BannerThumbnail';
 
 interface FieldProps {
   label: string;
@@ -74,7 +74,7 @@ function LinkValue({ banner }: { banner: Banner }) {
 function BannerDetails({ banner }: { banner: Banner }) {
   return (
     <div className="flex flex-col gap-5">
-      <BannerThumbnail src={banner.imageUrl} alt={banner.title} className="w-full" eager />
+      <ImageThumbnail src={banner.imageUrl} alt={banner.title} className="w-full" eager />
       <Section title="Banner">
         <dl className="grid grid-cols-1 gap-x-6 gap-y-3 sm:grid-cols-2">
           <Field label="Status">

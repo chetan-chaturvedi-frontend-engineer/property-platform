@@ -1,5 +1,6 @@
 import { keepPreviousData, useMutation, useQuery } from '@tanstack/react-query';
 
+import { toPickedImage } from '@/hooks/useImagePicker';
 import type { EntityId } from '@/types/common.types';
 
 import { bannerService } from '../services/bannerService';
@@ -10,8 +11,6 @@ import type {
   UpdateBannerRequest,
   UploadProgressHandler,
 } from '../types/banner.types';
-
-import { toPickedImage } from './useBannerImagePicker';
 
 export const bannerKeys = {
   all: ['banners'] as const,

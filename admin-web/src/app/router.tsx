@@ -63,6 +63,15 @@ const BannersPage = lazy(() =>
 const BannerFormPage = lazy(() =>
   import('@/features/banners/pages/BannerFormPage').then((m) => ({ default: m.BannerFormPage })),
 );
+const BlogsPage = lazy(() =>
+  import('@/features/blogs/pages/BlogsPage').then((m) => ({ default: m.BlogsPage })),
+);
+const BlogFormPage = lazy(() =>
+  import('@/features/blogs/pages/BlogFormPage').then((m) => ({ default: m.BlogFormPage })),
+);
+const BlogDetailsPage = lazy(() =>
+  import('@/features/blogs/pages/BlogDetailsPage').then((m) => ({ default: m.BlogDetailsPage })),
+);
 const ProfilePage = lazy(() =>
   import('@/features/profile/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 );
@@ -151,6 +160,22 @@ export const routes: RouteObject[] = [
                       />
                     ),
                     children: [{ path: `${ROUTES.banners}/:id/edit`, element: <BannerFormPage /> }],
+                  },
+                ],
+              },
+              {
+                // Every blog screen reads blogs; the list, detail and editor need BLOG_VIEW.
+                element: <ProtectedRoute requiredPermissions={[PERMISSIONS.blogView]} />,
+                children: [
+                  { path: ROUTES.blogs, element: <BlogsPage /> },
+                  {
+                    element: <ProtectedRoute requiredPermissions={[PERMISSIONS.blogCreate]} />,
+                    children: [{ path: ROUTES.blogNew, element: <BlogFormPage /> }],
+                  },
+                  { path: `${ROUTES.blogs}/:id`, element: <BlogDetailsPage /> },
+                  {
+                    element: <ProtectedRoute requiredPermissions={[PERMISSIONS.blogUpdate]} />,
+                    children: [{ path: `${ROUTES.blogs}/:id/edit`, element: <BlogFormPage /> }],
                   },
                 ],
               },

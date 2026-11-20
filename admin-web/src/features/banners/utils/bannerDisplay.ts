@@ -1,4 +1,3 @@
-import { env } from '@/config/env';
 import { formatDateTime } from '@/utils/formatters';
 import { sanitizeUrl } from '@/utils/security';
 
@@ -26,20 +25,6 @@ export const DISPLAY_STATE_META: Record<
     description: 'Switched off; never shown, whatever the schedule.',
   },
 };
-
-/**
- * The banner `imageUrl` is an API path (`/api/v1/admin/banners/…`), so it is resolved against the
- * API's origin, which differs from the dashboard's when `VITE_API_BASE_URL` is absolute.
- */
-export function bannerAssetUrl(path: string | null | undefined): string | null {
-  if (!path) return null;
-  try {
-    const apiOrigin = new URL(env.apiBaseUrl, window.location.origin).origin;
-    return sanitizeUrl(new URL(path, apiOrigin).href);
-  } catch {
-    return null;
-  }
-}
 
 /** "20 May 2026, 12:00" / "No start" etc. */
 export function scheduleBound(value: string | null, fallback: string): string {

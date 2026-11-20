@@ -9,6 +9,7 @@ import IconButton from '@mui/material/IconButton';
 import Tooltip from '@mui/material/Tooltip';
 import Typography from '@mui/material/Typography';
 
+import { ImageThumbnail } from '@/components/common/ImageThumbnail';
 import type { DataTableColumn } from '@/components/common/DataTable/DataTable';
 import { RowMenu, type RowMenuAction } from '@/components/common/RowMenu';
 
@@ -17,7 +18,6 @@ import { bannerPlacementLabel, bannerTypeLabel } from '../utils/bannerOptions';
 
 import { BannerScheduleCell } from './BannerScheduleCell';
 import { BannerStatusChip } from './BannerStatusChip';
-import { BannerThumbnail } from './BannerThumbnail';
 
 /** Handlers for the row actions; only the actions the viewer is permitted to use are passed in. */
 export interface BannerRowActions {
@@ -84,7 +84,7 @@ export function buildBannerColumns(handlers: BannerRowActions): BannerColumn[] {
       sortField: 'title',
       cell: (banner) => (
         <div className="flex min-w-64 flex-col gap-1.5 py-2">
-          <BannerThumbnail src={banner.imageUrl} alt={banner.title} className="w-56 max-w-full" />
+          <ImageThumbnail src={banner.imageUrl} alt={banner.title} className="w-56 max-w-full" />
           <div className="min-w-0">
             <Typography variant="body2" fontWeight={600} noWrap title={banner.title}>
               {banner.title}

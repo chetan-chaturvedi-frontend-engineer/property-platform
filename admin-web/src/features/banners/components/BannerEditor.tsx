@@ -10,14 +10,17 @@ import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 
 import { Button } from '@/components/common/Button';
+import { FormSection } from '@/components/common/FormSection';
+import { ImageUpload } from '@/components/common/ImageUpload';
 import { ConfirmDialog } from '@/components/common/Modal';
+import { type PickedImage, useImagePicker } from '@/hooks/useImagePicker';
+import { useUnsavedChangesPrompt } from '@/hooks/useUnsavedChangesPrompt';
 import { toApiError } from '@/services/api/apiError';
 import { notify } from '@/store/notificationStore';
 import { ROUTES, UPLOAD_LIMITS } from '@/utils/constants';
 import { formatBytes } from '@/utils/formatters';
 import { applyServerErrors } from '@/utils/helpers';
 
-import { useBannerImagePicker, type PickedImage } from '../hooks/useBannerImagePicker';
 import { useBannerPermissions } from '../hooks/useBannerPermissions';
 import {
   useContentPages,
@@ -25,7 +28,6 @@ import {
   useReplaceBannerImage,
   useUpdateBanner,
 } from '../hooks/useBanners';
-import { useUnsavedChangesPrompt } from '../hooks/useUnsavedChangesPrompt';
 import { bannerFormSchema, type BannerFormValues, CUSTOM_PATH } from '../schemas/bannerSchema';
 import type { Banner } from '../types/banner.types';
 import { linkLabel } from '../utils/bannerDisplay';
@@ -46,13 +48,11 @@ import {
   withSavedOption,
 } from '../utils/bannerOptions';
 
-import { BannerImageUpload } from './BannerImageUpload';
 import { BannerInfoFields, BannerStatusField } from './BannerInfoFields';
 import { BannerLinkFields } from './BannerLinkFields';
 import { BannerLivePreview } from './BannerLivePreview';
 import { BannerScheduleFields } from './BannerScheduleFields';
 import { BannerSidePanels } from './BannerSidePanels';
-import { FormSection } from './FormSection';
 
 /** What the editor does: create from scratch, copy an existing banner, or edit one. */
 export type BannerEditorMode =
@@ -107,7 +107,7 @@ export function BannerEditor({ mode, heading, notice }: BannerEditorProps) {
   const updateBanner = useUpdateBanner();
   const replaceImage = useReplaceBannerImage();
   const contentPages = useContentPages({ enabled: canPickContentPages });
-  const image = useBannerImagePicker(mode.kind === 'duplicate' ? mode.image : null);
+  const image = useImagePicker(mode.kind === 'duplicate' ? mode.image : null);
   const [progress, setProgress] = useState<number | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const isSaving = createBanner.isPending || updateBanner.isPending || replaceImage.isPending;
@@ -277,8 +277,9 @@ export function BannerEditor({ mode, heading, notice }: BannerEditorProps) {
                 }
                 disabled={isSaving}
               />
-              <BannerImageUpload
+              <ImageUpload
                 label="Banner image"
+                dropTitle="Upload banner image"
                 required={!isEdit}
                 previewSrc={previewSrc}
                 fileInfo={image.picked?.file}
