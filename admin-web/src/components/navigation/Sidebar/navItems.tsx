@@ -3,6 +3,7 @@ import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import GroupOutlined from '@mui/icons-material/GroupOutlined';
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
 import PersonOutline from '@mui/icons-material/PersonOutline';
+import SupportAgentOutlined from '@mui/icons-material/SupportAgentOutlined';
 
 import type { NavSection } from '@/types/common.types';
 import { PERMISSIONS, ROUTES } from '@/utils/constants';
@@ -26,6 +27,12 @@ export const NAV_SECTIONS: readonly NavSection[] = [
         path: ROUTES.properties,
         icon: <ApartmentOutlined />,
         requiredPermissions: [PERMISSIONS.propertyListAny],
+      },
+      {
+        label: 'Leads / Enquiries',
+        path: ROUTES.leads,
+        icon: <SupportAgentOutlined />,
+        requiredPermissions: [PERMISSIONS.leadListAny],
       },
     ],
   },

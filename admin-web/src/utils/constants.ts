@@ -7,6 +7,7 @@ export const ROUTES = {
   users: '/users',
   properties: '/properties',
   propertyNew: '/properties/new',
+  leads: '/leads',
   profile: '/profile',
   unauthorized: '/unauthorized',
 } as const;
@@ -35,6 +36,15 @@ export const PERMISSIONS = {
   propertyPublish: 'PROPERTY_PUBLISH',
   propertySuspend: 'PROPERTY_SUSPEND',
   propertyLegalReview: 'PROPERTY_LEGAL_REVIEW',
+  leadCreate: 'LEAD_CREATE',
+  leadListAny: 'LEAD_LIST_ANY',
+  leadView: 'LEAD_VIEW',
+  leadViewAny: 'LEAD_VIEW_ANY',
+  leadUpdate: 'LEAD_UPDATE',
+  leadUpdateAny: 'LEAD_UPDATE_ANY',
+  leadDelete: 'LEAD_DELETE',
+  leadDeleteAny: 'LEAD_DELETE_ANY',
+  leadAssign: 'LEAD_ASSIGN',
 } as const;
 
 /** Property routes with an id. */
@@ -44,10 +54,16 @@ export const propertyRoutes = {
     `${ROUTES.properties}/${id}/edit${step ? `?step=${step}` : ''}`,
 } as const;
 
+/** Lead routes with an id. */
+export const leadRoutes = {
+  detail: (id: number) => `${ROUTES.leads}/${id}`,
+} as const;
+
 export const STORAGE_KEYS = {
   activityPageSize: 'admin-web:activity-page-size',
   usersPageSize: 'admin-web:users-page-size',
   propertiesPageSize: 'admin-web:properties-page-size',
+  leadsPageSize: 'admin-web:leads-page-size',
   sidebarCollapsed: 'admin-web:sidebar-collapsed',
 } as const;
 
