@@ -15,6 +15,7 @@ import com.propertypro.property_platform.lead.dto.MySiteVisitFilter;
 import com.propertypro.property_platform.lead.dto.SiteVisitFilter;
 import com.propertypro.property_platform.lead.dto.SiteVisitReportRequest;
 import com.propertypro.property_platform.lead.dto.SiteVisitResponse;
+import com.propertypro.property_platform.lead.dto.SiteVisitStatsResponse;
 import com.propertypro.property_platform.lead.dto.SiteVisitStatusRequest;
 import com.propertypro.property_platform.lead.dto.SiteVisitSummaryResponse;
 import com.propertypro.property_platform.lead.dto.UpdateSiteVisitRequest;
@@ -49,9 +50,11 @@ import java.time.LocalTime;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.EnumSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 
@@ -202,6 +205,27 @@ public class SiteVisitService {
 		requirePermission(actor, SITE_VISIT_LIST_ANY);
 		Page<SiteVisit> page = repository.findAll(matching(filter), paging(pageable));
 		return PageResponse.of(page, mapper.summaries(page.getContent(), visit -> true));
+	}
+
+	/** Counts of every visit per status and visit type; requires {@code SITE_VISIT_LIST_ANY}. */
+	@Transactional(readOnly = true)
+	public SiteVisitStatsResponse stats(CurrentActor actor) {
+		requirePermission(actor, SITE_VISIT_LIST_ANY);
+		Map<String, Long> byStatus = new LinkedHashMap<>();
+		for (SiteVisitStatus status : SiteVisitStatus.values()) {
+			byStatus.put(status.getValue(), 0L);
+		}
+		Map<String, Long> byVisitType = new LinkedHashMap<>();
+		for (SiteVisitType type : SiteVisitType.values()) {
+			byVisitType.put(type.getValue(), 0L);
+		}
+		long total = 0;
+		for (SiteVisitRepository.StatusTypeCount count : repository.countByStatusAndVisitType()) {
+			total += count.getTotal();
+			byStatus.merge(count.getStatus().getValue(), count.getTotal(), Long::sum);
+			byVisitType.merge(count.getVisitType().getValue(), count.getTotal(), Long::sum);
+		}
+		return new SiteVisitStatsResponse(total, byStatus, byVisitType);
 	}
 
 	/**

@@ -8,6 +8,7 @@ import com.propertypro.property_platform.lead.dto.AssignSiteVisitRequest;
 import com.propertypro.property_platform.lead.dto.SiteVisitFilter;
 import com.propertypro.property_platform.lead.dto.SiteVisitReportRequest;
 import com.propertypro.property_platform.lead.dto.SiteVisitResponse;
+import com.propertypro.property_platform.lead.dto.SiteVisitStatsResponse;
 import com.propertypro.property_platform.lead.dto.SiteVisitStatusRequest;
 import com.propertypro.property_platform.lead.dto.SiteVisitSummaryResponse;
 import com.propertypro.property_platform.lead.dto.UpdateSiteVisitRequest;
@@ -60,6 +61,14 @@ public class AdminSiteVisitController {
 	public PageResponse<SiteVisitSummaryResponse> list(CurrentActor actor, @Valid SiteVisitFilter filter,
 			@SortDefault(sort = "visitDate", direction = Sort.Direction.DESC) Pageable pageable) {
 		return siteVisitService.listAll(actor, filter, pageable);
+	}
+
+	@Operation(summary = "Counts per status and visit type (SITE_VISIT_LIST_ANY)", description = """
+			Non-deleted visits in total, per status and per visit type (every value present, 0 when none).""")
+	@GetMapping("/stats")
+	@PreAuthorize("hasAuthority('SITE_VISIT_LIST_ANY')")
+	public SiteVisitStatsResponse stats(CurrentActor actor) {
+		return siteVisitService.stats(actor);
 	}
 
 	@Operation(summary = "Create a site visit (SITE_VISIT_CREATE_ANY)", description = """

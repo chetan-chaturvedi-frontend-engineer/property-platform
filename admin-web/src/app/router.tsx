@@ -47,6 +47,11 @@ const LeadsPage = lazy(() =>
 const LeadDetailsPage = lazy(() =>
   import('@/features/leads/pages/LeadDetailsPage').then((m) => ({ default: m.LeadDetailsPage })),
 );
+const SiteVisitsPage = lazy(() =>
+  import('@/features/siteVisits/pages/SiteVisitsPage').then((m) => ({
+    default: m.SiteVisitsPage,
+  })),
+);
 const ProfilePage = lazy(() =>
   import('@/features/profile/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 );
@@ -108,6 +113,10 @@ export const routes: RouteObject[] = [
                   { path: ROUTES.leads, element: <LeadsPage /> },
                   { path: `${ROUTES.leads}/:id`, element: <LeadDetailsPage /> },
                 ],
+              },
+              {
+                element: <ProtectedRoute requiredPermissions={[PERMISSIONS.siteVisitListAny]} />,
+                children: [{ path: ROUTES.siteVisits, element: <SiteVisitsPage /> }],
               },
               {
                 element: <ProtectedRoute requiredPermissions={[PERMISSIONS.propertyListAny]} />,

@@ -3,9 +3,11 @@ import type { SystemLog, SystemLogLevel } from '@/features/dashboard/types/syste
 import type { ManagedUser, UserStatus } from '@/features/users/types/user.types';
 
 import type { Lead } from '@/features/leads/types/lead.types';
+import type { SiteVisit } from '@/features/siteVisits/types/siteVisit.types';
 
 import { buildLeads } from './leadMockData';
 import { buildProperties, type StoredProperty } from './propertyMockData';
+import { buildSiteVisits } from './siteVisitMockData';
 
 /** A `users` row as the mock stores it; the role is resolved from `roles` on every response. */
 export type StoredUser = Omit<ManagedUser, 'role'>;
@@ -65,6 +67,15 @@ const ADMIN_USER: AdminUser = {
     'LEAD_UPDATE_ANY',
     'LEAD_DELETE_ANY',
     'LEAD_ASSIGN',
+    // The seeded admin role's site visit module.
+    'SITE_VISIT_LIST_ANY',
+    'SITE_VISIT_VIEW_ANY',
+    'SITE_VISIT_CREATE_ANY',
+    'SITE_VISIT_UPDATE_ANY',
+    'SITE_VISIT_DELETE_ANY',
+    'SITE_VISIT_ASSIGN_ANY',
+    'SITE_VISIT_UPDATE_STATUS_ANY',
+    'SITE_VISIT_SUBMIT_REPORT_ANY',
   ],
 };
 
@@ -117,6 +128,16 @@ const LEAD_VIEWER_USER: AdminUser = {
   permissions: ['ADMIN_PANEL_ACCESS', 'LEAD_LIST_ANY', 'LEAD_VIEW_ANY'],
 };
 
+/** Lists every site visit but may not open or change them. */
+const SITE_VISIT_VIEWER_USER: AdminUser = {
+  id: 8,
+  fullName: 'Sia Visits',
+  email: 'visits@example.com',
+  phone: null,
+  role: { slug: 'visit-viewer', name: 'Visit Viewer' },
+  permissions: ['ADMIN_PANEL_ACCESS', 'SITE_VISIT_LIST_ANY'],
+};
+
 export const mockUsers = {
   admin: ADMIN_USER,
   manager: MANAGER_USER,
@@ -124,6 +145,7 @@ export const mockUsers = {
   editor: EDITOR_USER,
   propertyViewer: PROPERTY_VIEWER_USER,
   leadViewer: LEAD_VIEWER_USER,
+  siteVisitViewer: SITE_VISIT_VIEWER_USER,
 } as const;
 
 /** Mirrors the seeded roles plus two custom ones. Permissions match the sign-in accounts above. */
@@ -297,6 +319,10 @@ function createState() {
       [EDITOR_USER.email ?? '', { user: EDITOR_USER, password: MOCK_PASSWORD }],
       [PROPERTY_VIEWER_USER.email ?? '', { user: PROPERTY_VIEWER_USER, password: MOCK_PASSWORD }],
       [LEAD_VIEWER_USER.email ?? '', { user: LEAD_VIEWER_USER, password: MOCK_PASSWORD }],
+      [
+        SITE_VISIT_VIEWER_USER.email ?? '',
+        { user: SITE_VISIT_VIEWER_USER, password: MOCK_PASSWORD },
+      ],
     ]),
     jar: readJar(),
     csrfToken: 'mock-csrf-token-1',
@@ -312,6 +338,8 @@ function createState() {
     nextPlaceId: 700,
     leads: buildLeads(28),
     nextLeadId: 1000,
+    siteVisits: buildSiteVisits(36),
+    nextSiteVisitId: 2000,
     /** Idempotency-Key -> created property id, per owner. */
     createKeys: new Map<string, number>(),
   };
@@ -477,6 +505,30 @@ export const mockDb = {
 
   nextLeadId(): number {
     return state.nextLeadId++;
+  },
+
+  /** `site_visits` rows that are not soft-deleted. */
+  siteVisits(): SiteVisit[] {
+    return state.siteVisits;
+  },
+
+  findSiteVisit(id: number): SiteVisit | undefined {
+    return state.siteVisits.find((visit) => visit.id === id);
+  },
+
+  saveSiteVisit(visit: SiteVisit): void {
+    const exists = state.siteVisits.some((row) => row.id === visit.id);
+    state.siteVisits = exists
+      ? state.siteVisits.map((row) => (row.id === visit.id ? visit : row))
+      : [visit, ...state.siteVisits];
+  },
+
+  deleteSiteVisit(id: number): void {
+    state.siteVisits = state.siteVisits.filter((visit) => visit.id !== id);
+  },
+
+  nextSiteVisitId(): number {
+    return state.nextSiteVisitId++;
   },
 
   createdWithKey(key: string): number | undefined {

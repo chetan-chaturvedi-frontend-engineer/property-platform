@@ -51,6 +51,37 @@ class SiteVisitAdminApiTests extends SiteVisitApiTestSupport {
 	}
 
 	@Test
+	void statsCountNonDeletedVisitsPerStatusAndVisitType() throws Exception {
+		long propertyId = property(bobId, "published");
+		book(alice, propertyId);
+		long confirmed = id(postAs(ADMIN, admin, booking(propertyId, tomorrow(), "11:00")
+			.replaceFirst("\\{", "{\"visitType\": \"virtual_visit\", "))
+			.andExpect(status().isCreated()));
+		patchAs(adminPath(confirmed) + "/status", admin, "{\"status\": \"confirmed\"}").andExpect(status().isOk());
+		long deleted = id(postAs(ADMIN, admin, booking(propertyId, tomorrow(), "12:00")).andExpect(status().isCreated()));
+		deleteAs(adminPath(deleted), admin).andExpect(status().isNoContent());
+
+		getAs(ADMIN + "/stats", admin)
+			.andExpect(status().isOk())
+			.andExpect(jsonPath("$.total").value(2))
+			.andExpect(jsonPath("$.byStatus.scheduled").value(1))
+			.andExpect(jsonPath("$.byStatus.confirmed").value(1))
+			.andExpect(jsonPath("$.byStatus.no_show").value(0))
+			.andExpect(jsonPath("$.byVisitType.site_visit").value(1))
+			.andExpect(jsonPath("$.byVisitType.virtual_visit").value(1))
+			.andExpect(jsonPath("$.byVisitType.revisit").value(0));
+	}
+
+	@Test
+	void statsNeedListAnyAndTheAdminPanel() throws Exception {
+		getAs(ADMIN + "/stats", bob).andExpect(status().isForbidden());
+		role("visit-viewer", "\"site_visit\": {\"view_any\": true}");
+		account("visit-viewer@example.com", "visit-viewer");
+		getAs(ADMIN + "/stats", token("visit-viewer@example.com")).andExpect(status().isForbidden());
+		mvc.perform(get(ADMIN + "/stats")).andExpect(status().isUnauthorized());
+	}
+
+	@Test
 	void appUsersAndUnauthenticatedCallersCannotUseAdminEndpoints() throws Exception {
 		long visitId = book(alice, property(bobId, "published"));
 

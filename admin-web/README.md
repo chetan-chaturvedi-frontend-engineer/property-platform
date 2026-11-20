@@ -25,14 +25,15 @@ by default `http://localhost:8080/api/v1`, so the browser calls the backend dire
 
 **Mock accounts** (`dev:mock` only, password `Admin@1234` for all):
 
-| Email                 | Role            | Sees                                                                                                       |
-| --------------------- | --------------- | ---------------------------------------------------------------------------------------------------------- |
-| `admin@example.com`   | Administrator   | dashboard, users (full CRUD), properties (full workflow), leads (full CRUD, assign), activity log, profile |
-| `manager@example.com` | Manager         | dashboard, users (view only), profile (no `SYSTEM_LOG_LIST`)                                               |
-| `editor@example.com`  | User Editor     | users: add and edit, but no status changes or deletes                                                      |
-| `viewer@example.com`  | Property Viewer | properties: list and details only, no edits or workflow actions                                            |
-| `leads@example.com`   | Lead Viewer     | leads: list and details only, no edits, assignment or deletes                                              |
-| `user@example.com`    | app user        | login refused: `admin_access_denied`                                                                       |
+| Email                 | Role            | Sees                                                                                                                       |
+| --------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `admin@example.com`   | Administrator   | dashboard, users (full CRUD), properties (full workflow), leads and site visits (full CRUD, assign), activity log, profile |
+| `manager@example.com` | Manager         | dashboard, users (view only), profile (no `SYSTEM_LOG_LIST`)                                                               |
+| `editor@example.com`  | User Editor     | users: add and edit, but no status changes or deletes                                                                      |
+| `viewer@example.com`  | Property Viewer | properties: list and details only, no edits or workflow actions                                                            |
+| `leads@example.com`   | Lead Viewer     | leads: list and details only, no edits, assignment or deletes                                                              |
+| `visits@example.com`  | Visit Viewer    | site visits: list only (no details, edits, status changes, assignment or deletes)                                          |
+| `user@example.com`    | app user        | login refused: `admin_access_denied`                                                                                       |
 
 With the real backend, sign in with an account whose role grants `ADMIN_PANEL_ACCESS`.
 

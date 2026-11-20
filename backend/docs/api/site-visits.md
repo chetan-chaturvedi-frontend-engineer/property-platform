@@ -207,6 +207,7 @@ are cleared. The submitter is the caller.
 | Method and path | Permission |
 |---|---|
 | `GET /admin/site-visits` | `SITE_VISIT_LIST_ANY` |
+| `GET /admin/site-visits/stats` | `SITE_VISIT_LIST_ANY` |
 | `POST /admin/site-visits` | `SITE_VISIT_CREATE_ANY` (+ `SITE_VISIT_ASSIGN_ANY` with `assignId`) |
 | `GET /admin/site-visits/{id}` | `SITE_VISIT_VIEW_ANY` |
 | `PATCH /admin/site-visits/{id}` | `SITE_VISIT_UPDATE_ANY` |
@@ -222,5 +223,16 @@ builder always comes from the property.
 List query: `search` (visitor name, email, mobile digits (3+), visit code), `propertyId`, `builderId`,
 `assignId`, `userId`, `leadId`, `status`, `visitType`, `interest`, `visitDateFrom`, `visitDateTo`,
 `nextFollowUpFrom`, `nextFollowUpTo`, plus the same paging and sorting as the app list.
+
+### `GET /admin/site-visits/stats` — dashboard counts
+
+Non-deleted visits in total, per status and per visit type. Every status and type is a key (0 when
+none), and each map adds up to `total`. Not affected by list filters.
+
+```json
+{ "total": 156,
+  "byStatus": { "scheduled": 20, "confirmed": 12, "completed": 86, "cancelled": 12, "rescheduled": 6, "no_show": 20 },
+  "byVisitType": { "site_visit": 140, "virtual_visit": 10, "revisit": 6 } }
+```
 
 There is no `PUT`: updates are partial (`PATCH`), like every other module.
