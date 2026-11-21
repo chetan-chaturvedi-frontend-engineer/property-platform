@@ -13,7 +13,8 @@ import lombok.RequiredArgsConstructor;
 public enum NotificationType implements PersistableEnum {
 
 	SITE_VISIT_BOOKED("site_visit_booked"),
-	PROPERTY_STATUS_CHANGED("property_status_changed");
+	PROPERTY_STATUS_CHANGED("property_status_changed"),
+	NEW_MESSAGE("new_message");
 
 	private final String value;
 

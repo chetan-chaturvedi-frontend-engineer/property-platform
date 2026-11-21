@@ -44,6 +44,8 @@ public final class PermissionCatalog {
 					"update_any", "delete_any")),
 			new Module("builder_team_membership", "Team Memberships", List.of("view", "respond")),
 			new Module("subscription", "My Subscription", List.of("view", "create")),
+			new Module("conversation", "Conversations", List.of("list", "create", "update")),
+			new Module("message", "Messages", List.of("list", "create")),
 			new Module("notification", "Notifications", List.of("list", "update", "delete")),
 			new Module("profile", "My Account", List.of("update", "change_password", "delete")),
 			new Module("saved_property", "Saved Properties", List.of("list", "create", "delete")),

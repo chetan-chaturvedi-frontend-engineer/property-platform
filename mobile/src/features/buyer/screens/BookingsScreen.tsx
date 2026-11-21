@@ -71,7 +71,7 @@ export function BookingsScreen() {
           </View>
           {b.status === 'Upcoming' ? (
             <View style={[styles.row, styles.actions]}>
-              <Button small variant="outline" icon="chatbubble-outline" label="Chat Now" style={styles.flex} />
+              <Button small variant="outline" icon="chatbubble-outline" label="Chat Now" style={styles.flex} onPress={() => nav.navigate('Chat', { propertyId: b.propertyId, title: b.name, subtitle: 'Ask the owner' })} />
               <Button small variant="danger" label="Cancel" style={styles.flex} onPress={() => cancel(b.visitId)} />
             </View>
           ) : null}

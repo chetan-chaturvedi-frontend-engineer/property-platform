@@ -42,6 +42,8 @@ export interface Booking {
   id: string;
   /** Numeric backend id, used to cancel. */
   visitId: number;
+  /** The visited property, for "Chat now". */
+  propertyId: number;
   name: string;
   config: string;
   area: string;
@@ -52,20 +54,28 @@ export interface Booking {
   status: BookingStatus;
 }
 
+/** One enquiry conversation in the inbox. */
 export interface ChatThread {
+  /** Conversation id. */
   id: string;
-  name: string;
-  role: string;
+  propertyId: number;
+  /** The caller's side: a buyer asked about the property, or the seller owns it. */
+  role: 'buyer' | 'seller';
+  /** Who or what the row is about: the property for a buyer, the buyer for a seller. */
+  title: string;
+  subtitle: string;
   lastMessage: string;
+  /** ISO instant of the last message; shown as a relative time. */
   time: string;
-  unread?: boolean;
+  unread: number;
 }
 
 export interface ChatMessage {
-  id: string;
+  id: number;
   fromMe: boolean;
   text: string;
-  time: string;
+  /** ISO instant. */
+  createdAt: string;
 }
 
 export type ListingPurpose = 'For Sale' | 'For Rent' | 'Draft';
@@ -264,7 +274,7 @@ export interface SellerEngagement {
   saves: number;
 }
 
-export type NotificationKind = 'site_visit_booked' | 'property_status_changed';
+export type NotificationKind = 'site_visit_booked' | 'property_status_changed' | 'new_message';
 
 export interface AppNotification {
   id: number;
@@ -276,4 +286,5 @@ export interface AppNotification {
   createdAt: string;
   /** Ids for opening the related screen. */
   propertyId?: number;
+  conversationId?: number;
 }

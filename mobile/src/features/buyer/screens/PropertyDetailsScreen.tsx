@@ -41,6 +41,18 @@ export function PropertyDetailsScreen({ navigation, route }: RootScreenProps<'Pr
     }
   }, [status, propertyId]);
 
+  /** Enquiring starts a conversation with the owner, which needs an account. */
+  function onEnquire() {
+    if (!p) {
+      return;
+    }
+    if (status === 'signedIn') {
+      navigation.navigate('Chat', { propertyId: p.propertyId, title: p.name, subtitle: 'Ask the owner' });
+    } else {
+      navigation.navigate('Login');
+    }
+  }
+
   async function onToggleSaved() {
     if (propertyId !== undefined && (await toggle(propertyId)) === 'needsLogin') {
       navigation.navigate('Login');
@@ -57,7 +69,7 @@ export function PropertyDetailsScreen({ navigation, route }: RootScreenProps<'Pr
       footer={
         <View style={styles.footerRow}>
           <Button label="Schedule Visit" variant="outline" icon="calendar-outline" style={styles.flex} onPress={() => navigation.navigate('ScheduleVisit', { id })} />
-          <Button label="Enquire Now" style={styles.flex} onPress={() => navigation.navigate('Chat', { id: '1', title: p.name })} />
+          <Button label="Enquire Now" style={styles.flex} onPress={onEnquire} />
         </View>
       }>
       <Header

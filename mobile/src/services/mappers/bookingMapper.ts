@@ -28,6 +28,7 @@ export function toBooking(v: ApiSiteVisit): Booking {
   return {
     id: v.visitCode,
     visitId: v.id,
+    propertyId: v.property.id,
     name: v.property.projectName,
     config: '',
     area: [v.property.locality, v.property.city].filter(Boolean).join(', '),

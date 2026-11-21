@@ -23,7 +23,6 @@ export function ApartmentDetailsScreen({ navigation, route }: RootScreenProps<'A
       footer={
         <View style={styles.row}>
           <Button variant="outline" icon="call-outline" label="Call Now" style={styles.flex} />
-          <Button variant="outline" icon="chatbubble-outline" label="Chat Now" style={styles.flex} onPress={() => navigation.navigate('Chat', { id: '1', title: '2 BHK Apartment' })} />
           <Button label="Enquire Now" style={styles.flex} onPress={() => navigation.navigate('ScheduleVisit', { id: route.params.id })} />
         </View>
       }>

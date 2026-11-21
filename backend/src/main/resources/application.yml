@@ -155,6 +155,10 @@ app:
     builder-team-write-user: { max-requests: 300, window: 1h }
     # Creation and updates of the caller's own settings.
     user-setting-write-user: { max-requests: 120, window: 1h }
+    # Starting conversations with property owners.
+    conversation-create-user: { max-requests: 30, window: 1h }
+    # Sending messages and marking conversations read.
+    message-write-user: { max-requests: 600, window: 1h }
     # Marking notifications read and deleting them.
     notification-write-user: { max-requests: 600, window: 1h }
     # Own account changes: rename, change password, delete (the last two check the current password).

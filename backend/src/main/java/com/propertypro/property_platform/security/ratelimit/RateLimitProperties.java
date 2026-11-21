@@ -47,6 +47,10 @@ public record RateLimitProperties(
 		RateLimit builderTeamWriteUser,
 		/** Creation and updates of the caller's own settings. */
 		RateLimit userSettingWriteUser,
+		/** Starting conversations; small, since each is a message to a stranger. */
+		RateLimit conversationCreateUser,
+		/** Sending messages and marking conversations read. */
+		RateLimit messageWriteUser,
 		/** Marking notifications read and deleting them. */
 		RateLimit notificationWriteUser,
 		/** Changing own name or password and deleting own account; small, since two of them check the password. */

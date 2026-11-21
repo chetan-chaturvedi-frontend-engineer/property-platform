@@ -1,5 +1,5 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { AppState } from 'react-native';
+import React, { createContext, useContext, useMemo } from 'react';
+import { usePolledCount } from '../../hooks/usePolledCount';
 import { notificationService } from '../../services/notificationService';
 import { useAuth } from '../auth/AuthProvider';
 
@@ -11,35 +11,11 @@ interface UnreadValue {
 
 const UnreadContext = createContext<UnreadValue | undefined>(undefined);
 
-const REFRESH_MS = 60_000;
-
-/** The bell's unread count: loaded after sign-in, then refreshed when the app returns to the foreground and each minute. */
+/** The bell's unread count, kept fresh while the user is signed in. */
 export function UnreadNotificationsProvider({ children }: { children: React.ReactNode }) {
   const { status } = useAuth();
-  const [unread, setUnread] = useState(0);
-
-  const refresh = useCallback(() => {
-    if (status !== 'signedIn') {
-      setUnread(0);
-      return;
-    }
-    notificationService.unreadCount().then(setUnread).catch(() => undefined);
-  }, [status]);
-
-  useEffect(() => {
-    refresh();
-    if (status !== 'signedIn') {
-      return undefined;
-    }
-    const timer = setInterval(refresh, REFRESH_MS);
-    const subscription = AppState.addEventListener('change', state => state === 'active' && refresh());
-    return () => {
-      clearInterval(timer);
-      subscription.remove();
-    };
-  }, [refresh, status]);
-
-  const value = useMemo(() => ({ unread, refresh }), [unread, refresh]);
+  const { count, refresh } = usePolledCount(notificationService.unreadCount, status === 'signedIn');
+  const value = useMemo(() => ({ unread: count, refresh }), [count, refresh]);
   return <UnreadContext.Provider value={value}>{children}</UnreadContext.Provider>;
 }
 

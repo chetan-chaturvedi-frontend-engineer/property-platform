@@ -14,6 +14,7 @@ import { useUnreadNotifications } from '../UnreadNotificationsProvider';
 const ICON: Record<NotificationKind, IconName> = {
   site_visit_booked: 'calendar-outline',
   property_status_changed: 'business-outline',
+  new_message: 'chatbubble-outline',
 };
 
 export function NotificationsScreen() {
@@ -31,7 +32,9 @@ export function NotificationsScreen() {
       reload();
       refresh();
     }
-    if (n.kind === 'site_visit_booked') {
+    if (n.kind === 'new_message' && n.conversationId !== undefined) {
+      nav.navigate('Chat', { id: String(n.conversationId), title: 'Conversation' });
+    } else if (n.kind === 'site_visit_booked') {
       nav.navigate('Bookings');
     } else if (n.propertyId !== undefined) {
       nav.navigate('SellerPropertyDetails', { id: String(n.propertyId) });
