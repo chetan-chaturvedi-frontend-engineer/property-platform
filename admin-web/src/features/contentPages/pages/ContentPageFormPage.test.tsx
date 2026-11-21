@@ -123,7 +123,7 @@ describe('ContentPageFormPage', () => {
 
       await waitFor(() => expect(titleBox()).toHaveValue('Privacy policy'));
       expect(screen.getByRole('textbox', { name: /Meta title/ })).toHaveValue(
-        'Privacy policy | PropertyPro',
+        'Privacy policy | Dwellery',
       );
       await user.clear(screen.getByRole('textbox', { name: /Meta title/ }));
       await user.clear(screen.getByRole('textbox', { name: /URL slug/ }));

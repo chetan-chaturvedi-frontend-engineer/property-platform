@@ -13,7 +13,7 @@ const truncate = (text: string, max: number) =>
   text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
 
 interface BlogSeoFieldsProps {
-  /** Public site address used in the search result preview, e.g. "propertypro.com". */
+  /** Public site address used in the search result preview, e.g. "dwellery.com". */
   siteLabel: string;
   disabled?: boolean;
 }

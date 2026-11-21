@@ -42,9 +42,7 @@ describe('BlogDetailsPage', () => {
     expect(info.getByText('home buying')).toBeInTheDocument();
 
     const seo = within(screen.getByRole('region', { name: 'SEO & meta details' }));
-    expect(
-      seo.getByText('Top 10 Tips for First-Time Home Buyers | PropertyPro'),
-    ).toBeInTheDocument();
+    expect(seo.getByText('Top 10 Tips for First-Time Home Buyers | Dwellery')).toBeInTheDocument();
     expect(seo.getByText('Not set: the short description is used.')).toBeInTheDocument();
     expect(seo.getByText('/blog/top-10-tips-for-first-time-home-buyers')).toBeInTheDocument();
   });
