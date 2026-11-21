@@ -50,8 +50,14 @@ import java.util.regex.Pattern;
 public class Role {
 
 	public static final String SUPER_ADMIN_SLUG = "super-admin";
+	/**
+	 * Roles seeded by migrations. Registration and existing accounts rely on them, so they cannot be deleted
+	 * through the API (their permissions stay editable, except super admin).
+	 */
+	public static final Set<String> DEFAULT_SLUGS = Set.of(SUPER_ADMIN_SLUG, "admin", "user");
 
 	public static final int NAME_MAX_LENGTH = 100;
+	public static final int DESCRIPTION_MAX_LENGTH = 500;
 	/** Same as {@code users.user_type}. */
 	public static final int SLUG_MAX_LENGTH = 30;
 	public static final int MAX_MODULES = 100;
@@ -74,6 +80,10 @@ public class Role {
 	/** Immutable: changing it would move every user of this role to another one. */
 	@Column(nullable = false, length = SLUG_MAX_LENGTH, updatable = false)
 	private String slug;
+
+	@Setter
+	@Column(length = DESCRIPTION_MAX_LENGTH)
+	private String description;
 
 	@JdbcTypeCode(SqlTypes.JSON)
 	@Column(nullable = false)
@@ -112,6 +122,10 @@ public class Role {
 		return SUPER_ADMIN_SLUG.equals(slug);
 	}
 
+	public boolean isDefault() {
+		return DEFAULT_SLUGS.contains(slug);
+	}
+
 	public boolean isActive() {
 		return status == RoleStatus.ACTIVE;
 	}
@@ -128,6 +142,11 @@ public class Role {
 	/** Permission codes this role grants right now; empty while inactive. */
 	public Set<String> grantedPermissions() {
 		return isActive() ? codes(permissions) : Set.of();
+	}
+
+	/** Permission codes set to true in the stored JSON, whether or not the role is active. */
+	public Set<String> configuredPermissions() {
+		return codes(permissions);
 	}
 
 	/** Defensive copy of the stored JSON, including {@code false} entries. */
