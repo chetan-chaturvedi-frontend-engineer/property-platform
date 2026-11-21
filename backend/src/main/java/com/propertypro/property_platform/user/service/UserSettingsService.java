@@ -35,6 +35,15 @@ public class UserSettingsService {
 
 	private final UserSettingsRepository repository;
 
+	/**
+	 * Whether the user wants notifications at all (the master switch). Users who never saved settings get the
+	 * defaults, which is on.
+	 */
+	@Transactional(readOnly = true)
+	public boolean notificationsEnabled(Long userId) {
+		return repository.findByUserId(userId).map(UserSettings::isNotificationEnabled).orElse(true);
+	}
+
 	@Transactional(readOnly = true)
 	public UserSettingsResponse get(CurrentActor actor) {
 		requirePermission(actor, USER_SETTING_VIEW);

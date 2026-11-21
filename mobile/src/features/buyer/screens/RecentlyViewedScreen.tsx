@@ -1,50 +1,43 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Chip, Header, Icon, Screen } from '../../../components';
+import { Alert, StyleSheet, Text } from 'react-native';
+import { EmptyState, Header, Screen } from '../../../components';
+import { useAsync } from '../../../hooks/useAsync';
 import { useRootNavigation } from '../../../navigation/useRootNavigation';
-import { colors, typography } from '../../../theme';
+import { recentlyViewedService } from '../../../services/recentlyViewedService';
+import { colors } from '../../../theme';
+import { useAuth } from '../../auth/AuthProvider';
 import { PropertyListCard } from '../components/PropertyListCard';
-import { useProperties } from '../hooks/useProperties';
-
-const stats = [['18', 'Viewed Properties'], ['7', 'Projects'], ['11', 'Flats'], ['3', 'Today']];
 
 export function RecentlyViewedScreen() {
   const nav = useRootNavigation();
-  const { data } = useProperties();
+  const { status } = useAuth();
+  const signedIn = status === 'signedIn';
+  const { data, loading, error, reload } = useAsync(() => (signedIn ? recentlyViewedService.list() : Promise.resolve([])), [signedIn]);
+  const list = data ?? [];
+
+  function clearAll() {
+    Alert.alert('Clear your history?', 'This removes the list; sellers keep their view counts.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Clear', style: 'destructive', onPress: () => recentlyViewedService.clear().then(reload).catch(() => Alert.alert('Could not clear', 'Try again.')) },
+    ]);
+  }
+
   return (
     <Screen>
-      <Header title="Recently Viewed" subtitle="Properties you recently explored" right={<Text style={styles.clear}>Clear All</Text>} />
-      <Card style={styles.stats}>
-        <View style={styles.spread}>
-          {stats.map(([n, l]) => (
-            <View key={l} style={styles.stat}><Text style={typography.h2}>{n}</Text><Text style={typography.tiny}>{l}</Text></View>
-          ))}
-        </View>
-      </Card>
-      <View style={styles.chips}>
-        {['All (18)', 'Projects (7)', 'Flats (11)', 'Plots (0)', 'Villas (0)'].map((c, i) => <Chip key={c} label={c} active={i === 0} />)}
-      </View>
-      <Text style={styles.group}>Today</Text>
-      {(data ?? []).map(p => <PropertyListCard key={p.id} property={p} onToggleLike={() => undefined} />)}
-      <Card style={styles.cta}>
-        <Icon name="time-outline" size={22} />
-        <View style={styles.flex}>
-          <Text style={typography.h3}>Can't find what you are looking for?</Text>
-          <Text style={typography.tiny}>Save your favourite properties to access them anytime.</Text>
-        </View>
-        <Button small icon="heart-outline" label="View Shortlist" onPress={() => nav.navigate('BuyerTabs')} />
-      </Card>
+      <Header
+        title="Recently Viewed"
+        subtitle="Properties you recently explored"
+        right={signedIn && list.length > 0 ? <Text style={styles.clear} onPress={clearAll} accessibilityRole="button">Clear All</Text> : undefined}
+      />
+      {status === 'signedOut' ? <EmptyState title="Sign in to see your history" actionLabel="Sign In" onAction={() => nav.navigate('Login')} /> : null}
+      {signedIn && error ? <EmptyState title="Could not load your history" body={error.message} actionLabel="Retry" onAction={reload} /> : null}
+      {signedIn && loading && !data ? <EmptyState title="Loading…" /> : null}
+      {list.map(p => <PropertyListCard key={p.id} property={p} />)}
+      {signedIn && !loading && !error && list.length === 0 ? <EmptyState title="Nothing here yet" body="Properties you open will appear here." /> : null}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  flex: { flex: 1 },
   clear: { color: colors.danger, fontWeight: '600', fontSize: 12 },
-  stats: { marginHorizontal: 16 },
-  spread: { flexDirection: 'row', justifyContent: 'space-around' },
-  stat: { alignItems: 'center' },
-  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16, marginTop: 12 },
-  group: { ...typography.h3, paddingHorizontal: 16, marginVertical: 12 },
-  cta: { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16 },
 });

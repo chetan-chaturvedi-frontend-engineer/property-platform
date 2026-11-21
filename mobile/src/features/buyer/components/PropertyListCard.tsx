@@ -4,17 +4,23 @@ import { Button, Card, Icon, PropertyPhoto, Tag } from '../../../components';
 import { useRootNavigation } from '../../../navigation/useRootNavigation';
 import { colors, typography } from '../../../theme';
 import { Property } from '../../../types';
+import { useSavedProperties } from '../SavedPropertiesProvider';
 
 interface Props {
   property: Property;
-  liked?: boolean;
-  onToggleLike?: () => void;
   showActions?: boolean;
 }
 
 /** Horizontal property card used by Saved / Recently Viewed / Home lists. */
-export function PropertyListCard({ property: p, liked, onToggleLike, showActions }: Props) {
+export function PropertyListCard({ property: p, showActions }: Props) {
   const nav = useRootNavigation();
+  const { isSaved, toggle } = useSavedProperties();
+  const liked = isSaved(p.propertyId);
+  const onToggleLike = async () => {
+    if ((await toggle(p.propertyId)) === 'needsLogin') {
+      nav.navigate('Login');
+    }
+  };
   const open = () => nav.navigate('PropertyDetails', { id: p.id });
   return (
     <Card style={styles.card}>
@@ -23,11 +29,9 @@ export function PropertyListCard({ property: p, liked, onToggleLike, showActions
         <View style={styles.flex}>
           <View style={styles.titleRow}>
             <Text style={[typography.h3, styles.flex]} numberOfLines={1}>{p.name}</Text>
-            {onToggleLike ? (
-              <Pressable onPress={onToggleLike} accessibilityRole="button" accessibilityLabel="Toggle saved">
-                <Icon name={liked ? 'heart' : 'heart-outline'} size={18} color={liked ? colors.danger : colors.textFaint} />
-              </Pressable>
-            ) : null}
+            <Pressable onPress={onToggleLike} accessibilityRole="button" accessibilityLabel={liked ? 'Remove from saved' : 'Save property'} hitSlop={8}>
+              <Icon name={liked ? 'heart' : 'heart-outline'} size={18} color={liked ? colors.danger : colors.textFaint} />
+            </Pressable>
           </View>
           <Text style={typography.muted} numberOfLines={1}>{p.area}</Text>
           <Text style={typography.muted}>{p.config}</Text>

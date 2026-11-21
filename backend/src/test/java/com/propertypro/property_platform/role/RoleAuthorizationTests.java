@@ -42,6 +42,18 @@ import static com.propertypro.property_platform.security.Permissions.PROPERTY_DE
 import static com.propertypro.property_platform.security.Permissions.PROPERTY_LIST;
 import static com.propertypro.property_platform.security.Permissions.PROPERTY_UPDATE;
 import static com.propertypro.property_platform.security.Permissions.PROPERTY_VIEW;
+import static com.propertypro.property_platform.security.Permissions.NOTIFICATION_DELETE;
+import static com.propertypro.property_platform.security.Permissions.NOTIFICATION_LIST;
+import static com.propertypro.property_platform.security.Permissions.NOTIFICATION_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.PROFILE_CHANGE_PASSWORD;
+import static com.propertypro.property_platform.security.Permissions.PROFILE_DELETE;
+import static com.propertypro.property_platform.security.Permissions.PROFILE_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.RECENTLY_VIEWED_CREATE;
+import static com.propertypro.property_platform.security.Permissions.RECENTLY_VIEWED_DELETE;
+import static com.propertypro.property_platform.security.Permissions.RECENTLY_VIEWED_LIST;
+import static com.propertypro.property_platform.security.Permissions.SAVED_PROPERTY_CREATE;
+import static com.propertypro.property_platform.security.Permissions.SAVED_PROPERTY_DELETE;
+import static com.propertypro.property_platform.security.Permissions.SAVED_PROPERTY_LIST;
 import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_ASSIGN;
 import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_CREATE;
 import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_LIST;
@@ -104,7 +116,10 @@ class RoleAuthorizationTests extends AbstractIntegrationTest {
 					SITE_VISIT_SUBMIT_REPORT, SITE_VISIT_ASSIGN, BUILDER_TEAM_LIST, BUILDER_TEAM_VIEW, BUILDER_TEAM_CREATE,
 					BUILDER_TEAM_UPDATE, BUILDER_TEAM_DELETE, BUILDER_TEAM_ASSIGN_ROLE, BUILDER_TEAM_MANAGE_PERMISSIONS,
 					BUILDER_TEAM_MANAGE_STATUS, BUILDER_TEAM_MEMBERSHIP_VIEW, BUILDER_TEAM_MEMBERSHIP_RESPOND,
-					USER_SETTING_VIEW, USER_SETTING_CREATE, USER_SETTING_UPDATE, SUBSCRIPTION_VIEW, SUBSCRIPTION_CREATE);
+					USER_SETTING_VIEW, USER_SETTING_CREATE, USER_SETTING_UPDATE, SUBSCRIPTION_VIEW, SUBSCRIPTION_CREATE, SAVED_PROPERTY_LIST, SAVED_PROPERTY_CREATE,
+					SAVED_PROPERTY_DELETE, RECENTLY_VIEWED_LIST, RECENTLY_VIEWED_CREATE, RECENTLY_VIEWED_DELETE, PROFILE_UPDATE,
+					PROFILE_CHANGE_PASSWORD, PROFILE_DELETE, NOTIFICATION_LIST, NOTIFICATION_UPDATE,
+					NOTIFICATION_DELETE);
 
 		getWithToken(ADMIN_PLANS, accessToken).andExpect(status().isForbidden());
 	}

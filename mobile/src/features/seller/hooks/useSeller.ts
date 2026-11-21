@@ -13,6 +13,7 @@ function useWhenSignedIn<T>(load: () => Promise<T>, empty: T) {
 export const useSellerListings = () => useWhenSignedIn(() => sellerService.listings(), []);
 export const useSellerLeads = () => useWhenSignedIn(() => sellerService.leads(), []);
 export const useSiteVisitCount = () => useWhenSignedIn(() => sellerService.siteVisitCount(), 0);
+export const useSellerEngagement = () => useWhenSignedIn(() => sellerService.engagement(), { views: 0, uniqueViewers: 0, saves: 0 });
 export const useMySubscription = () => useWhenSignedIn(() => subscriptionService.mine(), null);
 export const useSubscriptionPlans = () => useAsync(() => subscriptionService.plans());
 

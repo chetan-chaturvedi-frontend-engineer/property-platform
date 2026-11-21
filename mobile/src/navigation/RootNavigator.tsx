@@ -4,6 +4,8 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ApartmentDetailsScreen } from '../features/buyer/screens/ApartmentDetailsScreen';
 import { BookingsScreen } from '../features/buyer/screens/BookingsScreen';
 import { CompareScreen } from '../features/buyer/screens/CompareScreen';
+import { ChangePasswordScreen } from '../features/buyer/screens/ChangePasswordScreen';
+import { EditProfileScreen } from '../features/buyer/screens/EditProfileScreen';
 import { DeleteAccountScreen } from '../features/buyer/screens/DeleteAccountScreen';
 import { LegalScreen } from '../features/buyer/screens/LegalScreen';
 import { EmiCalculatorScreen } from '../features/buyer/screens/EmiCalculatorScreen';
@@ -61,6 +63,8 @@ export function RootNavigator() {
         <Stack.Screen name="Legal" component={LegalScreen} />
         <Stack.Screen name="Faq" component={FaqScreen} />
         <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
+        <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
 
         <Stack.Screen name="SellerRegistration" component={SellerRegistrationScreen} />
         <Stack.Screen name="AddProperty" component={AddPropertyScreen} />

@@ -47,6 +47,14 @@ public record RateLimitProperties(
 		RateLimit builderTeamWriteUser,
 		/** Creation and updates of the caller's own settings. */
 		RateLimit userSettingWriteUser,
+		/** Marking notifications read and deleting them. */
+		RateLimit notificationWriteUser,
+		/** Changing own name or password and deleting own account; small, since two of them check the password. */
+		RateLimit profileWriteUser,
+		/** Saving and unsaving properties. */
+		RateLimit savedPropertyWriteUser,
+		/** Recording property views (each opened property detail) and clearing the list. */
+		RateLimit propertyViewWriteUser,
 		/** Subscribing to a plan. */
 		RateLimit userSubscriptionWriteUser,
 		/** Admin user management writes: create, update and delete. */

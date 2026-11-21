@@ -1,61 +1,82 @@
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Card, Chip, Header, Icon, IconButton, Screen } from '../../../components';
+import React from 'react';
+import { StyleSheet, Text, View } from 'react-native';
+import { Card, EmptyState, Header, Icon, Screen } from '../../../components';
 import type { IconName } from '../../../components';
+import { useAsync } from '../../../hooks/useAsync';
+import { useRootNavigation } from '../../../navigation/useRootNavigation';
+import { notificationService } from '../../../services/notificationService';
 import { colors, typography } from '../../../theme';
+import { AppNotification, NotificationKind } from '../../../types';
+import { formatListTime } from '../../../utils/dates';
+import { useAuth } from '../../auth/AuthProvider';
+import { useUnreadNotifications } from '../UnreadNotificationsProvider';
 
-type Kind = 'Offers' | 'Updates' | 'Reminders' | 'Messages';
-interface Item { id: string; kind: Kind; icon: IconName; title: string; body: string; cta: string; time: string; group: 'Today' | 'Yesterday' }
-
-const items: Item[] = [
-  { id: '1', kind: 'Offers', icon: 'pricetag-outline', title: 'Price Drop Alert!', body: 'The price of "Green Valley Residences" has dropped by ₹3.5 Lakhs.', cta: 'View Property', time: '10:30 AM', group: 'Today' },
-  { id: '2', kind: 'Updates', icon: 'business-outline', title: 'New Launch Near You!', body: '"Skyline Heights Phase 2" is now launched in Kondapur, Hyderabad.', cta: 'Explore Now', time: '9:15 AM', group: 'Today' },
-  { id: '3', kind: 'Reminders', icon: 'calendar-outline', title: 'Upcoming Site Visit Reminder', body: 'You have a site visit scheduled for "Urban Elite" on 18 May 2025 at 11:00 AM.', cta: 'View Details', time: '8:00 AM', group: 'Today' },
-  { id: '4', kind: 'Messages', icon: 'chatbubble-outline', title: 'New Message from Expert', body: 'Rahul Sharma replied to your query about "Green Valley Residences".', cta: 'Open Chat', time: '7:45 PM', group: 'Yesterday' },
-  { id: '5', kind: 'Updates', icon: 'flame-outline', title: 'Your Shortlisted Property is in High Demand', body: '"Skyline Heights" is getting a lot of interest. Book your site visit today!', cta: 'Book Now', time: '5:30 PM', group: 'Yesterday' },
-  { id: '6', kind: 'Updates', icon: 'shield-checkmark-outline', title: 'Loan Pre-Approval Successful', body: 'Congratulations! You are pre-approved for a loan up to ₹1.25 Crore.', cta: 'View Details', time: '2:10 PM', group: 'Yesterday' },
-];
-const tabs: ('All' | Kind)[] = ['All', 'Offers', 'Updates', 'Reminders', 'Messages'];
+const ICON: Record<NotificationKind, IconName> = {
+  site_visit_booked: 'calendar-outline',
+  property_status_changed: 'business-outline',
+};
 
 export function NotificationsScreen() {
-  const [tab, setTab] = useState<(typeof tabs)[number]>('All');
-  const list = items.filter(i => tab === 'All' || i.kind === tab);
+  const nav = useRootNavigation();
+  const { status } = useAuth();
+  const { refresh } = useUnreadNotifications();
+  const signedIn = status === 'signedIn';
+  const { data, loading, error, reload } = useAsync(() => (signedIn ? notificationService.list() : Promise.resolve([])), [signedIn]);
+  const list = data ?? [];
+  const hasUnread = list.some(n => !n.read);
+
+  async function open(n: AppNotification) {
+    if (!n.read) {
+      await notificationService.markRead(n.id).catch(() => undefined);
+      reload();
+      refresh();
+    }
+    if (n.kind === 'site_visit_booked') {
+      nav.navigate('Bookings');
+    } else if (n.propertyId !== undefined) {
+      nav.navigate('SellerPropertyDetails', { id: String(n.propertyId) });
+    }
+  }
+
+  async function readAll() {
+    await notificationService.markAllRead().catch(() => undefined);
+    reload();
+    refresh();
+  }
+
   return (
     <Screen>
-      <Header title="Notifications" subtitle="Stay updated with the latest updates" right={<IconButton name="settings-outline" accessibilityLabel="Notification settings" />} />
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.tabs}>
-        {tabs.map(t => <Chip key={t} label={t} active={tab === t} onPress={() => setTab(t)} />)}
-      </ScrollView>
-      {(['Today', 'Yesterday'] as const).map(g => {
-        const group = list.filter(i => i.group === g);
-        return group.length ? (
-          <View key={g}>
-            <Text style={styles.group}>{g}</Text>
-            {group.map(i => (
-              <Card key={i.id} style={styles.card}>
-                <View style={styles.tile}><Icon name={i.icon} size={20} /></View>
-                <View style={styles.flex}>
-                  <View style={styles.row}><Text style={[typography.h3, styles.flex]}>{i.title}</Text><Text style={typography.tiny}>{i.time}</Text></View>
-                  <Text style={typography.muted}>{i.body}</Text>
-                  <Text style={styles.cta}>{i.cta} →</Text>
-                </View>
-                <View style={styles.dot} />
-              </Card>
-            ))}
+      <Header
+        title="Notifications"
+        subtitle="Stay updated with the latest updates"
+        right={signedIn && hasUnread ? <Text style={styles.readAll} onPress={readAll} accessibilityRole="button">Mark all read</Text> : undefined}
+      />
+      {status === 'signedOut' ? <EmptyState title="Sign in to see your notifications" actionLabel="Sign In" onAction={() => nav.navigate('Login')} /> : null}
+      {signedIn && error ? <EmptyState title="Could not load notifications" body={error.message} actionLabel="Retry" onAction={reload} /> : null}
+      {signedIn && loading && !data ? <EmptyState title="Loading…" /> : null}
+      {signedIn && !loading && !error && list.length === 0 ? <EmptyState title="You are all caught up" body="Bookings and review decisions appear here." /> : null}
+      {list.map(n => (
+        <Card key={n.id} style={styles.card}>
+          <View style={styles.tile}><Icon name={ICON[n.kind]} size={20} /></View>
+          <View style={styles.flex}>
+            <View style={styles.row}>
+              <Text style={[typography.h3, styles.flex]} onPress={() => open(n)} accessibilityRole="button">{n.title}</Text>
+              <Text style={typography.tiny}>{formatListTime(n.createdAt)}</Text>
+            </View>
+            <Text style={typography.muted}>{n.body}</Text>
           </View>
-        ) : null;
-      })}
+          {!n.read ? <View style={styles.dot} accessibilityLabel="Unread" /> : null}
+        </Card>
+      ))}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  tabs: { gap: 8, paddingHorizontal: 16 },
-  group: { ...typography.h3, paddingHorizontal: 16, marginTop: 16, marginBottom: 8 },
   card: { flexDirection: 'row', gap: 12, marginHorizontal: 16, marginBottom: 10 },
   tile: { width: 42, height: 42, borderRadius: 12, backgroundColor: colors.primarySoft, alignItems: 'center', justifyContent: 'center' },
   row: { flexDirection: 'row', gap: 8 },
-  cta: { color: colors.primary, fontWeight: '600', fontSize: 12, marginTop: 4 },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.primary, marginTop: 6 },
+  readAll: { color: colors.primary, fontWeight: '600', fontSize: 12 },
 });

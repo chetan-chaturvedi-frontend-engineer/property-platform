@@ -10,6 +10,10 @@ interface AuthContextValue {
   user: User | null;
   signIn: (identifier: string, password: string) => Promise<void>;
   signOut: () => Promise<void>;
+  /** Replaces the signed-in user, e.g. after a rename. */
+  setUser: (user: User) => void;
+  /** Drops the session without calling the server, e.g. after the account was deleted or the password changed. */
+  clearSession: () => void;
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -56,7 +60,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setStatus('signedOut');
   }, []);
 
-  const value = useMemo(() => ({ status, user, signIn, signOut }), [status, user, signIn, signOut]);
+  const clearSession = useCallback(() => {
+    setUser(null);
+    setStatus('signedOut');
+  }, []);
+
+  const value = useMemo(
+    () => ({ status, user, signIn, signOut, setUser, clearSession }),
+    [status, user, signIn, signOut, clearSession],
+  );
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 

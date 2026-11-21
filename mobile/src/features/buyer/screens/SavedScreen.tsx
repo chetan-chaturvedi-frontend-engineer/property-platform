@@ -1,43 +1,46 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Button, Chip, Header, Icon, Screen } from '../../../components';
+import { Button, EmptyState, Header, Icon, Screen } from '../../../components';
+import { useAsync } from '../../../hooks/useAsync';
 import { useRootNavigation } from '../../../navigation/useRootNavigation';
+import { savedService } from '../../../services/savedService';
 import { colors, typography } from '../../../theme';
+import { useAuth } from '../../auth/AuthProvider';
 import { PropertyListCard } from '../components/PropertyListCard';
-import { useProperties } from '../hooks/useProperties';
+import { useSavedProperties } from '../SavedPropertiesProvider';
 
 export function SavedScreen() {
   const nav = useRootNavigation();
-  const { data } = useProperties();
-  const [removed, setRemoved] = useState<string[]>([]);
-  const saved = (data ?? []).filter(p => !removed.includes(p.id));
+  const { status } = useAuth();
+  const { ids } = useSavedProperties();
+  const signedIn = status === 'signedIn';
+  // Reload when a heart is toggled elsewhere (the ids change), so removed cards disappear.
+  const { data, loading, error, reload } = useAsync(() => (signedIn ? savedService.list() : Promise.resolve([])), [signedIn, ids.length]);
+  const saved = data ?? [];
 
   return (
     <Screen>
       <Header title="My Shortlist" subtitle="Properties you've saved for later" showBack={false} />
-      <View style={styles.row}>
-        <Chip label="Sort: Recently Added" icon="swap-vertical" />
-        <Chip label="Filter" icon="funnel-outline" onPress={() => nav.navigate('Filters')} />
-      </View>
-      <View style={styles.banner}>
-        <Icon name="heart" size={22} color={colors.danger} />
-        <View style={styles.flex}>
-          <Text style={typography.h3}>Easily compare your favorite properties</Text>
-          <Text style={typography.tiny}>Review and shortlist the best options for you.</Text>
+      {signedIn && saved.length > 0 ? (
+        <View style={styles.banner}>
+          <Icon name="heart" size={22} color={colors.danger} />
+          <View style={styles.flex}>
+            <Text style={typography.h3}>Easily compare your favorite properties</Text>
+            <Text style={typography.tiny}>Review and shortlist the best options for you.</Text>
+          </View>
+          <Button small label={`Compare (${Math.min(saved.length, 4)})`} onPress={() => nav.navigate('Compare')} />
         </View>
-        <Button small label={`Compare (${Math.min(saved.length, 4)})`} onPress={() => nav.navigate('Compare')} />
-      </View>
-      {saved.map(p => (
-        <PropertyListCard key={p.id} property={p} liked showActions onToggleLike={() => setRemoved(r => [...r, p.id])} />
-      ))}
-      {saved.length === 0 ? <Text style={styles.empty}>No saved properties yet.</Text> : null}
+      ) : null}
+      {status === 'signedOut' ? <EmptyState title="Sign in to see your shortlist" body="Tap the heart on any property to save it." actionLabel="Sign In" onAction={() => nav.navigate('Login')} /> : null}
+      {signedIn && error ? <EmptyState title="Could not load your shortlist" body={error.message} actionLabel="Retry" onAction={reload} /> : null}
+      {signedIn && loading && !data ? <EmptyState title="Loading…" /> : null}
+      {saved.map(p => <PropertyListCard key={p.id} property={p} showActions />)}
+      {signedIn && !loading && !error && saved.length === 0 ? <EmptyState title="No saved properties yet" body="Tap the heart on any property to save it." /> : null}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  row: { flexDirection: 'row', gap: 8, paddingHorizontal: 16 },
   banner: { flexDirection: 'row', alignItems: 'center', gap: 10, margin: 16, padding: 12, borderRadius: 12, backgroundColor: colors.primaryTint },
-  empty: { textAlign: 'center', color: colors.textMuted, marginTop: 40 },
 });

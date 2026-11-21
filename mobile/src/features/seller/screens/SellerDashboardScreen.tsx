@@ -4,7 +4,7 @@ import { Button, Card, EmptyState, Icon, PropertyPhoto, Screen, SectionTitle, St
 import { useRootNavigation } from '../../../navigation/useRootNavigation';
 import { colors, typography } from '../../../theme';
 import { useAuth } from '../../auth/AuthProvider';
-import { useMySubscription, useSellerLeads, useSellerListings, useSiteVisitCount } from '../hooks/useSeller';
+import { useMySubscription, useSellerEngagement, useSellerLeads, useSellerListings, useSiteVisitCount } from '../hooks/useSeller';
 
 export function SellerDashboardScreen() {
   const nav = useRootNavigation();
@@ -13,6 +13,7 @@ export function SellerDashboardScreen() {
   const leads = useSellerLeads();
   const visits = useSiteVisitCount();
   const subscription = useMySubscription();
+  const engagement = useSellerEngagement();
   const properties = listings.data ?? [];
   const active = properties.filter(p => p.status === 'Active').length;
   const signedIn = status === 'signedIn';
@@ -48,8 +49,13 @@ export function SellerDashboardScreen() {
           <SectionTitle title="Overview" />
           <View style={styles.stats}>
             <StatTile icon="business-outline" value={String(properties.length)} label="Properties" trend={`${active} Active`} />
+            <StatTile icon="eye-outline" value={String(engagement.data?.views ?? 0)} label="Views" trend={`${engagement.data?.uniqueViewers ?? 0} viewers`} />
+            <StatTile icon="heart-outline" value={String(engagement.data?.saves ?? 0)} label="Saves" />
+          </View>
+          <View style={[styles.stats, styles.top]}>
             <StatTile icon="person-outline" value={String(leads.data?.length ?? 0)} label="Leads" />
             <StatTile icon="calendar-outline" value={String(visits.data ?? 0)} label="Site Visits" />
+            <View style={styles.flex} />
           </View>
 
           <SectionTitle title="Recent Leads" />
@@ -73,6 +79,7 @@ const styles = StyleSheet.create({
   cta: { alignSelf: 'flex-start', marginTop: 8 },
   verify: { flexDirection: 'row', alignItems: 'center', gap: 10, margin: 16 },
   stats: { flexDirection: 'row', gap: 8, paddingHorizontal: 16 },
+  top: { marginTop: 8 },
   inq: { flexDirection: 'row', alignItems: 'center', gap: 10, marginHorizontal: 16, marginBottom: 10, padding: 10 },
   photo: { width: 48, height: 48 },
 });

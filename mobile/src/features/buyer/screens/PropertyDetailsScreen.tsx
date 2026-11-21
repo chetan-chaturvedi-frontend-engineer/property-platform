@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { Button, Card, Chip, Header, Icon, IconButton, PropertyPhoto, Screen, SectionTitle } from '../../../components';
 import { RootScreenProps } from '../../../navigation/types';
 import { colors, typography } from '../../../theme';
 import { IconName } from '../../../components';
+import { recentlyViewedService } from '../../../services/recentlyViewedService';
+import { useAuth } from '../../auth/AuthProvider';
 import { usePropertyAmenities, useProperty, useUnits } from '../hooks/useProperties';
+import { useSavedProperties } from '../SavedPropertiesProvider';
 
 const media: { icon: IconName; label: string }[] = [
   { icon: 'videocam', label: 'Live Tour' },
@@ -26,7 +29,23 @@ export function PropertyDetailsScreen({ navigation, route }: RootScreenProps<'Pr
   const { data: units } = useUnits(id);
   const { data: amenities } = usePropertyAmenities(id);
   const [filter, setFilter] = useState('All');
-  const [liked, setLiked] = useState(false);
+  const { status } = useAuth();
+  const { isSaved, toggle } = useSavedProperties();
+  const propertyId = p?.propertyId;
+  const liked = propertyId !== undefined && isSaved(propertyId);
+
+  // Opening a property counts as a view: it feeds Recently Viewed and the seller's view numbers.
+  useEffect(() => {
+    if (status === 'signedIn' && propertyId !== undefined) {
+      recentlyViewedService.record(propertyId).catch(() => undefined);
+    }
+  }, [status, propertyId]);
+
+  async function onToggleSaved() {
+    if (propertyId !== undefined && (await toggle(propertyId)) === 'needsLogin') {
+      navigation.navigate('Login');
+    }
+  }
 
   if (!p) {
     return <Screen><Header title="Loading…" /></Screen>;
@@ -46,7 +65,7 @@ export function PropertyDetailsScreen({ navigation, route }: RootScreenProps<'Pr
         subtitle={p.area}
         right={
           <View style={styles.row}>
-            <IconButton name={liked ? 'heart' : 'heart-outline'} color={liked ? colors.danger : colors.text} accessibilityLabel="Save" onPress={() => setLiked(v => !v)} />
+            <IconButton name={liked ? 'heart' : 'heart-outline'} color={liked ? colors.danger : colors.text} accessibilityLabel={liked ? 'Remove from saved' : 'Save property'} onPress={onToggleSaved} />
             <IconButton name="share-outline" accessibilityLabel="Share" />
           </View>
         }
