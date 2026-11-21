@@ -93,14 +93,9 @@ export const NAV_SECTIONS: readonly NavSection[] = [
         icon: <ShieldOutlined />,
         requiredPermissions: [PERMISSIONS.roleView],
       },
-    ],
-  },
-  {
-    title: 'Monitoring',
-    items: [
       {
-        label: 'Activity log',
-        path: ROUTES.activity,
+        label: 'System logs',
+        path: ROUTES.systemLogs,
         icon: <HistoryOutlined />,
         requiredPermissions: [PERMISSIONS.systemLogList],
       },

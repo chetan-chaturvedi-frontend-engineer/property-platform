@@ -3,7 +3,9 @@ export const ROUTES = {
   login: '/login',
   register: '/register',
   dashboard: '/dashboard',
+  /** Old address of the system logs page; redirects. */
   activity: '/activity',
+  systemLogs: '/system-logs',
   users: '/users',
   properties: '/properties',
   propertyNew: '/properties/new',
@@ -135,7 +137,7 @@ export const leadRoutes = {
 } as const;
 
 export const STORAGE_KEYS = {
-  activityPageSize: 'admin-web:activity-page-size',
+  systemLogsPageSize: 'admin-web:system-logs-page-size',
   usersPageSize: 'admin-web:users-page-size',
   propertiesPageSize: 'admin-web:properties-page-size',
   leadsPageSize: 'admin-web:leads-page-size',

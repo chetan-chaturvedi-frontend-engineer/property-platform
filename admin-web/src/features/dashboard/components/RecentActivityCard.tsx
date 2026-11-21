@@ -21,7 +21,7 @@ export function RecentActivityCard() {
         <Typography variant="h6" component="h2">
           Recent activity
         </Typography>
-        <Link component={RouterLink} to={ROUTES.activity} underline="hover" variant="body2">
+        <Link component={RouterLink} to={ROUTES.systemLogs} underline="hover" variant="body2">
           View all
         </Link>
       </div>

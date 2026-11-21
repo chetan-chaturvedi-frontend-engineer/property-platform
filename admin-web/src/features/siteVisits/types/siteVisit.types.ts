@@ -1,3 +1,4 @@
+import type { PickerOption } from '@/components/common/SearchAutocomplete';
 import type { PageParams } from '@/types/api.types';
 import type { EntityId, IsoDateTime, Nullable } from '@/types/common.types';
 
@@ -175,13 +176,7 @@ export interface SiteVisitReportRequest {
   followUpNote?: string;
 }
 
-/** An option from a search-as-you-type picker; restored URL filters may only know id and label. */
-export interface PickerOption {
-  id: EntityId;
-  label: string;
-  /** Second line, e.g. an email or a city. */
-  detail?: string;
-}
+export type { PickerOption } from '@/components/common/SearchAutocomplete';
 
 /** A lead offered when linking a visit; its contact details prefill the visitor fields. */
 export interface LeadPickerOption extends PickerOption {

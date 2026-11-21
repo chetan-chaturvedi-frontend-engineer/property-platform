@@ -1,12 +1,14 @@
 import { useState } from 'react';
 
+import {
+  SearchAutocomplete,
+  type SearchAutocompleteProps,
+} from '@/components/common/SearchAutocomplete';
 import { useDebounce } from '@/hooks/useDebounce';
 import { SEARCH_DEBOUNCE_MS } from '@/utils/constants';
 
 import { useLeadOptions, usePropertyOptions, useUserOptions } from '../hooks/useSiteVisits';
 import type { LeadPickerOption, PickerOption } from '../types/siteVisit.types';
-
-import { SearchAutocomplete, type SearchAutocompleteProps } from './SearchAutocomplete';
 
 type PickerProps<TOption extends PickerOption> = Omit<
   SearchAutocompleteProps<TOption>,
