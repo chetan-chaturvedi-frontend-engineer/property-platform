@@ -6,6 +6,7 @@ import FormatItalic from '@mui/icons-material/FormatItalic';
 import FormatListBulleted from '@mui/icons-material/FormatListBulleted';
 import FormatListNumbered from '@mui/icons-material/FormatListNumbered';
 import FormatQuote from '@mui/icons-material/FormatQuote';
+import FormatStrikethrough from '@mui/icons-material/FormatStrikethrough';
 import FormatUnderlined from '@mui/icons-material/FormatUnderlined';
 import ImageOutlined from '@mui/icons-material/ImageOutlined';
 import InsertLink from '@mui/icons-material/InsertLink';
@@ -24,6 +25,8 @@ import Tooltip from '@mui/material/Tooltip';
 import type { Editor } from '@tiptap/core';
 import { useEditorState } from '@tiptap/react';
 import { type MouseEvent, type ReactNode, useState } from 'react';
+
+import type { RichTextFeatures } from './richTextExtensions';
 
 const BLOCKS = [
   { value: 'paragraph', label: 'Paragraph' },
@@ -72,6 +75,8 @@ function ToolButton({ label, shortcut, icon, onClick, active = false, disabled }
 interface RichTextToolbarProps {
   editor: Editor;
   disabled?: boolean;
+  /** Which optional controls to show; the editor's schema must have the same features. */
+  features: Required<RichTextFeatures>;
   /** Opens the link dialog (the editor keeps the selection). */
   onLink: () => void;
   onImage: () => void;
@@ -81,6 +86,7 @@ interface RichTextToolbarProps {
 export function RichTextToolbar({
   editor,
   disabled = false,
+  features,
   onLink,
   onImage,
 }: RichTextToolbarProps) {
@@ -92,6 +98,7 @@ export function RichTextToolbar({
       bold: e.isActive('bold'),
       italic: e.isActive('italic'),
       underline: e.isActive('underline'),
+      strike: e.isActive('strike'),
       code: e.isActive('code'),
       subscript: e.isActive('subscript'),
       superscript: e.isActive('superscript'),
@@ -137,23 +144,30 @@ export function RichTextToolbar({
       aria-label="Formatting"
       className="flex flex-wrap items-center gap-0.5 border-b px-2 py-1.5"
     >
-      <TextField
-        select
-        size="small"
-        variant="standard"
-        value={state.block}
-        onChange={(event) => setBlock(event.target.value)}
-        disabled={disabled}
-        className="mr-1 w-32"
-        slotProps={{ htmlInput: { 'aria-label': 'Text style' }, input: { disableUnderline: true } }}
-      >
-        {BLOCKS.map((block) => (
-          <MenuItem key={block.value} value={block.value}>
-            {block.label}
-          </MenuItem>
-        ))}
-      </TextField>
-      <Divider orientation="vertical" flexItem className="mx-1" />
+      {features.headings && (
+        <>
+          <TextField
+            select
+            size="small"
+            variant="standard"
+            value={state.block}
+            onChange={(event) => setBlock(event.target.value)}
+            disabled={disabled}
+            className="mr-1 w-32"
+            slotProps={{
+              htmlInput: { 'aria-label': 'Text style' },
+              input: { disableUnderline: true },
+            }}
+          >
+            {BLOCKS.map((block) => (
+              <MenuItem key={block.value} value={block.value}>
+                {block.label}
+              </MenuItem>
+            ))}
+          </TextField>
+          <Divider orientation="vertical" flexItem className="mx-1" />
+        </>
+      )}
       <ToolButton
         label="Bold"
         shortcut="Ctrl+B"
@@ -178,6 +192,16 @@ export function RichTextToolbar({
         disabled={disabled}
         onClick={() => chain().toggleUnderline().run()}
       />
+      {features.strike && (
+        <ToolButton
+          label="Strikethrough"
+          shortcut="Ctrl+Shift+S"
+          icon={<FormatStrikethrough fontSize="small" />}
+          active={state.strike}
+          disabled={disabled}
+          onClick={() => chain().toggleStrike().run()}
+        />
+      )}
       <ToolButton
         label="Inline code"
         icon={<Code fontSize="small" />}
@@ -245,19 +269,23 @@ export function RichTextToolbar({
           onClick={() => chain().extendMarkRange('link').unsetLink().run()}
         />
       )}
-      <ToolButton
-        label="Insert image"
-        icon={<ImageOutlined fontSize="small" />}
-        disabled={disabled}
-        onClick={onImage}
-      />
-      <ToolButton
-        label="Table"
-        icon={<TableChartOutlined fontSize="small" />}
-        active={state.table}
-        disabled={disabled}
-        onClick={(event) => setTableMenu(event.currentTarget)}
-      />
+      {features.images && (
+        <ToolButton
+          label="Insert image"
+          icon={<ImageOutlined fontSize="small" />}
+          disabled={disabled}
+          onClick={onImage}
+        />
+      )}
+      {features.tables && (
+        <ToolButton
+          label="Table"
+          icon={<TableChartOutlined fontSize="small" />}
+          active={state.table}
+          disabled={disabled}
+          onClick={(event) => setTableMenu(event.currentTarget)}
+        />
+      )}
       <Menu anchorEl={tableMenu} open={tableMenu !== null} onClose={() => setTableMenu(null)}>
         {tableActions.map((action) => (
           <MenuItem key={action.label} onClick={() => tableAction(action.run)}>

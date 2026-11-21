@@ -7,7 +7,7 @@ import type { ImageDimensions } from '@/utils/image';
 import type { BlogFormValues } from '../../schemas/blogSchema';
 import type { BlogCategory, BlogCategoryRef } from '../../types/blog.types';
 import { BLOG_LIMITS, RECOMMENDED_BLOG_IMAGE } from '../../utils/blogDisplay';
-import { RichTextEditor } from '../richText/RichTextEditor';
+import { RichTextEditor } from '@/components/common/RichText';
 
 import { BlogCategoryField } from './BlogCategoryField';
 import { BlogSlugField } from './BlogSlugField';

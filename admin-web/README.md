@@ -25,18 +25,19 @@ by default `http://localhost:8080/api/v1`, so the browser calls the backend dire
 
 **Mock accounts** (`dev:mock` only, password `Admin@1234` for all):
 
-| Email                     | Role            | Sees                                                                                                                                                      |
-| ------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `admin@example.com`       | Administrator   | dashboard, users (full CRUD), properties (full workflow), leads and site visits (full CRUD, assign), banners and blogs (full CRUD), activity log, profile |
-| `manager@example.com`     | Manager         | dashboard, users (view only), profile (no `SYSTEM_LOG_LIST`)                                                                                              |
-| `editor@example.com`      | User Editor     | users: add and edit, but no status changes or deletes                                                                                                     |
-| `viewer@example.com`      | Property Viewer | properties: list and details only, no edits or workflow actions                                                                                           |
-| `leads@example.com`       | Lead Viewer     | leads: list and details only, no edits, assignment or deletes                                                                                             |
-| `visits@example.com`      | Visit Viewer    | site visits: list only (no details, edits, status changes, assignment or deletes)                                                                         |
-| `banners@example.com`     | Banner Editor   | banners: list, view, add and edit (saved as inactive), but no status changes or deletes                                                                   |
-| `blogs@example.com`       | Blog Writer     | blogs: list, view, add, edit, publish and schedule; no deletes, categories not listed                                                                     |
-| `blog-viewer@example.com` | Blog Viewer     | blogs: list and details only                                                                                                                              |
-| `user@example.com`        | app user        | login refused: `admin_access_denied`                                                                                                                      |
+| Email                     | Role            | Sees                                                                                                                                                            |
+| ------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `admin@example.com`       | Administrator   | dashboard, users (full CRUD), properties (full workflow), leads and site visits (full CRUD, assign), banners, blogs and FAQs (full CRUD), activity log, profile |
+| `manager@example.com`     | Manager         | dashboard, users (view only), profile (no `SYSTEM_LOG_LIST`)                                                                                                    |
+| `editor@example.com`      | User Editor     | users: add and edit, but no status changes or deletes                                                                                                           |
+| `viewer@example.com`      | Property Viewer | properties: list and details only, no edits or workflow actions                                                                                                 |
+| `leads@example.com`       | Lead Viewer     | leads: list and details only, no edits, assignment or deletes                                                                                                   |
+| `visits@example.com`      | Visit Viewer    | site visits: list only (no details, edits, status changes, assignment or deletes)                                                                               |
+| `banners@example.com`     | Banner Editor   | banners: list, view, add and edit (saved as inactive), but no status changes or deletes                                                                         |
+| `blogs@example.com`       | Blog Writer     | blogs: list, view, add, edit, publish and schedule; no deletes, categories not listed                                                                           |
+| `blog-viewer@example.com` | Blog Viewer     | blogs: list and details only                                                                                                                                    |
+| `faqs@example.com`        | FAQ Editor      | FAQs: list, view, add (as draft) and edit; no publish/unpublish or deletes                                                                                      |
+| `user@example.com`        | app user        | login refused: `admin_access_denied`                                                                                                                            |
 
 With the real backend, sign in with an account whose role grants `ADMIN_PANEL_ACCESS`.
 
@@ -47,6 +48,13 @@ With the real backend, sign in with an account whose role grants `ADMIN_PANEL_AC
 > ([`blogs.md`](../backend/docs/api/blogs.md), [`blog-categories.md`](../backend/docs/api/blog-categories.md)).
 > The editor is TipTap and only offers formatting the backend's HTML sanitizer keeps (no alignment, colors,
 > strikethrough or embeds; content images must be `https` URLs).
+
+> **FAQs page:** backed by `/api/v1/admin/faqs` and the public `/api/v1/public/faq-categories`
+> ([`faqs.md`](../backend/docs/api/faqs.md)). Categories are server configuration (`app.faq.categories`), not
+> editable here. There is no stats endpoint (the cards are one-row list requests), no bulk endpoint (bulk
+> publish/delete send one request per FAQ) and no trash: deleting is permanent. Status changes need
+> `FAQ_PUBLISH` on top of create/update. The answer editor offers what the FAQ sanitizer keeps: no headings,
+> images or tables, but strikethrough.
 
 ## Scripts
 

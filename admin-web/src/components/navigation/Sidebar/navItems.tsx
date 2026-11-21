@@ -3,6 +3,7 @@ import ArticleOutlined from '@mui/icons-material/ArticleOutlined';
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
 import EventAvailableOutlined from '@mui/icons-material/EventAvailableOutlined';
 import GroupOutlined from '@mui/icons-material/GroupOutlined';
+import HelpOutlineOutlined from '@mui/icons-material/HelpOutlineOutlined';
 import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
 import Inventory2Outlined from '@mui/icons-material/Inventory2Outlined';
 import PermMediaOutlined from '@mui/icons-material/PermMediaOutlined';
@@ -66,6 +67,12 @@ export const NAV_SECTIONS: readonly NavSection[] = [
         path: ROUTES.blogs,
         icon: <ArticleOutlined />,
         requiredPermissions: [PERMISSIONS.blogView],
+      },
+      {
+        label: 'FAQs',
+        path: ROUTES.faqs,
+        icon: <HelpOutlineOutlined />,
+        requiredPermissions: [PERMISSIONS.faqView],
       },
     ],
   },

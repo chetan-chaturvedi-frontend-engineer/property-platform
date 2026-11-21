@@ -10,13 +10,13 @@ export interface Crumb {
   to?: string;
 }
 
-interface BlogPageHeadingProps {
+interface PageHeadingProps {
   title: string;
   crumbs: readonly Crumb[];
 }
 
 /** Page title with its breadcrumb trail; the last crumb is the current page. */
-export function BlogPageHeading({ title, crumbs }: BlogPageHeadingProps) {
+export function PageHeading({ title, crumbs }: PageHeadingProps) {
   return (
     <div className="min-w-0">
       <Typography variant="h1" className="break-words">

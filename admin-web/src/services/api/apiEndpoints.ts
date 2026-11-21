@@ -54,6 +54,12 @@ export const API_ENDPOINTS = {
   blogCategories: {
     list: '/admin/blog-categories',
   },
+  faqs: {
+    list: '/admin/faqs',
+    detail: (id: EntityId) => `/admin/faqs/${id}`,
+    /** Public, no session needed: the configured categories (backend `app.faq.categories`). */
+    categories: '/public/faq-categories',
+  },
   pages: {
     list: '/admin/pages',
   },
