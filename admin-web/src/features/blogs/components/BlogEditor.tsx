@@ -19,6 +19,8 @@ import { toApiError } from '@/services/api/apiError';
 import { notify } from '@/store/notificationStore';
 import { blogRoutes, ROUTES, SEARCH_DEBOUNCE_MS, UPLOAD_LIMITS } from '@/utils/constants';
 import { formatBytes } from '@/utils/formatters';
+import { hasVisibleContent } from '@/utils/html';
+import { SLUG_PATTERN, slugify } from '@/utils/slug';
 
 import { useBlogPermissions } from '../hooks/useBlogPermissions';
 import {
@@ -30,12 +32,7 @@ import {
   useReplaceBlogImage,
   useUpdateBlog,
 } from '../hooks/useBlogs';
-import {
-  blogFormSchema,
-  type BlogFormValues,
-  hasVisibleContent,
-  type SaveIntent,
-} from '../schemas/blogSchema';
+import { blogFormSchema, type BlogFormValues, type SaveIntent } from '../schemas/blogSchema';
 import type { Blog } from '../types/blog.types';
 import { countWords, htmlToText, readingTimeLabel } from '../utils/blogDisplay';
 import {
@@ -48,7 +45,6 @@ import {
   toUpdateRequest,
 } from '../utils/blogForm';
 import { applyBlogServerErrors } from '../utils/blogFormErrors';
-import { SLUG_PATTERN, slugify } from '../utils/blogSlug';
 
 import { BlogCategoryDialog } from './form/BlogCategoryDialog';
 import { BlogContentFields } from './form/BlogContentFields';

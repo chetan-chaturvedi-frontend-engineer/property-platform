@@ -113,9 +113,16 @@ describe('banner queries', () => {
       activity: useBannerActivity(11),
     }));
     await waitFor(() => expect(result.current.pages.isSuccess).toBe(true));
+    // Published only, by heading (see contentPageMockData).
     expect(result.current.pages.data?.map((page) => page.slug)).toEqual([
       'about-us',
+      'builder-guidelines',
+      'contact-us',
+      'home-loan-partners',
+      'how-it-works',
       'privacy-policy',
+      'sitemap',
+      'terms-conditions',
       'open-house',
     ]);
     await waitFor(() => expect(result.current.activity.isSuccess).toBe(true));

@@ -25,19 +25,20 @@ by default `http://localhost:8080/api/v1`, so the browser calls the backend dire
 
 **Mock accounts** (`dev:mock` only, password `Admin@1234` for all):
 
-| Email                     | Role            | Sees                                                                                                                                                            |
-| ------------------------- | --------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `admin@example.com`       | Administrator   | dashboard, users (full CRUD), properties (full workflow), leads and site visits (full CRUD, assign), banners, blogs and FAQs (full CRUD), activity log, profile |
-| `manager@example.com`     | Manager         | dashboard, users (view only), profile (no `SYSTEM_LOG_LIST`)                                                                                                    |
-| `editor@example.com`      | User Editor     | users: add and edit, but no status changes or deletes                                                                                                           |
-| `viewer@example.com`      | Property Viewer | properties: list and details only, no edits or workflow actions                                                                                                 |
-| `leads@example.com`       | Lead Viewer     | leads: list and details only, no edits, assignment or deletes                                                                                                   |
-| `visits@example.com`      | Visit Viewer    | site visits: list only (no details, edits, status changes, assignment or deletes)                                                                               |
-| `banners@example.com`     | Banner Editor   | banners: list, view, add and edit (saved as inactive), but no status changes or deletes                                                                         |
-| `blogs@example.com`       | Blog Writer     | blogs: list, view, add, edit, publish and schedule; no deletes, categories not listed                                                                           |
-| `blog-viewer@example.com` | Blog Viewer     | blogs: list and details only                                                                                                                                    |
-| `faqs@example.com`        | FAQ Editor      | FAQs: list, view, add (as draft) and edit; no publish/unpublish or deletes                                                                                      |
-| `user@example.com`        | app user        | login refused: `admin_access_denied`                                                                                                                            |
+| Email                     | Role            | Sees                                                                                                                                                                   |
+| ------------------------- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `admin@example.com`       | Administrator   | dashboard, users (full CRUD), properties (full workflow), leads and site visits (full CRUD, assign), banners, blogs, FAQs and pages (full CRUD), activity log, profile |
+| `manager@example.com`     | Manager         | dashboard, users (view only), profile (no `SYSTEM_LOG_LIST`)                                                                                                           |
+| `editor@example.com`      | User Editor     | users: add and edit, but no status changes or deletes                                                                                                                  |
+| `viewer@example.com`      | Property Viewer | properties: list and details only, no edits or workflow actions                                                                                                        |
+| `leads@example.com`       | Lead Viewer     | leads: list and details only, no edits, assignment or deletes                                                                                                          |
+| `visits@example.com`      | Visit Viewer    | site visits: list only (no details, edits, status changes, assignment or deletes)                                                                                      |
+| `banners@example.com`     | Banner Editor   | banners: list, view, add and edit (saved as inactive), but no status changes or deletes                                                                                |
+| `blogs@example.com`       | Blog Writer     | blogs: list, view, add, edit, publish and schedule; no deletes, categories not listed                                                                                  |
+| `blog-viewer@example.com` | Blog Viewer     | blogs: list and details only                                                                                                                                           |
+| `faqs@example.com`        | FAQ Editor      | FAQs: list, view, add (as draft) and edit; no publish/unpublish or deletes                                                                                             |
+| `pages@example.com`       | Page Editor     | pages: list, view, add (as draft) and edit; no publish/unpublish or deletes                                                                                            |
+| `user@example.com`        | app user        | login refused: `admin_access_denied`                                                                                                                                   |
 
 With the real backend, sign in with an account whose role grants `ADMIN_PANEL_ACCESS`.
 
@@ -55,6 +56,12 @@ With the real backend, sign in with an account whose role grants `ADMIN_PANEL_AC
 > publish/delete send one request per FAQ) and no trash: deleting is permanent. Status changes need
 > `FAQ_PUBLISH` on top of create/update. The answer editor offers what the FAQ sanitizer keeps: no headings,
 > images or tables, but strikethrough.
+
+> **Pages page:** backed by `/api/v1/admin/pages` ([`pages.md`](../backend/docs/api/pages.md)). The backend has
+> no stats endpoint (the cards are one-row list requests), no bulk endpoint (bulk publish/delete send one request
+> per page), no display order, no featured image and no trash: deleting is permanent, so the fourth card counts
+> system pages. `type` (static/system) is only a label; system pages get stronger warnings before they are
+> unpublished or deleted. Status changes need `PAGE_PUBLISH` on top of create/update.
 
 ## Scripts
 

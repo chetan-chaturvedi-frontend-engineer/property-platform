@@ -8,8 +8,9 @@ import {
   type BlogStatus,
   type BlogSummary,
 } from '@/features/blogs/types/blog.types';
-import { normalizeTag, SLUG_PATTERN, slugify } from '@/features/blogs/utils/blogSlug';
+import { normalizeTag } from '@/features/blogs/utils/blogSlug';
 import type { PageResponse } from '@/types/api.types';
+import { SLUG_PATTERN, slugify } from '@/utils/slug';
 
 import { decodeMockImage } from '../mocks/bannerMockData';
 import { publicStateAt, type StoredBlog } from '../mocks/blogMockData';

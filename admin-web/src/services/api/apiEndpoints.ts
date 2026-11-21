@@ -62,6 +62,7 @@ export const API_ENDPOINTS = {
   },
   pages: {
     list: '/admin/pages',
+    detail: (id: EntityId) => `/admin/pages/${id}`,
   },
   properties: {
     list: '/admin/properties',

@@ -1,6 +1,7 @@
 import { authHandlers } from './authHandlers';
 import { bannerHandlers } from './bannerHandlers';
 import { blogHandlers } from './blogHandlers';
+import { contentPageHandlers } from './contentPageHandlers';
 import { faqHandlers } from './faqHandlers';
 import { leadHandlers } from './leadHandlers';
 import { propertyHandlers } from './propertyHandlers';
@@ -20,4 +21,5 @@ export const handlers = [
   ...bannerHandlers,
   ...blogHandlers,
   ...faqHandlers,
+  ...contentPageHandlers,
 ];

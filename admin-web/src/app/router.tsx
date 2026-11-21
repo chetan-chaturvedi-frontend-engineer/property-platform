@@ -78,6 +78,16 @@ const FaqsPage = lazy(() =>
 const FaqFormPage = lazy(() =>
   import('@/features/faqs/pages/FaqFormPage').then((m) => ({ default: m.FaqFormPage })),
 );
+const ContentPagesPage = lazy(() =>
+  import('@/features/contentPages/pages/ContentPagesPage').then((m) => ({
+    default: m.ContentPagesPage,
+  })),
+);
+const ContentPageFormPage = lazy(() =>
+  import('@/features/contentPages/pages/ContentPageFormPage').then((m) => ({
+    default: m.ContentPageFormPage,
+  })),
+);
 const ProfilePage = lazy(() =>
   import('@/features/profile/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 );
@@ -197,6 +207,23 @@ export const routes: RouteObject[] = [
                   {
                     element: <ProtectedRoute requiredPermissions={[PERMISSIONS.faqUpdate]} />,
                     children: [{ path: `${ROUTES.faqs}/:id/edit`, element: <FaqFormPage /> }],
+                  },
+                ],
+              },
+              {
+                // Every page screen reads pages (the list and the editor, which loads the page).
+                element: <ProtectedRoute requiredPermissions={[PERMISSIONS.pageView]} />,
+                children: [
+                  { path: ROUTES.pages, element: <ContentPagesPage /> },
+                  {
+                    element: <ProtectedRoute requiredPermissions={[PERMISSIONS.pageCreate]} />,
+                    children: [{ path: ROUTES.pageNew, element: <ContentPageFormPage /> }],
+                  },
+                  {
+                    element: <ProtectedRoute requiredPermissions={[PERMISSIONS.pageUpdate]} />,
+                    children: [
+                      { path: `${ROUTES.pages}/:id/edit`, element: <ContentPageFormPage /> },
+                    ],
                   },
                 ],
               },

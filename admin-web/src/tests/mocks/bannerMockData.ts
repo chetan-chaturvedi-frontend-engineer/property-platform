@@ -3,7 +3,6 @@ import type {
   BannerDisplayState,
   BannerLinkType,
   BannerStatus,
-  ContentPageOption,
 } from '@/features/banners/types/banner.types';
 
 /**
@@ -195,11 +194,3 @@ export function buildBanners(now = Date.now()): {
   );
   return { banners, images };
 }
-
-/** Published and draft content pages; the banner form lists published ones only. */
-export const MOCK_CONTENT_PAGES: readonly ContentPageOption[] = [
-  { id: 1, heading: 'About us', slug: 'about-us', status: 'publish' },
-  { id: 2, heading: 'Weekend open house', slug: 'open-house', status: 'publish' },
-  { id: 3, heading: 'Privacy policy', slug: 'privacy-policy', status: 'publish' },
-  { id: 4, heading: 'Upcoming launch (draft)', slug: 'upcoming-launch', status: 'draft' },
-];

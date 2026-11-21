@@ -1,5 +1,8 @@
 import { toBlogFilters, type BlogListParams } from '../hooks/useBlogListParams';
-import { blogFormSchema, type BlogFormValues, hasVisibleContent } from '../schemas/blogSchema';
+import { hasVisibleContent } from '@/utils/html';
+import { cleanSlugInput, slugify } from '@/utils/slug';
+
+import { blogFormSchema, type BlogFormValues } from '../schemas/blogSchema';
 import type { Blog } from '../types/blog.types';
 
 import { toBlogCsv } from './blogCsv';
@@ -13,7 +16,7 @@ import {
   toUpdateRequest,
 } from './blogForm';
 import { activeBlogChips } from './blogFilters';
-import { cleanSlugInput, normalizeTag, slugify } from './blogSlug';
+import { normalizeTag } from './blogSlug';
 
 const BLOG: Blog = {
   id: 6,

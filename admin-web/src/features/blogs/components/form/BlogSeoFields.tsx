@@ -1,13 +1,13 @@
 import Typography from '@mui/material/Typography';
 import { useFormContext, useWatch } from 'react-hook-form';
 
+import { CharCount } from '@/components/common/CharCount';
 import { FormTextField } from '@/components/common/Input';
+import { SEO_RECOMMENDED } from '@/utils/constants';
+import { slugify } from '@/utils/slug';
 
 import type { BlogFormValues } from '../../schemas/blogSchema';
-import { BLOG_LIMITS, SEO_RECOMMENDED } from '../../utils/blogDisplay';
-import { slugify } from '../../utils/blogSlug';
-
-import { CharCount } from './CharCount';
+import { BLOG_LIMITS } from '../../utils/blogDisplay';
 
 const truncate = (text: string, max: number) =>
   text.length > max ? `${text.slice(0, max - 1).trimEnd()}…` : text;
