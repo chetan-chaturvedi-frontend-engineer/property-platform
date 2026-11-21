@@ -54,6 +54,8 @@ class UserSubscriptionApiTests extends AbstractIntegrationTest {
 	void restoreRoles() {
 		originalRoles.forEach(role -> jdbc.update("UPDATE roles SET permissions = ?::jsonb WHERE slug = ?",
 				role.get("permissions"), role.get("slug")));
+		// Leaves no properties, subscriptions or notifications behind for classes that do not clean up themselves.
+		jdbc.execute("TRUNCATE system_logs, users RESTART IDENTITY CASCADE");
 	}
 
 	@Test

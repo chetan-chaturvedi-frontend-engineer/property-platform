@@ -57,4 +57,14 @@ public interface PropertyProjectRepository extends JpaRepository<PropertyProject
 			nativeQuery = true)
 	int lockSlugBase(String baseSlug);
 
+	/**
+	 * Archives every property of an owner whose account was deleted, so none stays public. Final and read-only
+	 * for the owner, like any archived property; rows already archived are left alone.
+	 */
+	@Modifying
+	@Query(value = """
+			UPDATE property_projects SET publication_status = 'archived', updated_at = now()
+			WHERE user_id = :userId AND deleted_at IS NULL AND publication_status <> 'archived'""", nativeQuery = true)
+	int archiveAllOfOwner(Long userId);
+
 }

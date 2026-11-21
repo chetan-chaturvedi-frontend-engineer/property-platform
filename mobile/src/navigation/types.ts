@@ -27,6 +27,8 @@ export type RootStackParamList = {
   Chat: { id: string; title: string };
   Legal: { doc: 'privacy' | 'terms' };
   DeleteAccount: undefined;
+  ChangePassword: undefined;
+  EditProfile: undefined;
   // Seller
   SellerRegistration: undefined;
   AddProperty: undefined;

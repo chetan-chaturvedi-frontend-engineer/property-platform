@@ -53,6 +53,9 @@ class PropertyMigrationRollbackTests {
 
 		// site_visits references property_projects, so it goes first.
 		jdbc.execute(script("db/rollback/U202610271000__create_site_visits.sql"));
+		// saved_properties and property_views reference property_projects as well.
+		jdbc.execute(script("db/rollback/U202611211200__create_saved_properties.sql"));
+		jdbc.execute(script("db/rollback/U202611211210__create_property_views.sql"));
 		List<String> newestFirst = new ArrayList<>(MIGRATIONS);
 		Collections.reverse(newestFirst);
 		for (String migration : newestFirst) {

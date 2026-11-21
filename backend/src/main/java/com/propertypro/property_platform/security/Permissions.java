@@ -123,6 +123,25 @@ public final class Permissions {
 	public static final String USER_SETTING_CREATE = "USER_SETTING_CREATE";
 	public static final String USER_SETTING_UPDATE = "USER_SETTING_UPDATE";
 
+	// The caller's own in-app notifications: always for oneself, so no _ANY variant.
+	public static final String NOTIFICATION_LIST = "NOTIFICATION_LIST";
+	/** Marking one or all of the caller's notifications read. */
+	public static final String NOTIFICATION_UPDATE = "NOTIFICATION_UPDATE";
+	public static final String NOTIFICATION_DELETE = "NOTIFICATION_DELETE";
+
+	// The caller's own account (app users): rename, change the password, delete. Always for oneself.
+	public static final String PROFILE_UPDATE = "PROFILE_UPDATE";
+	public static final String PROFILE_CHANGE_PASSWORD = "PROFILE_CHANGE_PASSWORD";
+	public static final String PROFILE_DELETE = "PROFILE_DELETE";
+
+	// The caller's own saved properties and recently viewed list: always for oneself, so no _ANY variant.
+	public static final String SAVED_PROPERTY_LIST = "SAVED_PROPERTY_LIST";
+	public static final String SAVED_PROPERTY_CREATE = "SAVED_PROPERTY_CREATE";
+	public static final String SAVED_PROPERTY_DELETE = "SAVED_PROPERTY_DELETE";
+	public static final String RECENTLY_VIEWED_LIST = "RECENTLY_VIEWED_LIST";
+	public static final String RECENTLY_VIEWED_CREATE = "RECENTLY_VIEWED_CREATE";
+	public static final String RECENTLY_VIEWED_DELETE = "RECENTLY_VIEWED_DELETE";
+
 	// The caller's own subscription: plans are public, subscribing and viewing are always for oneself.
 	public static final String SUBSCRIPTION_VIEW = "SUBSCRIPTION_VIEW";
 	public static final String SUBSCRIPTION_CREATE = "SUBSCRIPTION_CREATE";

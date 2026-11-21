@@ -85,6 +85,8 @@ export const apiClient = {
   put: <T>(path: string, body?: unknown, options?: RequestOptions) => request<T>('PUT', path, body, options),
   patch: <T>(path: string, body?: unknown, options?: RequestOptions) => request<T>('PATCH', path, body, options),
   delete: <T>(path: string, options?: RequestOptions) => request<T>('DELETE', path, undefined, options),
+  /** DELETE that needs a body, e.g. the password confirming an account deletion. */
+  deleteWithBody: <T>(path: string, body: unknown, options?: RequestOptions) => request<T>('DELETE', path, body, options),
   /** Multipart upload (files); `form` is sent as is. */
   postForm: <T>(path: string, form: FormData, options?: RequestOptions) => request<T>('POST', path, form, options),
 };

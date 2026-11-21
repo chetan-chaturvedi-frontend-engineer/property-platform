@@ -102,6 +102,28 @@ public class PublicPropertyService {
 		};
 	}
 
+	/** 404 unless the property is published and not deleted: only those can be saved or counted as viewed. */
+	@Transactional(readOnly = true)
+	public void requirePublished(Long id) {
+		summaryRepository.findById(id).filter(PublicPropertyService::isPublic).orElseThrow(PropertyExceptions::notFound);
+	}
+
+	/** Published, non-deleted properties among {@code ids}, in the order of {@code ids}; any other id is skipped. */
+	@Transactional(readOnly = true)
+	public List<PublicPropertySummaryResponse> summariesByIds(List<Long> ids) {
+		if (ids.isEmpty()) {
+			return List.of();
+		}
+		Map<Long, PropertyProjectSummary> byId = summaryRepository.findAllByIdIn(ids).stream()
+			.filter(PublicPropertyService::isPublic).collect(Collectors.toMap(PropertyProjectSummary::getId, p -> p));
+		List<PropertyProjectSummary> ordered = ids.stream().map(byId::get).filter(Objects::nonNull).toList();
+		return ordered.stream().map(toSummaries(ordered)).toList();
+	}
+
+	private static boolean isPublic(PropertyProjectSummary p) {
+		return p.getDeletedAt() == null && p.getPublicationStatus() == PublicationStatus.PUBLISHED;
+	}
+
 	@Transactional(readOnly = true)
 	public PublicPropertyResponse get(String slug) {
 		return mapper.toPublicResponse(published(slug));

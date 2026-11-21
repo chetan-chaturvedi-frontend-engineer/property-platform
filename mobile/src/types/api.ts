@@ -248,3 +248,13 @@ export interface ApiOwnerPropertyDetail {
   wizard: ApiWizard;
   statusHistory: { action: string; toStatus: string; reason: string | null }[];
 }
+
+export interface ApiNotification {
+  id: number;
+  type: 'site_visit_booked' | 'property_status_changed';
+  title: string;
+  body: string;
+  data: { propertyId?: number; visitId?: number } | null;
+  read: boolean;
+  createdAt: string;
+}
