@@ -126,11 +126,53 @@ export interface EmiResult {
   totalPayment: number;
 }
 
+/** Search and filter choices; `null` / empty means "no filter" for that field. */
 export interface FilterState {
-  budget: [number, number];
-  propertyType: string;
-  bhk: string;
+  /** [min, max] in rupees, or null for any budget. */
+  budget: [number, number] | null;
+  propertyType: string | null;
+  bhk: string | null;
   possession: PossessionStatus | null;
+  city: string;
+}
+
+export interface PropertyPage {
+  items: Property[];
+  /** Total matches across all pages, for "N properties found". */
+  total: number;
+}
+
+export interface CmsPage {
+  heading: string;
+  /** Plain text paragraphs (HTML already converted). */
+  body: string;
+}
+
+export interface Faq {
+  id: number;
+  question: string;
+  answer: string;
+  category: string;
+}
+
+export interface FaqCategory {
+  key: string;
+  label: string;
+}
+
+export interface Banner {
+  id: number;
+  title: string;
+  imageUrl: string;
+  link: string | null;
+  linkType: 'internal' | 'external' | null;
+}
+
+export interface UserSettings {
+  location: string;
+  theme: 'light' | 'dark' | 'system';
+  language: string;
+  notificationsEnabled: boolean;
 }
 
 export interface User {

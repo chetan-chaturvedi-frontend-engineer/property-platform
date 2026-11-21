@@ -3,22 +3,20 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { Button, Card, Header, Icon, IconButton, PropertyPhoto, Screen } from '../../../components';
 import { useRootNavigation } from '../../../navigation/useRootNavigation';
 import { colors, typography } from '../../../theme';
-import { useAmenities } from '../hooks/useProperties';
-import { useCompare } from '../hooks/useCompare';
+import { useCompare, useCompareAmenities } from '../hooks/useCompare';
 
 const COL = 130;
 
 export function CompareScreen() {
   const nav = useRootNavigation();
   const { selected, remove } = useCompare();
-  const { data: amenities } = useAmenities();
+  const { data: amenities } = useCompareAmenities(selected);
 
   const rows: [string, (i: number) => string][] = [
     ['Price', i => `${selected[i].price} onwards`],
     ['Configuration', i => selected[i].config.replace(' Apartments', '')],
     ['Super Built-up', i => selected[i].sqft || '—'],
     ['Possession Date', i => selected[i].possession],
-    ['RERA Status', () => 'Registered'],
     ['Builder Rating', i => (selected[i].rating ? `★ ${selected[i].rating}` : '—')],
   ];
 
@@ -48,10 +46,14 @@ export function CompareScreen() {
             </View>
           ))}
           <Text style={styles.section}>Amenities</Text>
-          {(amenities ?? []).slice(0, 4).map(a => (
-            <View key={a.label} style={[styles.row, styles.line]}>
-              <Text style={[typography.muted, styles.label]}>{a.label}</Text>
-              {selected.map(p => <View key={p.id} style={styles.cellBox}><Icon name="checkmark-circle" size={18} color={colors.success} /></View>)}
+          {(amenities?.labels ?? []).slice(0, 8).map(label => (
+            <View key={label} style={[styles.row, styles.line]}>
+              <Text style={[typography.muted, styles.label]}>{label}</Text>
+              {selected.map((p, i) => (
+                <View key={p.id} style={styles.cellBox}>
+                  {amenities?.has[i]?.has(label) ? <Icon name="checkmark-circle" size={18} color={colors.success} /> : <Text style={typography.muted}>–</Text>}
+                </View>
+              ))}
             </View>
           ))}
           <View style={[styles.row, styles.cta]}>

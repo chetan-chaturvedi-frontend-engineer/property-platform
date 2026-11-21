@@ -1,5 +1,7 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { useAsync } from '../../../hooks/useAsync';
+import { bookingService } from '../../../services/bookingService';
 import { Button, Card, Header, Icon, IconButton, ListRow, Screen, SectionTitle, Tag } from '../../../components';
 import type { IconName } from '../../../components';
 import { useRootNavigation } from '../../../navigation/useRootNavigation';
@@ -8,27 +10,32 @@ import { colors, radius, typography } from '../../../theme';
 import { initialsOf } from '../../../utils/format';
 import { useAuth } from '../../auth/AuthProvider';
 
-const activity: { icon: IconName; n: string; l: string }[] = [
-  { icon: 'heart-outline', n: '12', l: 'Shortlisted' },
-  { icon: 'calendar-outline', n: '3', l: 'Scheduled' },
-  { icon: 'document-text-outline', n: '2', l: 'Bookings' },
-  { icon: 'eye-outline', n: '18', l: 'Viewed' },
-  { icon: 'git-compare-outline', n: '4', l: 'Compared' },
-];
-
-const items: { icon: IconName; title: string; sub: string; badge?: string; to?: keyof RootStackParamList }[] = [
-  { icon: 'heart-outline', title: 'My Shortlist', sub: 'View and manage your saved properties', badge: '12 Properties' },
-  { icon: 'calendar-outline', title: 'Scheduled Visits', sub: 'Manage your upcoming site visits', badge: '3 Visits', to: 'Bookings' },
-  { icon: 'eye-outline', title: 'Recently Viewed', sub: 'Properties you recently explored', badge: '18 Properties', to: 'RecentlyViewed' },
-  { icon: 'git-compare-outline', title: 'Compare Properties', sub: 'View and manage your comparisons', badge: '4', to: 'Compare' },
-  { icon: 'document-text-outline', title: 'My Bookings', sub: 'View your booking history and details', badge: '2 Bookings', to: 'Bookings' },
-  { icon: 'calculator-outline', title: 'Loan & EMI Calculator', sub: 'Check loan eligibility and EMI plans', to: 'EmiCalculator' },
-  { icon: 'headset-outline', title: 'Support & Help', sub: 'Get help or raise a query' },
-];
+interface MenuItem { icon: IconName; title: string; sub: string; badge?: string; to?: keyof RootStackParamList }
 
 export function ProfileScreen() {
   const nav = useRootNavigation();
   const { status, user, signOut } = useAuth();
+  const signedIn = status === 'signedIn';
+  const { data: bookings } = useAsync(() => (signedIn ? bookingService.list() : Promise.resolve([])), [signedIn]);
+  const upcoming = (bookings ?? []).filter(b => b.status === 'Upcoming').length;
+  const total = bookings?.length ?? 0;
+  // Counts without a backend endpoint yet (saved, viewed, compared) show a dash, never a made-up number.
+  const activity: { icon: IconName; n: string; l: string }[] = [
+    { icon: 'heart-outline', n: '–', l: 'Shortlisted' },
+    { icon: 'calendar-outline', n: signedIn ? String(upcoming) : '–', l: 'Scheduled' },
+    { icon: 'document-text-outline', n: signedIn ? String(total) : '–', l: 'Bookings' },
+    { icon: 'eye-outline', n: '–', l: 'Viewed' },
+    { icon: 'git-compare-outline', n: '–', l: 'Compared' },
+  ];
+  const items: MenuItem[] = [
+    { icon: 'heart-outline', title: 'My Shortlist', sub: 'View and manage your saved properties' },
+    { icon: 'calendar-outline', title: 'Scheduled Visits', sub: 'Manage your upcoming site visits', badge: signedIn ? `${upcoming} ${upcoming === 1 ? 'Visit' : 'Visits'}` : undefined, to: 'Bookings' },
+    { icon: 'eye-outline', title: 'Recently Viewed', sub: 'Properties you recently explored', to: 'RecentlyViewed' },
+    { icon: 'git-compare-outline', title: 'Compare Properties', sub: 'View and manage your comparisons', to: 'Compare' },
+    { icon: 'document-text-outline', title: 'My Bookings', sub: 'View your booking history and details', badge: signedIn ? `${total} ${total === 1 ? 'Booking' : 'Bookings'}` : undefined, to: 'Bookings' },
+    { icon: 'calculator-outline', title: 'Loan & EMI Calculator', sub: 'Check loan eligibility and EMI plans', to: 'EmiCalculator' },
+    { icon: 'headset-outline', title: 'Support & Help', sub: 'FAQs and contact options', to: 'Faq' },
+  ];
   return (
     <Screen>
       <Header
@@ -37,7 +44,7 @@ export function ProfileScreen() {
         showBack={false}
         right={
           <View style={styles.row}>
-            <IconButton name="notifications-outline" badge={3} accessibilityLabel="Notifications" onPress={() => nav.navigate('Notifications')} />
+            <IconButton name="notifications-outline" accessibilityLabel="Notifications" onPress={() => nav.navigate('Notifications')} />
             <IconButton name="settings-outline" accessibilityLabel="Settings" onPress={() => nav.navigate('Settings')} />
           </View>
         }

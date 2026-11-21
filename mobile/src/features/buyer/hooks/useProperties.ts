@@ -1,6 +1,8 @@
 import { useAsync } from '../../../hooks/useAsync';
 import { propertyService } from '../../../services/propertyService';
+import { usePropertyFilters } from '../PropertyFiltersProvider';
 
+/** Unfiltered list (Saved, Recently viewed and Compare until they have their own endpoints). */
 export function useProperties() {
   return useAsync(() => propertyService.list());
 }
@@ -18,7 +20,9 @@ export function usePropertyAmenities(propertyId: string) {
   return useAsync(() => propertyService.amenities(propertyId), [propertyId]);
 }
 
-/** Full amenity catalogue, used by the compare table. */
-export function useAmenities() {
-  return useAsync(() => propertyService.amenityCatalog());
+
+/** Home and Search: results for the current search text and filters, with the total match count. */
+export function usePropertySearch() {
+  const { filters, search } = usePropertyFilters();
+  return useAsync(() => propertyService.search(filters, search), [JSON.stringify(filters), search]);
 }

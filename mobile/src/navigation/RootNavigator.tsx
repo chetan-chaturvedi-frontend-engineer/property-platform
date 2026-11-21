@@ -7,6 +7,7 @@ import { CompareScreen } from '../features/buyer/screens/CompareScreen';
 import { DeleteAccountScreen } from '../features/buyer/screens/DeleteAccountScreen';
 import { LegalScreen } from '../features/buyer/screens/LegalScreen';
 import { EmiCalculatorScreen } from '../features/buyer/screens/EmiCalculatorScreen';
+import { FaqScreen } from '../features/buyer/screens/FaqScreen';
 import { FiltersScreen } from '../features/buyer/screens/FiltersScreen';
 import { NotificationsScreen } from '../features/buyer/screens/NotificationsScreen';
 import { PropertyDetailsScreen } from '../features/buyer/screens/PropertyDetailsScreen';
@@ -15,6 +16,8 @@ import { ScheduleVisitScreen } from '../features/buyer/screens/ScheduleVisitScre
 import { SettingsScreen } from '../features/buyer/screens/SettingsScreen';
 import { SiteVisitScreen } from '../features/buyer/screens/SiteVisitScreen';
 import { VirtualTourScreen } from '../features/buyer/screens/VirtualTourScreen';
+import { ForgotPasswordScreen } from '../features/auth/screens/ForgotPasswordScreen';
+import { ResetPasswordScreen } from '../features/auth/screens/ResetPasswordScreen';
 import { LoginScreen } from '../features/auth/screens/LoginScreen';
 import { RegisterScreen } from '../features/auth/screens/RegisterScreen';
 import { VerifyOtpScreen } from '../features/auth/screens/VerifyOtpScreen';
@@ -42,6 +45,8 @@ export function RootNavigator() {
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="VerifyOtp" component={VerifyOtpScreen} />
+        <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
 
         <Stack.Screen name="PropertyDetails" component={PropertyDetailsScreen} />
         <Stack.Screen name="ApartmentDetails" component={ApartmentDetailsScreen} />
@@ -57,6 +62,7 @@ export function RootNavigator() {
         <Stack.Screen name="EmiCalculator" component={EmiCalculatorScreen} />
         <Stack.Screen name="Chat" component={ChatScreen} />
         <Stack.Screen name="Legal" component={LegalScreen} />
+        <Stack.Screen name="Faq" component={FaqScreen} />
         <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
 
         <Stack.Screen name="SellerRegistration" component={SellerRegistrationScreen} />

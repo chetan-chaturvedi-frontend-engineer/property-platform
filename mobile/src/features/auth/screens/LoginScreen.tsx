@@ -44,6 +44,9 @@ export function LoginScreen({ navigation, route }: RootScreenProps<'Login'>) {
           placeholder="Your password"
         />
         {f.error ? <Text style={styles.error}>{f.error}</Text> : null}
+        <Text style={[typography.muted, styles.link]} onPress={() => navigation.navigate('ForgotPassword', { identifier: f.identifier.trim() })} accessibilityRole="link">
+          Forgot password?
+        </Text>
         <Text style={[typography.muted, styles.link]} onPress={() => navigation.navigate('Register')} accessibilityRole="link">
           New here? Create an account
         </Text>
