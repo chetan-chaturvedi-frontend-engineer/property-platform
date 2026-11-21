@@ -1,8 +1,8 @@
-import { Amenity, Property, Unit } from '../types';
+import { Amenity, FilterState, Property, PropertyPage, Unit } from '../types';
 import { ApiPage, ApiPublicProperty, ApiPublicPropertySummary } from '../types/api';
 import { apiClient } from './api/apiClient';
-import { mockAmenities } from './mockData';
 import { toAmenity, toProperty, toPropertyFromSummary, toUnit } from './mappers/propertyMapper';
+import { EMPTY_FILTERS, toSearchQuery } from './mappers/propertySearchMapper';
 
 const PAGE_SIZE = 50;
 const DETAIL_TTL_MS = 30_000;
@@ -22,9 +22,15 @@ function detail(slug: string): Promise<ApiPublicProperty> {
 }
 
 export const propertyService = {
+  /** Server-side search: text, city, type, BHK, possession and budget are all applied by the backend. */
+  async search(filters: FilterState = EMPTY_FILTERS, search = ''): Promise<PropertyPage> {
+    const page = await apiClient.get<ApiPage<ApiPublicPropertySummary>>(
+      `/public/properties?${toSearchQuery(filters, search, PAGE_SIZE)}`,
+    );
+    return { items: page.content.map(toPropertyFromSummary), total: page.totalElements };
+  },
   async list(): Promise<Property[]> {
-    const page = await apiClient.get<ApiPage<ApiPublicPropertySummary>>(`/public/properties?size=${PAGE_SIZE}`);
-    return page.content.map(toPropertyFromSummary);
+    return (await propertyService.search()).items;
   },
   async getById(slug: string): Promise<Property> {
     return toProperty(await detail(slug));
@@ -35,6 +41,4 @@ export const propertyService = {
   async amenities(slug: string): Promise<Amenity[]> {
     return (await detail(slug)).amenities.map(toAmenity);
   },
-  /** Full amenity catalogue for compare/seller forms. TODO: GET /amenities needs a signed-in user. */
-  amenityCatalog: (): Promise<Amenity[]> => Promise.resolve(mockAmenities),
 };

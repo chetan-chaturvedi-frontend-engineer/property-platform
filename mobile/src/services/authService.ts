@@ -32,6 +32,17 @@ export const authService = {
   resendOtp: (identifier: string, purpose: OtpPurpose) =>
     apiClient.post<ApiMessage>('/auth/resend-otp', { identifier, purpose }, { auth: false }),
 
+  /** Sends a reset code; the response is the same whether or not the account exists. */
+  forgotPassword: (identifier: string) =>
+    apiClient.post<ApiMessage>('/auth/forgot-password', { identifier }, { auth: false }),
+
+  resetPassword: (identifier: string, otp: string, password: string) =>
+    apiClient.post<ApiMessage>(
+      '/auth/reset-password',
+      { identifier, otp, password, passwordConfirmation: password },
+      { auth: false },
+    ),
+
   async signIn(identifier: string, password: string): Promise<User> {
     const tokens = await apiClient.post<ApiTokenResponse>('/auth/login', { identifier, password }, { auth: false });
     await secureStorage.saveSession({ accessToken: tokens.accessToken, refreshToken: tokens.refreshToken });

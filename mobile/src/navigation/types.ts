@@ -8,6 +8,9 @@ export type RootStackParamList = {
   Login: { identifier?: string; notice?: string } | undefined;
   Register: undefined;
   VerifyOtp: { identifier: string; purpose: OtpPurpose };
+  ForgotPassword: { identifier?: string } | undefined;
+  ResetPassword: { identifier: string };
+  Faq: undefined;
   // Buyer
   PropertyDetails: { id: string };
   ApartmentDetails: { id: string };

@@ -150,3 +150,49 @@ export interface ApiLeadSummary {
   preferredLocation: string | null;
   createdAt: string;
 }
+
+export interface ApiPageSummary {
+  heading: string;
+  subHeading: string | null;
+  slug: string;
+}
+
+export interface ApiCmsPage extends ApiPageSummary {
+  content: string;
+}
+
+export interface ApiFaq {
+  id: number;
+  question: string;
+  answer: string;
+  category: string;
+  categoryLabel: string | null;
+  sortOrder: number;
+}
+
+export interface ApiFaqCategory {
+  key: string;
+  label: string;
+}
+
+export interface ApiBanner {
+  id: number;
+  title: string;
+  type: string;
+  placement: string;
+  linkType: 'internal' | 'external' | null;
+  link: string | null;
+  imageUrl: string;
+}
+
+export interface ApiUserSettings {
+  id: number;
+  location: string | null;
+  theme: 'light' | 'dark' | 'system';
+  language: string;
+  notificationEnabled: boolean;
+  emailNotifications: boolean;
+  pushNotifications: boolean;
+  smsNotifications: boolean;
+  timezone: string;
+}

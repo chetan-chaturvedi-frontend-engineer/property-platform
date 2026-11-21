@@ -1,33 +1,39 @@
 import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Button, Chip, IconButton, Screen, SectionTitle, TextField } from '../../../components';
+import { Button, Chip, IconButton, Screen, SectionTitle } from '../../../components';
 import { useRootNavigation } from '../../../navigation/useRootNavigation';
 import { colors, typography } from '../../../theme';
+import { BannerStrip } from '../components/BannerStrip';
 import { PropertyListCard } from '../components/PropertyListCard';
-import { useProperties } from '../hooks/useProperties';
+import { SearchBox } from '../components/SearchBox';
+import { usePropertySearch } from '../hooks/useProperties';
+import { usePropertyFilters } from '../PropertyFiltersProvider';
 
 export function HomeScreen() {
   const nav = useRootNavigation();
-  const { data, loading, error, reload } = useProperties();
+  const { filters, activeCount } = usePropertyFilters();
+  const { data: page, loading, error, reload } = usePropertySearch();
+  const data = page?.items;
   return (
     <Screen>
       <View style={styles.top}>
         <View style={styles.flex}>
           <Text style={typography.muted}>Location</Text>
-          <Text style={typography.h2}>Hyderabad ⌄</Text>
+          <Text style={typography.h2}>{filters.city.trim() || 'All Cities'}</Text>
         </View>
-        <IconButton name="notifications-outline" badge={3} accessibilityLabel="Notifications" onPress={() => nav.navigate('Notifications')} />
-        <IconButton name="options-outline" accessibilityLabel="Filters" onPress={() => nav.navigate('Filters')} />
+        <IconButton name="notifications-outline" accessibilityLabel="Notifications" onPress={() => nav.navigate('Notifications')} />
+        <IconButton name="options-outline" badge={activeCount || undefined} accessibilityLabel="Filters" onPress={() => nav.navigate('Filters')} />
       </View>
       <View style={styles.search}>
-        <TextField icon="search" placeholder="Search by locality, project or builder" />
+        <SearchBox />
       </View>
+      <BannerStrip placement="home_top" />
       <View style={styles.chips}>
         <Chip label="EMI Calculator" icon="calculator-outline" onPress={() => nav.navigate('EmiCalculator')} />
         <Chip label="Compare" icon="git-compare-outline" onPress={() => nav.navigate('Compare')} />
         <Chip label="Bookings" icon="calendar-outline" onPress={() => nav.navigate('Bookings')} />
       </View>
-      <SectionTitle title="Featured Projects" action="Recently Viewed" onAction={() => nav.navigate('RecentlyViewed')} />
+      <SectionTitle title={page ? `${page.total} ${page.total === 1 ? 'Project' : 'Projects'}` : 'Projects'} action="Recently Viewed" onAction={() => nav.navigate('RecentlyViewed')} />
       {error ? (
         <View style={styles.state}>
           <Text style={typography.muted}>Could not load properties. Check your connection and try again.</Text>
@@ -36,7 +42,7 @@ export function HomeScreen() {
       ) : null}
       {loading && !data ? <Text style={[typography.muted, styles.state]}>Loading properties…</Text> : null}
       {!loading && !error && data?.length === 0 ? (
-        <Text style={[typography.muted, styles.state]}>No properties are listed yet.</Text>
+        <Text style={[typography.muted, styles.state]}>No properties match your search.</Text>
       ) : null}
       {(data ?? []).map(p => (
         <PropertyListCard key={p.id} property={p} showActions />

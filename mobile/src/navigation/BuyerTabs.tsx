@@ -36,7 +36,7 @@ export function BuyerTabs() {
       })}>
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Search" component={MapSearchScreen} />
-      <Tab.Screen name="Chats" component={ChatListScreen} options={{ tabBarBadge: 2 }} />
+      <Tab.Screen name="Chats" component={ChatListScreen} />
       <Tab.Screen name="Saved" component={SavedScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>

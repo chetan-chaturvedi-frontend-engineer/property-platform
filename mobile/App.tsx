@@ -2,6 +2,7 @@ import React from 'react';
 import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/features/auth/AuthProvider';
+import { PropertyFiltersProvider } from './src/features/buyer/PropertyFiltersProvider';
 import { RootNavigator } from './src/navigation/RootNavigator';
 
 export default function App() {
@@ -9,7 +10,9 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar barStyle="dark-content" />
       <AuthProvider>
-        <RootNavigator />
+        <PropertyFiltersProvider>
+          <RootNavigator />
+        </PropertyFiltersProvider>
       </AuthProvider>
     </SafeAreaProvider>
   );

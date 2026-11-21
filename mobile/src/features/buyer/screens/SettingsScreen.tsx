@@ -1,10 +1,13 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Alert, StyleSheet, Switch, Text, View } from 'react-native';
 import { Card, Header, ListRow, Screen, Tag } from '../../../components';
 import type { IconName } from '../../../components';
-import { authService } from '../../../services/authService';
 import { useRootNavigation } from '../../../navigation/useRootNavigation';
 import { colors, typography } from '../../../theme';
+import { useAuth } from '../../auth/AuthProvider';
+import { useSettings } from '../hooks/useSettings';
+
+const { version } = require('../../../../package.json') as { version: string };
 
 interface Row { icon: IconName; title: string; sub: string; right?: string }
 const account: Row[] = [
@@ -13,16 +16,11 @@ const account: Row[] = [
   { icon: 'call-outline', title: 'Mobile Number', sub: 'Update your registered mobile number' },
   { icon: 'mail-outline', title: 'Email Address', sub: 'Update your registered email address' },
 ];
-const prefs: Row[] = [
-  { icon: 'notifications-outline', title: 'Notifications', sub: 'Manage what you want to receive', right: 'Enabled' },
-  { icon: 'globe-outline', title: 'Language', sub: 'Choose your preferred language', right: 'English' },
-  { icon: 'color-palette-outline', title: 'Theme', sub: 'Choose your app theme', right: 'Light' },
-  { icon: 'location-outline', title: 'Location Preferences', sub: 'Manage location access and suggestions' },
-];
 const more: Row[] = [
   { icon: 'shield-outline', title: 'Privacy & Security', sub: 'Manage your data and privacy' },
   { icon: 'document-text-outline', title: 'Terms & Conditions', sub: 'Read our terms and conditions' },
-  { icon: 'information-circle-outline', title: 'About Property', sub: 'App version 2.3.1', right: 'Latest Version' },
+  { icon: 'help-circle-outline', title: 'Support & Help', sub: 'FAQs and contact options' },
+  { icon: 'information-circle-outline', title: 'About Property', sub: `App version ${version}` },
 ];
 
 const legalTarget: Record<string, 'privacy' | 'terms'> = {
@@ -33,12 +31,55 @@ const legalTarget: Record<string, 'privacy' | 'terms'> = {
 export function SettingsScreen() {
   const nav = useRootNavigation();
 
+  const { status, signOut } = useAuth();
+  const { settings, update, error, signedIn } = useSettings();
+
   async function logOut() {
-    await authService.signOut();
+    await signOut();
     nav.reset({ index: 0, routes: [{ name: 'BuyerTabs' }] });
   }
 
-  const group = (title: string, rows: Row[]) => (
+  /** Saving settings needs an account; guests are sent to sign in. */
+  function needAccount(action: () => void) {
+    if (signedIn) {
+      action();
+    } else if (status === 'signedOut') {
+      nav.navigate('Login');
+    }
+  }
+
+  const choose = (title: string, options: [string, () => void][]) =>
+    Alert.alert(title, undefined, [...options.map(([label, run]) => ({ text: label, onPress: run })), { text: 'Cancel', style: 'cancel' as const }]);
+
+  const prefs: { icon: IconName; title: string; sub: string; right?: React.ReactNode; onPress?: () => void }[] = [
+    {
+      icon: 'notifications-outline',
+      title: 'Notifications',
+      sub: 'Manage what you want to receive',
+      right: <Switch value={settings.notificationsEnabled} onValueChange={v => needAccount(() => update({ notificationsEnabled: v }))} accessibilityLabel="Notifications" />,
+    },
+    {
+      icon: 'globe-outline',
+      title: 'Language',
+      sub: 'Choose your preferred language',
+      right: <Tag label={settings.language === 'hi' ? 'हिन्दी' : 'English'} tone="success" />,
+      onPress: () => needAccount(() => choose('Language', [['English', () => update({ language: 'en' })], ['हिन्दी', () => update({ language: 'hi' })]])),
+    },
+    {
+      icon: 'color-palette-outline',
+      title: 'Theme',
+      sub: 'Choose your app theme',
+      right: <Tag label={settings.theme[0].toUpperCase() + settings.theme.slice(1)} tone="success" />,
+      onPress: () => needAccount(() => choose('Theme', [['Light', () => update({ theme: 'light' })], ['Dark', () => update({ theme: 'dark' })], ['System', () => update({ theme: 'system' })]])),
+    },
+    {
+      icon: 'location-outline',
+      title: 'Location Preferences',
+      sub: settings.location ? `Preferred city: ${settings.location}` : 'No preferred city saved',
+    },
+  ];
+
+  const group = (title: string, rows: { icon: IconName; title: string; sub: string; right?: React.ReactNode; onPress?: () => void }[]) => (
     <>
       <Text style={styles.group}>{title}</Text>
       <Card style={styles.card}>
@@ -48,8 +89,8 @@ export function SettingsScreen() {
             icon={r.icon}
             title={r.title}
             subtitle={r.sub}
-            right={r.right ? <Tag label={r.right} tone="success" /> : undefined}
-            onPress={legalTarget[r.title] ? () => nav.navigate('Legal', { doc: legalTarget[r.title] }) : undefined}
+            right={r.right}
+            onPress={r.onPress ?? (legalTarget[r.title] ? () => nav.navigate('Legal', { doc: legalTarget[r.title] }) : r.title === 'Support & Help' ? () => nav.navigate('Faq') : undefined)}
           />
         ))}
       </Card>
@@ -63,6 +104,7 @@ export function SettingsScreen() {
         <Text style={typography.h3}>Secure. Simple. Personal.</Text>
         <Text style={typography.muted}>We care about your privacy and provide a better experience.</Text>
       </View>
+      {error ? <Text style={styles.error}>{error}</Text> : null}
       {group('Account Settings', account)}
       {group('Preferences', prefs)}
       {group('More', more)}
@@ -84,4 +126,5 @@ const styles = StyleSheet.create({
   banner: { marginHorizontal: 16, padding: 16, borderRadius: 16, backgroundColor: colors.primarySoft },
   group: { ...typography.h3, paddingHorizontal: 16, marginTop: 16, marginBottom: 8 },
   card: { marginHorizontal: 16, padding: 0 },
+  error: { color: colors.danger, fontSize: 12, paddingHorizontal: 16, paddingTop: 8 },
 });
