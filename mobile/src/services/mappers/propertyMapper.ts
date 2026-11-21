@@ -133,6 +133,10 @@ export function toUnit(a: ApiApartment): Unit {
   };
 }
 
+export function amenityIcon(key: string | null): string {
+  return AMENITY_ICONS[key ?? ''] ?? 'checkmark-circle-outline';
+}
+
 export function toAmenity(a: ApiAmenity): Amenity {
-  return { icon: AMENITY_ICONS[a.icon ?? ''] ?? 'checkmark-circle-outline', label: a.name };
+  return { icon: amenityIcon(a.icon), label: a.name };
 }

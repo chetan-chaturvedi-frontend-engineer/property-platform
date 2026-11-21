@@ -9,3 +9,7 @@ jest.mock('@react-native-vector-icons/ionicons', () => {
   const { Text } = require('react-native');
   return { __esModule: true, default: ({ name }) => <Text>{name}</Text> };
 });
+
+jest.mock('react-native-image-picker', () => ({
+  launchImageLibrary: jest.fn(() => Promise.resolve({ didCancel: true })),
+}));

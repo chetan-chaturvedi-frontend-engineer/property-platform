@@ -66,4 +66,26 @@ public final class SubscriptionExceptions {
 						+ "member, to add more.", details);
 	}
 
+	/** The caller has no subscription in force. */
+	public static ApiException notFound() {
+		return new ApiException(HttpStatus.NOT_FOUND, "subscription_not_found", "You have no active subscription.");
+	}
+
+	/** One subscription in force per user; taking another one is a 409, not a silent replacement. */
+	public static ApiException alreadySubscribed() {
+		return new ApiException(HttpStatus.CONFLICT, "subscription_already_active",
+				"You already have an active subscription.");
+	}
+
+	/** A paid plan cannot be taken without payment while no payment gateway is configured. */
+	public static ApiException paymentRequired() {
+		return new ApiException(HttpStatus.FORBIDDEN, "payment_required",
+				"This plan needs a payment, which is not available yet.");
+	}
+
+	public static ApiException actionForbidden() {
+		return new ApiException(HttpStatus.FORBIDDEN, "subscription_action_forbidden",
+				"You are not allowed to do that with your subscription.");
+	}
+
 }

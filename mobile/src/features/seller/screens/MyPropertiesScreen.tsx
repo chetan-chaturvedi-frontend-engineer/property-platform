@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Button, Card, Chip, EmptyState, Header, Icon, IconButton, PropertyPhoto, Screen, Tag } from '../../../components';
+import { Card, Chip, EmptyState, Header, Icon, IconButton, PropertyPhoto, Screen, Tag } from '../../../components';
 import { useRootNavigation } from '../../../navigation/useRootNavigation';
 import { typography } from '../../../theme';
 import { useAuth } from '../../auth/AuthProvider';
@@ -42,10 +42,6 @@ export function MyPropertiesScreen() {
                 )}
               </View>
             </View>
-            <View style={[styles.row, styles.actions]}>
-              <Button small variant="outline" label="Performance" style={styles.flex} onPress={() => nav.navigate('PropertyPerformance', { id: l.id })} />
-              <Button small variant="soft" label="Edit" style={styles.flex} onPress={() => nav.navigate('AddProperty')} />
-            </View>
           </Card>
         </Pressable>
       ))}
@@ -59,5 +55,4 @@ const styles = StyleSheet.create({
   tabs: { flexDirection: 'row', gap: 8, paddingHorizontal: 16, marginBottom: 12, flexWrap: 'wrap' },
   card: { marginHorizontal: 16, marginBottom: 12 },
   photo: { width: 96, height: 96 },
-  actions: { marginTop: 10 },
 });

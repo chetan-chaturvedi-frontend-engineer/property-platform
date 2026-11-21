@@ -155,6 +155,8 @@ app:
     builder-team-write-user: { max-requests: 300, window: 1h }
     # Creation and updates of the caller's own settings.
     user-setting-write-user: { max-requests: 120, window: 1h }
+    # Subscribing to a plan.
+    user-subscription-write-user: { max-requests: 30, window: 1h }
     # Admin user management: create, update and delete.
     user-management-write-user: { max-requests: 120, window: 1h }
     # Admin role management: create, update and delete.
@@ -165,6 +167,10 @@ app:
     placements: home_top, home_middle, property_list, property_detail
     # Routes internal banner links may open: the route or any path below it ("/" = home page only).
     internal-link-prefixes: /, /properties, /projects, /offers, /blogs, /pages, /faqs, /subscription-plans
+  subscription:
+    # false: only free plans can be taken without payment (a payment gateway activates paid ones).
+    # true (dev profile only): any plan activates immediately, so the seller flow works without a gateway.
+    allow-unpaid-activation: false
   site-visit:
     # Visit dates and times are wall-clock values at the property; "today" and "past" use this zone.
     time-zone: Asia/Kolkata

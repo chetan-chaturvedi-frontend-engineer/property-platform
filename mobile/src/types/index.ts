@@ -184,3 +184,76 @@ export interface User {
 }
 
 export type OtpPurpose = 'email_verification' | 'phone_verification';
+
+export interface SubscriptionPlan {
+  id: number;
+  title: string;
+  /** e.g. "₹999 / month" or "Free". */
+  priceLabel: string;
+  description: string;
+  features: string[];
+  /** e.g. "Up to 10 properties" or "Unlimited properties". */
+  limitLabel: string;
+  popular: boolean;
+}
+
+export interface MySubscription {
+  planTitle: string;
+  /** null = unlimited. */
+  propertyLimit: number | null;
+  endsAt: string | null;
+}
+
+export interface AmenityOption {
+  id: number;
+  label: string;
+  icon: string;
+}
+
+export interface PickedPhoto {
+  uri: string;
+  name: string;
+  type: string;
+}
+
+/** One property of the signed-in seller, as the detail, preview and review screens show it. */
+export interface SellerPropertyDetail {
+  id: string;
+  title: string;
+  area: string;
+  status: SellerListing['status'];
+  /** Why the review rejected it, when it was. */
+  rejectionReason?: string;
+  readyToSubmit: boolean;
+  /** Human-readable list of what is still missing before it can be submitted. */
+  missing: string[];
+  type: string;
+  config: string;
+  price: string;
+  sqft: string;
+  description: string;
+  amenities: string[];
+  photoUrls: string[];
+}
+
+/** Everything the Add Property wizard collects; saved to the backend step by step. */
+export interface PropertyDraft {
+  propertyType: string;
+  projectName: string;
+  builderName: string;
+  email: string;
+  phone: string;
+  bhk: string;
+  areaSqft: string;
+  price: string;
+  bathrooms: string;
+  address: string;
+  locality: string;
+  city: string;
+  state: string;
+  pincode: string;
+  description: string;
+  projectStatus: PossessionStatus;
+  amenityIds: number[];
+  photos: PickedPhoto[];
+}

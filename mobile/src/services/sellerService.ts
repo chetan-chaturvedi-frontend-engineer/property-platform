@@ -12,6 +12,12 @@ export const sellerService = {
     return page.content.map(toSellerListing);
   },
 
+  /** How many site visits are booked on the seller's properties (the visits they are the builder of). */
+  async siteVisitCount(): Promise<number> {
+    const page = await apiClient.get<ApiPage<unknown>>('/site-visits?relation=builder&size=1');
+    return page.totalElements;
+  },
+
   /** Leads the signed-in user created or owns. */
   async leads(): Promise<SellerLead[]> {
     const page = await apiClient.get<ApiPage<ApiLeadSummary>>(`/leads?size=${PAGE_SIZE}`);

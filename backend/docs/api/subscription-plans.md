@@ -108,3 +108,68 @@ Partial update with the same rules. An omitted field keeps its value; an explici
 
 RFC 9457 problem details with `code`; validation errors are **400** `validation_failed` with an
 `errors` map of field to message.
+
+## App users: public plans and my subscription
+
+Base path `/api/v1`. These endpoints are for the mobile app; plan management stays under
+`/api/v1/admin/subscription-plans`.
+
+### `GET /public/subscription-plans` — active plans (no login)
+
+Active plans only, ordered by `sortOrder` then `id`. A plain array (a short, fixed list), not paginated. Status and audit
+fields are left out. `noOfProperties` `null` means unlimited; `noOfTeamMembers` `0` means team management is not included.
+
+```json
+[
+  { "id": 2, "icon": "crown", "title": "Premium", "slug": "premium", "price": 999.00, "currency": "INR",
+    "billingInterval": "month", "billingIntervalCount": 1, "description": "Best value",
+    "noOfProperties": null, "noOfTeamMembers": 3, "features": ["Verified badge"], "popular": true, "trialDays": 0 }
+]
+```
+
+### Permissions
+
+Granted to the app `user` role by `V202611211100`:
+
+| Permission (`roles.permissions` key) | Allows |
+|---|---|
+| `SUBSCRIPTION_VIEW` (`subscription.view`) | `GET /subscriptions/me` |
+| `SUBSCRIPTION_CREATE` (`subscription.create`) | `POST /subscriptions` |
+
+A missing permission is **403** `subscription_action_forbidden`. Both endpoints need `Authorization: Bearer <accessToken>`
+(otherwise **401**) and only ever act on the caller: there is no user id in the path or body.
+
+### `GET /subscriptions/me` — my subscription
+
+The subscription in force now (status `active`, started, not ended). **404** `subscription_not_found` when there is none.
+The terms are the copy taken from the plan when the subscription started.
+
+```json
+{ "id": 7, "planId": 2, "planTitle": "Premium", "status": "active", "price": 999.00, "currency": "INR",
+  "billingInterval": "month", "billingIntervalCount": 1, "noOfProperties": null, "noOfTeamMembers": 3,
+  "startsAt": "2026-11-21T10:00:00Z", "endsAt": "2026-12-21T10:00:00Z" }
+```
+
+### `POST /subscriptions` — take a plan (201)
+
+```json
+{ "planId": 2 }
+```
+
+Starts now for one billing period (`endsAt` `null` for a lifetime plan). Unknown fields are **400**.
+
+| Status | Code | When |
+|---|---|---|
+| 400 | `validation_failed` | missing or non-positive `planId`, unknown fields |
+| 403 | `payment_required` | the plan costs money and payment is not waived (see below) |
+| 404 | `subscription_plan_not_found` | unknown plan |
+| 409 | `subscription_plan_unavailable` | the plan is not active |
+| 409 | `subscription_already_active` | one subscription in force per user (also for parallel requests) |
+| 429 | | rate limit: 30 per hour per user |
+
+**Payment.** No payment gateway is integrated yet. Free plans (price 0) activate at once. A paid plan is **403**
+`payment_required` unless `app.subscription.allow-unpaid-activation` is `true`, which only `application-dev.yml` sets.
+When a gateway is added, it creates the subscription as pending and activates it after the payment succeeds.
+
+Creating a property is gated by the subscription in force (see `properties.md`): without one it is **403**
+`subscription_required`, and past the plan's `noOfProperties` it is **403** `property_limit_reached`.

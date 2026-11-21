@@ -23,12 +23,9 @@ import { RegisterScreen } from '../features/auth/screens/RegisterScreen';
 import { VerifyOtpScreen } from '../features/auth/screens/VerifyOtpScreen';
 import { ChatScreen } from '../features/chat/screens/ChatScreen';
 import { AddPropertyScreen } from '../features/seller/screens/AddPropertyScreen';
-import { PreviewListingScreen } from '../features/seller/screens/PreviewListingScreen';
-import { PropertyPerformanceScreen } from '../features/seller/screens/PropertyPerformanceScreen';
 import { PublishedScreen } from '../features/seller/screens/PublishedScreen';
 import { SellerPropertyDetailsScreen } from '../features/seller/screens/SellerPropertyDetailsScreen';
 import { SellerRegistrationScreen } from '../features/seller/screens/SellerRegistrationScreen';
-import { SellerVerificationScreen } from '../features/seller/screens/SellerVerificationScreen';
 import { BuyerTabs } from './BuyerTabs';
 import { SellerTabs } from './SellerTabs';
 import { RootStackParamList } from './types';
@@ -66,12 +63,9 @@ export function RootNavigator() {
         <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
 
         <Stack.Screen name="SellerRegistration" component={SellerRegistrationScreen} />
-        <Stack.Screen name="SellerVerification" component={SellerVerificationScreen} />
         <Stack.Screen name="AddProperty" component={AddPropertyScreen} />
-        <Stack.Screen name="PreviewListing" component={PreviewListingScreen} />
         <Stack.Screen name="Published" component={PublishedScreen} options={{ gestureEnabled: false }} />
         <Stack.Screen name="SellerPropertyDetails" component={SellerPropertyDetailsScreen} />
-        <Stack.Screen name="PropertyPerformance" component={PropertyPerformanceScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

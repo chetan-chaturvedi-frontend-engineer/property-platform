@@ -43,6 +43,7 @@ public final class PermissionCatalog {
 					"assign_role", "manage_permissions", "manage_status", "list_any", "view_any", "create_any",
 					"update_any", "delete_any")),
 			new Module("builder_team_membership", "Team Memberships", List.of("view", "respond")),
+			new Module("subscription", "My Subscription", List.of("view", "create")),
 			new Module("subscription_plan", "Packages & Plans",
 					List.of("list", "view", "create", "update", "change_status")),
 			new Module("banner", "Banners", List.of("list", "view", "create", "update", "change_status", "delete")),
