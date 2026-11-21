@@ -22,7 +22,7 @@ import { blogRoutes, ROUTES } from '@/utils/constants';
 import { formatDateTime } from '@/utils/formatters';
 
 import { type ActiveBlogDialog, BlogDialogs } from '../components/BlogDialogs';
-import { BlogPageHeading } from '../components/BlogPageHeading';
+import { PageHeading } from '@/components/common/PageHeading';
 import { BlogStateChip } from '../components/BlogStateChip';
 import { type BlogAction, BlogActionsCard } from '../components/details/BlogActionsCard';
 import { BlogDetailsView } from '../components/details/BlogDetailsView';
@@ -171,7 +171,7 @@ function BlogDetails({ blog }: { blog: Blog }) {
               <ArrowBack />
             </IconButton>
           </Tooltip>
-          <BlogPageHeading title="Blog details" crumbs={crumbs} />
+          <PageHeading title="Blog details" crumbs={crumbs} />
         </div>
         <div className="flex flex-wrap gap-2 self-start lg:self-auto">
           <Button
@@ -243,7 +243,7 @@ export function BlogDetailsPage() {
     const missing = id === null || error?.status === 404;
     return (
       <div className="flex flex-col gap-6">
-        <BlogPageHeading title="Blog details" crumbs={crumbs} />
+        <PageHeading title="Blog details" crumbs={crumbs} />
         <Paper>
           <ErrorState
             message={missing ? 'This blog does not exist or was deleted.' : (error?.message ?? '')}
@@ -260,7 +260,7 @@ export function BlogDetailsPage() {
   }
   return (
     <div className="flex flex-col gap-6" aria-busy aria-label="Loading blog">
-      <BlogPageHeading title="Blog details" crumbs={crumbs} />
+      <PageHeading title="Blog details" crumbs={crumbs} />
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(20rem,1fr)]">
         <Paper className="flex flex-col gap-4 p-5">
           <Skeleton variant="text" width="60%" height={40} />

@@ -6,7 +6,7 @@ import Typography from '@mui/material/Typography';
 import { ImageThumbnail } from '@/components/common/ImageThumbnail';
 import { cn } from '@/utils/helpers';
 
-import { RichTextContent } from '../richText/RichTextContent';
+import { RichTextContent } from '@/components/common/RichText';
 
 /** What a reader sees of a blog; built from saved data or from the form while editing. */
 export interface BlogArticleData {
@@ -76,7 +76,11 @@ export function BlogArticle({ data, density = 'comfortable' }: BlogArticleProps)
         )}
       </div>
       {data.content ? (
-        <RichTextContent html={data.content} className={cn(compact && 'text-sm')} />
+        <RichTextContent
+          html={data.content}
+          label="Blog content"
+          className={cn(compact && 'text-sm')}
+        />
       ) : (
         <Typography variant="body2" color="text.secondary">
           The blog content appears here.

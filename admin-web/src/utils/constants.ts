@@ -14,6 +14,8 @@ export const ROUTES = {
   bannerNew: '/banners/new',
   blogs: '/blogs',
   blogNew: '/blogs/new',
+  faqs: '/faqs',
+  faqNew: '/faqs/new',
   profile: '/profile',
   unauthorized: '/unauthorized',
 } as const;
@@ -77,6 +79,12 @@ export const PERMISSIONS = {
   blogDelete: 'BLOG_DELETE',
   blogCategoryView: 'BLOG_CATEGORY_VIEW',
   blogCategoryCreate: 'BLOG_CATEGORY_CREATE',
+  faqView: 'FAQ_VIEW',
+  faqCreate: 'FAQ_CREATE',
+  faqUpdate: 'FAQ_UPDATE',
+  /** Needed in addition to create/update for any status change (publish or unpublish). */
+  faqPublish: 'FAQ_PUBLISH',
+  faqDelete: 'FAQ_DELETE',
 } as const;
 
 /** Property routes with an id. */
@@ -99,6 +107,11 @@ export const blogRoutes = {
   duplicate: (id: number) => `${ROUTES.blogNew}?from=${id}`,
 } as const;
 
+/** FAQ routes with an id. */
+export const faqRoutes = {
+  edit: (id: number) => `${ROUTES.faqs}/${id}/edit`,
+} as const;
+
 /** Lead routes with an id. */
 export const leadRoutes = {
   detail: (id: number) => `${ROUTES.leads}/${id}`,
@@ -113,6 +126,7 @@ export const STORAGE_KEYS = {
   subscriptionPlansPageSize: 'admin-web:subscription-plans-page-size',
   bannersPageSize: 'admin-web:banners-page-size',
   blogsPageSize: 'admin-web:blogs-page-size',
+  faqsPageSize: 'admin-web:faqs-page-size',
   sidebarCollapsed: 'admin-web:sidebar-collapsed',
 } as const;
 

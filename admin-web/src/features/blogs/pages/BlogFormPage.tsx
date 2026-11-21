@@ -8,7 +8,7 @@ import { ErrorState } from '@/components/common/Feedback/ErrorState';
 import { blogRoutes, ROUTES } from '@/utils/constants';
 
 import { BlogEditor } from '../components/BlogEditor';
-import { BlogPageHeading, type Crumb } from '../components/BlogPageHeading';
+import { type Crumb, PageHeading } from '@/components/common/PageHeading';
 import { useBlog, useBlogImageFile } from '../hooks/useBlogs';
 import type { Blog } from '../types/blog.types';
 import { parseBlogId } from '../utils/blogForm';
@@ -26,7 +26,7 @@ const listCrumbs: Crumb[] = [
 function LoadingEditor({ heading }: { heading: HeadingProps }) {
   return (
     <div className="flex flex-col gap-6" aria-busy aria-label="Loading blog">
-      <BlogPageHeading {...heading} />
+      <PageHeading {...heading} />
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[minmax(0,1.6fr)_minmax(20rem,1fr)]">
         <Paper className="flex flex-col gap-4 p-5">
           {[0, 1, 2, 3].map((key) => (
@@ -54,7 +54,7 @@ function LoadFailed({
   const missing = error.status === 404;
   return (
     <div className="flex flex-col gap-6">
-      <BlogPageHeading {...heading} />
+      <PageHeading {...heading} />
       <Paper>
         <ErrorState
           message={missing ? 'This blog does not exist or was deleted.' : error.message}
@@ -85,7 +85,7 @@ function EditBlog({ id }: { id: number }) {
       <BlogEditor
         key={blog.id}
         mode={{ kind: 'edit', blog }}
-        heading={<BlogPageHeading {...heading} />}
+        heading={<PageHeading {...heading} />}
       />
     );
   }
@@ -101,7 +101,7 @@ function DuplicateBlog({ source }: { source: Blog }) {
   return (
     <BlogEditor
       mode={{ kind: 'duplicate', source, image: image.data ?? null }}
-      heading={<BlogPageHeading {...heading} />}
+      heading={<PageHeading {...heading} />}
       notice={
         <Alert severity={imageMissing ? 'warning' : 'info'}>
           {imageMissing
@@ -145,9 +145,7 @@ export function BlogFormPage() {
   return (
     <BlogEditor
       mode={{ kind: 'create' }}
-      heading={
-        <BlogPageHeading title="Add new blog" crumbs={[...listCrumbs, { label: 'Add new' }]} />
-      }
+      heading={<PageHeading title="Add new blog" crumbs={[...listCrumbs, { label: 'Add new' }]} />}
     />
   );
 }

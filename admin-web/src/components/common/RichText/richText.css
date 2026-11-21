@@ -1,4 +1,4 @@
-/* Article typography for the blog editor and its read-only views. Colors come from the MUI palette. */
+/* Rich text typography for the editor and its read-only views. Colors come from the MUI palette. */
 @layer components {
   .rich-text {
     color: var(--mui-palette-text-primary);

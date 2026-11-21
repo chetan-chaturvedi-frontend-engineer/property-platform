@@ -6,6 +6,31 @@ import { TableKit } from '@tiptap/extension-table';
 import { Placeholder } from '@tiptap/extensions';
 import StarterKit from '@tiptap/starter-kit';
 
+/**
+ * Optional formatting, switched on per use so the editor offers only what that backend's HTML
+ * sanitizer keeps. The defaults match the blog sanitizer (jsoup `Safelist.relaxed()`).
+ */
+export interface RichTextFeatures {
+  /** Headings 1–4. */
+  headings?: boolean;
+  /** Images by `https` URL. */
+  images?: boolean;
+  tables?: boolean;
+  /** Strikethrough (`<s>`). */
+  strike?: boolean;
+}
+
+export const DEFAULT_RICH_TEXT_FEATURES: Required<RichTextFeatures> = {
+  headings: true,
+  images: true,
+  tables: true,
+  strike: false,
+};
+
+export function resolveFeatures(features: RichTextFeatures = {}): Required<RichTextFeatures> {
+  return { ...DEFAULT_RICH_TEXT_FEATURES, ...features };
+}
+
 /** Link targets the backend keeps (`http`, `https`, `mailto`); anything else is removed on save. */
 export function isAllowedLink(url: string): boolean {
   try {
@@ -26,15 +51,19 @@ export function isAllowedImageSrc(url: string): boolean {
 }
 
 /**
- * Only formatting the backend's sanitizer keeps (jsoup `Safelist.relaxed()`): no strikethrough
- * (`<s>`), horizontal rules, inline styles (alignment, colors) or embeds, which it would strip.
+ * Editor schema. Never horizontal rules or inline styles (alignment, colors), which no sanitizer
+ * keeps; the optional parts follow `features`.
  */
-export function richTextExtensions({ placeholder }: { placeholder?: string } = {}): Extensions {
+export function richTextExtensions({
+  placeholder,
+  features,
+}: { placeholder?: string; features?: RichTextFeatures } = {}): Extensions {
+  const enabled = resolveFeatures(features);
   return [
     StarterKit.configure({
-      strike: false,
+      strike: enabled.strike ? {} : false,
       horizontalRule: false,
-      heading: { levels: [1, 2, 3, 4] },
+      heading: enabled.headings ? { levels: [1, 2, 3, 4] } : false,
       link: {
         openOnClick: false,
         autolink: true,
@@ -46,8 +75,8 @@ export function richTextExtensions({ placeholder }: { placeholder?: string } = {
     }),
     Subscript,
     Superscript,
-    Image.configure({ allowBase64: false, inline: false }),
-    TableKit.configure({ table: { resizable: false } }),
+    ...(enabled.images ? [Image.configure({ allowBase64: false, inline: false })] : []),
+    ...(enabled.tables ? [TableKit.configure({ table: { resizable: false } })] : []),
     ...(placeholder ? [Placeholder.configure({ placeholder })] : []),
   ];
 }

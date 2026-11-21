@@ -108,7 +108,9 @@ describe('BlogsPage', () => {
       // Live legal blogs: 4, 7, 13.
       await waitForRows(3);
 
-      await user.type(screen.getByRole('searchbox', { name: 'Search blogs' }), 'stamp');
+      // One input event, so a slow run cannot fire the debounce halfway through the word.
+      await user.click(screen.getByRole('searchbox', { name: 'Search blogs' }));
+      await user.paste('stamp');
       await waitForRows(1);
       expect(await findRow('Understanding Stamp Duty')).toBeTruthy();
       expect(router.state.location.search).toContain('q=stamp');

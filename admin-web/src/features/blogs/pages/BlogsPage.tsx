@@ -21,7 +21,7 @@ import { blogRoutes, ROUTES, SEARCH_DEBOUNCE_MS, STORAGE_KEYS } from '@/utils/co
 import { buildBlogColumns } from '../components/blogColumns';
 import { type ActiveBlogDialog, BlogDialogs } from '../components/BlogDialogs';
 import { BlogFiltersPanel } from '../components/BlogFiltersPanel';
-import { BlogPageHeading } from '../components/BlogPageHeading';
+import { PageHeading } from '@/components/common/PageHeading';
 import { BlogStatsCards } from '../components/BlogStatsCards';
 import { BlogTabs } from '../components/BlogTabs';
 import {
@@ -213,7 +213,7 @@ export function BlogsPage() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <BlogPageHeading
+        <PageHeading
           title="Blogs"
           crumbs={[{ label: 'Dashboard', to: ROUTES.dashboard }, { label: 'Blogs' }]}
         />

@@ -72,6 +72,12 @@ const BlogFormPage = lazy(() =>
 const BlogDetailsPage = lazy(() =>
   import('@/features/blogs/pages/BlogDetailsPage').then((m) => ({ default: m.BlogDetailsPage })),
 );
+const FaqsPage = lazy(() =>
+  import('@/features/faqs/pages/FaqsPage').then((m) => ({ default: m.FaqsPage })),
+);
+const FaqFormPage = lazy(() =>
+  import('@/features/faqs/pages/FaqFormPage').then((m) => ({ default: m.FaqFormPage })),
+);
 const ProfilePage = lazy(() =>
   import('@/features/profile/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 );
@@ -176,6 +182,21 @@ export const routes: RouteObject[] = [
                   {
                     element: <ProtectedRoute requiredPermissions={[PERMISSIONS.blogUpdate]} />,
                     children: [{ path: `${ROUTES.blogs}/:id/edit`, element: <BlogFormPage /> }],
+                  },
+                ],
+              },
+              {
+                // Every FAQ screen reads FAQs (the list, the editor and its suggested order).
+                element: <ProtectedRoute requiredPermissions={[PERMISSIONS.faqView]} />,
+                children: [
+                  { path: ROUTES.faqs, element: <FaqsPage /> },
+                  {
+                    element: <ProtectedRoute requiredPermissions={[PERMISSIONS.faqCreate]} />,
+                    children: [{ path: ROUTES.faqNew, element: <FaqFormPage /> }],
+                  },
+                  {
+                    element: <ProtectedRoute requiredPermissions={[PERMISSIONS.faqUpdate]} />,
+                    children: [{ path: `${ROUTES.faqs}/:id/edit`, element: <FaqFormPage /> }],
                   },
                 ],
               },

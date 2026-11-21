@@ -6,14 +6,24 @@ import { type ReactNode, useCallback, useEffect, useId, useRef, useState } from 
 import { cn } from '@/utils/helpers';
 
 import { RichTextToolbar } from './RichTextToolbar';
-import { isAllowedImageSrc, isAllowedLink, richTextExtensions } from './richTextExtensions';
+import {
+  isAllowedImageSrc,
+  isAllowedLink,
+  resolveFeatures,
+  type RichTextFeatures,
+  richTextExtensions,
+} from './richTextExtensions';
 import { UrlDialog, type UrlDialogValues } from './UrlDialog';
 import './richText.css';
 
 /** ARIA wiring of the editable area: named by the label, described by the error when there is one. */
-function editorAttributes(labelId: string, errorId: string | null): Record<string, string> {
+function editorAttributes(
+  labelId: string,
+  errorId: string | null,
+  minHeightClassName: string,
+): Record<string, string> {
   return {
-    class: 'rich-text min-h-64 px-4 py-3',
+    class: `rich-text ${minHeightClassName} px-4 py-3`,
     role: 'textbox',
     'aria-multiline': 'true',
     'aria-labelledby': labelId,
@@ -35,6 +45,10 @@ interface RichTextEditorProps {
   error?: string;
   /** Right side of the footer, e.g. word count and reading time. */
   footer?: ReactNode;
+  /** Optional formatting to offer; match what the backend's sanitizer keeps. */
+  features?: RichTextFeatures;
+  /** Tailwind min-height class of the editable area. */
+  minHeightClassName?: string;
 }
 
 /**
@@ -51,12 +65,16 @@ export function RichTextEditor({
   disabled = false,
   error,
   footer,
+  features,
+  minHeightClassName = 'min-h-64',
 }: RichTextEditorProps) {
   const labelId = useId();
   const errorId = useId();
   const [dialog, setDialog] = useState<OpenDialog | null>(null);
   // Ctrl/Cmd+K is handled inside the editor, which is created once; the ref reaches the latest handler.
   const openLinkRef = useRef<() => void>(() => undefined);
+  /** HTML emitted by typing since the value was last in sync. */
+  const emitted = useRef(new Set<string>());
   const handleEditorKeyDown = useCallback((_view: unknown, event: KeyboardEvent) => {
     if (!(event.ctrlKey || event.metaKey) || event.key.toLowerCase() !== 'k') return false;
     event.preventDefault();
@@ -64,25 +82,38 @@ export function RichTextEditor({
     return true;
   }, []);
 
+  const enabled = resolveFeatures(features);
   const editor = useEditor({
-    extensions: richTextExtensions({ placeholder }),
+    extensions: richTextExtensions({ placeholder, features }),
     content: value,
     editable: !disabled,
     shouldRerenderOnTransaction: false,
     editorProps: {
-      attributes: editorAttributes(labelId, error ? errorId : null),
+      attributes: editorAttributes(labelId, error ? errorId : null, minHeightClassName),
       handleKeyDown: handleEditorKeyDown,
     },
-    onUpdate: ({ editor: current }) => onChange(current.isEmpty ? '' : current.getHTML()),
+    onUpdate: ({ editor: current }) => {
+      const html = current.isEmpty ? '' : current.getHTML();
+      emitted.current.add(html);
+      onChange(html);
+    },
     onBlur: () => onBlur?.(),
   });
 
   // The editor is an external system: push value changes that did not come from typing (a form
-  // reset or a server value) into it, and keep its editable flag and ARIA state in step.
+  // reset or a server value) into it, and keep its editable flag and ARIA state in step. A value
+  // the editor emitted itself can arrive after newer keystrokes (typing outpaced the re-render);
+  // it is stale, not external, and must not reset the content.
   useEffect(() => {
     if (!editor || editor.isDestroyed) return;
     const current = editor.isEmpty ? '' : editor.getHTML();
-    if (value !== current) editor.commands.setContent(value, { emitUpdate: false });
+    if (value === current) {
+      emitted.current.clear();
+      return;
+    }
+    if (emitted.current.has(value)) return;
+    emitted.current.clear();
+    editor.commands.setContent(value, { emitUpdate: false });
   }, [editor, value]);
   useEffect(() => {
     if (editor && !editor.isDestroyed) editor.setEditable(!disabled);
@@ -91,11 +122,11 @@ export function RichTextEditor({
     if (!editor || editor.isDestroyed) return;
     editor.setOptions({
       editorProps: {
-        attributes: editorAttributes(labelId, error ? errorId : null),
+        attributes: editorAttributes(labelId, error ? errorId : null, minHeightClassName),
         handleKeyDown: handleEditorKeyDown,
       },
     });
-  }, [editor, error, errorId, labelId, handleEditorKeyDown]);
+  }, [editor, error, errorId, labelId, handleEditorKeyDown, minHeightClassName]);
 
   const openLink = () => {
     if (!editor) return;
@@ -163,6 +194,7 @@ export function RichTextEditor({
           <RichTextToolbar
             editor={editor}
             disabled={disabled}
+            features={enabled}
             onLink={openLink}
             onImage={() => setDialog({ kind: 'image' })}
           />
@@ -198,7 +230,7 @@ export function RichTextEditor({
           onClose={() => setDialog(null)}
         />
       )}
-      {dialog?.kind === 'image' && (
+      {dialog?.kind === 'image' && enabled.images && (
         <UrlDialog
           open
           title="Insert image"

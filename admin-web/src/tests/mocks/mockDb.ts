@@ -13,6 +13,7 @@ import {
   type StoredBlog,
   type StoredBlogCategory,
 } from './blogMockData';
+import { buildFaqs, type StoredFaq } from './faqMockData';
 import { buildLeads } from './leadMockData';
 import { buildProperties, type StoredProperty } from './propertyMockData';
 import { buildSiteVisits } from './siteVisitMockData';
@@ -108,6 +109,12 @@ const ADMIN_USER: AdminUser = {
     'BLOG_CATEGORY_CREATE',
     'BLOG_CATEGORY_UPDATE',
     'BLOG_CATEGORY_DELETE',
+    // The seeded admin role's FAQ module (V202610261100__grant_faq_permissions).
+    'FAQ_VIEW',
+    'FAQ_CREATE',
+    'FAQ_UPDATE',
+    'FAQ_PUBLISH',
+    'FAQ_DELETE',
   ],
 };
 
@@ -216,6 +223,16 @@ const BLOG_VIEWER_USER: AdminUser = {
   permissions: ['ADMIN_PANEL_ACCESS', 'BLOG_VIEW'],
 };
 
+/** Writes FAQ drafts and edits them, but may neither publish, unpublish nor delete. */
+const FAQ_EDITOR_USER: AdminUser = {
+  id: 13,
+  fullName: 'Fay Faqs',
+  email: 'faqs@example.com',
+  phone: null,
+  role: { slug: 'faq-editor', name: 'FAQ Editor' },
+  permissions: ['ADMIN_PANEL_ACCESS', 'FAQ_VIEW', 'FAQ_CREATE', 'FAQ_UPDATE'],
+};
+
 export const mockUsers = {
   admin: ADMIN_USER,
   manager: MANAGER_USER,
@@ -228,6 +245,7 @@ export const mockUsers = {
   bannerEditor: BANNER_EDITOR_USER,
   blogWriter: BLOG_WRITER_USER,
   blogViewer: BLOG_VIEWER_USER,
+  faqEditor: FAQ_EDITOR_USER,
 } as const;
 
 /** Mirrors the seeded roles plus two custom ones. Permissions match the sign-in accounts above. */
@@ -409,6 +427,7 @@ function createState() {
       [BANNER_EDITOR_USER.email ?? '', { user: BANNER_EDITOR_USER, password: MOCK_PASSWORD }],
       [BLOG_WRITER_USER.email ?? '', { user: BLOG_WRITER_USER, password: MOCK_PASSWORD }],
       [BLOG_VIEWER_USER.email ?? '', { user: BLOG_VIEWER_USER, password: MOCK_PASSWORD }],
+      [FAQ_EDITOR_USER.email ?? '', { user: FAQ_EDITOR_USER, password: MOCK_PASSWORD }],
     ]),
     jar: readJar(),
     csrfToken: 'mock-csrf-token-1',
@@ -433,6 +452,8 @@ function createState() {
     ...blogState(),
     nextBlogId: 100,
     nextBlogCategoryId: 100,
+    faqs: buildFaqs(),
+    nextFaqId: 100,
     nextLogId: 10_000,
     /** Idempotency-Key -> created property id, per owner. */
     createKeys: new Map<string, number>(),
@@ -737,6 +758,30 @@ export const mockDb = {
     const created = { ...category, id: state.nextBlogCategoryId++ };
     state.blogCategories = [...state.blogCategories, created];
     return created;
+  },
+
+  faqs(): StoredFaq[] {
+    return state.faqs;
+  },
+
+  findFaq(id: number): StoredFaq | undefined {
+    return state.faqs.find((faq) => faq.id === id);
+  },
+
+  saveFaq(faq: StoredFaq): void {
+    const exists = state.faqs.some((row) => row.id === faq.id);
+    state.faqs = exists
+      ? state.faqs.map((row) => (row.id === faq.id ? faq : row))
+      : [...state.faqs, faq];
+  },
+
+  /** Permanent: FAQs have no soft delete. */
+  deleteFaq(id: number): void {
+    state.faqs = state.faqs.filter((faq) => faq.id !== id);
+  },
+
+  nextFaqId(): number {
+    return state.nextFaqId++;
   },
 
   /** Appends an audit entry, as the backend's SystemLogInterceptor does for every admin write. */

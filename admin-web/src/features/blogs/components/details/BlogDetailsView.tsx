@@ -14,7 +14,7 @@ import { formatDateTime } from '@/utils/formatters';
 import type { Blog } from '../../types/blog.types';
 import { PUBLIC_STATE_META } from '../../utils/blogDisplay';
 import { BlogStateChip } from '../BlogStateChip';
-import { RichTextContent } from '../richText/RichTextContent';
+import { RichTextContent } from '@/components/common/RichText';
 
 interface BlogDetailsViewProps {
   blog: Blog;
@@ -85,7 +85,7 @@ export function BlogDetailsView({ blog, readingLabel, onPreview, info }: BlogDet
           {blog.shortDescription}
         </Typography>
       )}
-      <RichTextContent html={blog.content} />
+      <RichTextContent html={blog.content} label="Blog content" />
       {info}
     </Paper>
   );

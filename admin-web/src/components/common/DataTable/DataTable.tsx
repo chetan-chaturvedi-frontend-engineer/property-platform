@@ -1,4 +1,8 @@
+import KeyboardArrowDown from '@mui/icons-material/KeyboardArrowDown';
+import KeyboardArrowRight from '@mui/icons-material/KeyboardArrowRight';
 import Checkbox from '@mui/material/Checkbox';
+import Collapse from '@mui/material/Collapse';
+import IconButton from '@mui/material/IconButton';
 import MenuItem from '@mui/material/MenuItem';
 import Pagination from '@mui/material/Pagination';
 import Skeleton from '@mui/material/Skeleton';
@@ -12,7 +16,7 @@ import TableRow from '@mui/material/TableRow';
 import TableSortLabel from '@mui/material/TableSortLabel';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 
 import { formatNumber } from '@/utils/formatters';
 
@@ -60,6 +64,15 @@ export interface DataTableSelection<TId extends string | number> {
   rowLabel: (id: TId) => string;
 }
 
+export interface DataTableExpansion<TRow, TId extends string | number> {
+  expanded: ReadonlySet<TId>;
+  onToggle: (id: TId) => void;
+  /** Content of the panel under an expanded row; rendered only while it is open. */
+  render: (row: TRow) => ReactNode;
+  /** Accessible name of a row's toggle, e.g. "Details of How do I register?". */
+  toggleLabel: (row: TRow) => string;
+}
+
 interface DataTableProps<TRow, TId extends string | number> {
   caption: string;
   columns: readonly DataTableColumn<TRow>[];
@@ -75,6 +88,8 @@ interface DataTableProps<TRow, TId extends string | number> {
   sort?: DataTableSort;
   /** Adds a checkbox column; "select all" covers the rows on this page. */
   selection?: DataTableSelection<TId>;
+  /** Adds a toggle column that opens a details panel under each row. */
+  expansion?: DataTableExpansion<TRow, TId>;
   skeletonRows?: number;
   /** Lets wide tables scroll horizontally instead of squeezing columns on small screens. */
   minWidth?: number;
@@ -94,6 +109,7 @@ export function DataTable<TRow, TId extends string | number = string | number>({
   pagination,
   sort,
   selection,
+  expansion,
   skeletonRows = 5,
   minWidth,
 }: DataTableProps<TRow, TId>) {
@@ -102,6 +118,7 @@ export function DataTable<TRow, TId extends string | number = string | number>({
   }
 
   const showSkeleton = isLoading && !rows;
+  const columnCount = columns.length + (selection ? 1 : 0) + (expansion ? 1 : 0);
   const isEmpty = !showSkeleton && (!rows || rows.length === 0);
   const pageIds = rows?.map(getRowId) ?? [];
   const selectedOnPage = selection ? pageIds.filter((id) => selection.selected.has(id)).length : 0;
@@ -143,6 +160,11 @@ export function DataTable<TRow, TId extends string | number = string | number>({
                   />
                 </TableCell>
               )}
+              {expansion && (
+                <TableCell padding="checkbox">
+                  <span className="sr-only">Expand</span>
+                </TableCell>
+              )}
               {columns.map((column) => {
                 const isSorted = Boolean(sort && column.sortField === sort.field);
                 return (
@@ -179,6 +201,7 @@ export function DataTable<TRow, TId extends string | number = string | number>({
               Array.from({ length: skeletonRows }, (_, index) => (
                 <TableRow key={`skeleton-${index}`}>
                   {selection && <TableCell padding="checkbox" />}
+                  {expansion && <TableCell padding="checkbox" />}
                   {columns.map((column) => (
                     <TableCell key={column.id}>
                       <Skeleton variant="text" />
@@ -189,24 +212,60 @@ export function DataTable<TRow, TId extends string | number = string | number>({
             {rows?.map((row) => {
               const id = getRowId(row);
               const isSelected = selection?.selected.has(id) ?? false;
+              const isExpanded = expansion?.expanded.has(id) ?? false;
+              const panelId = `row-details-${String(id)}`;
               return (
-                <TableRow key={id} hover selected={isSelected}>
-                  {selection && (
-                    <TableCell padding="checkbox">
-                      <Checkbox
-                        size="small"
-                        checked={isSelected}
-                        onChange={() => toggleRow(id)}
-                        slotProps={{ input: { 'aria-label': selection.rowLabel(id) } }}
-                      />
-                    </TableCell>
+                <Fragment key={id}>
+                  <TableRow
+                    hover
+                    selected={isSelected}
+                    sx={isExpanded ? { '& > td': { borderBottom: 'none' } } : undefined}
+                  >
+                    {selection && (
+                      <TableCell padding="checkbox">
+                        <Checkbox
+                          size="small"
+                          checked={isSelected}
+                          onChange={() => toggleRow(id)}
+                          slotProps={{ input: { 'aria-label': selection.rowLabel(id) } }}
+                        />
+                      </TableCell>
+                    )}
+                    {expansion && (
+                      <TableCell padding="checkbox">
+                        <IconButton
+                          size="small"
+                          aria-label={expansion.toggleLabel(row)}
+                          aria-expanded={isExpanded}
+                          aria-controls={isExpanded ? panelId : undefined}
+                          onClick={() => expansion.onToggle(id)}
+                        >
+                          {isExpanded ? (
+                            <KeyboardArrowDown fontSize="small" />
+                          ) : (
+                            <KeyboardArrowRight fontSize="small" />
+                          )}
+                        </IconButton>
+                      </TableCell>
+                    )}
+                    {columns.map((column) => (
+                      <TableCell key={column.id} align={column.align}>
+                        {column.cell(row)}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  {expansion && isExpanded && (
+                    <TableRow selected={isSelected}>
+                      <TableCell colSpan={columnCount} sx={{ py: 0 }}>
+                        <Collapse in appear unmountOnExit>
+                          <div id={panelId} className="pb-4">
+                            {expansion.render(row)}
+                          </div>
+                        </Collapse>
+                      </TableCell>
+                    </TableRow>
                   )}
-                  {columns.map((column) => (
-                    <TableCell key={column.id} align={column.align}>
-                      {column.cell(row)}
-                    </TableCell>
-                  ))}
-                </TableRow>
+                </Fragment>
               );
             })}
           </TableBody>
