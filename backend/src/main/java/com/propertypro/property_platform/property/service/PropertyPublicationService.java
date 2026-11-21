@@ -7,11 +7,13 @@ import com.propertypro.property_platform.property.domain.PublicationAction;
 import com.propertypro.property_platform.property.domain.PublicationStatus;
 import com.propertypro.property_platform.property.domain.StatusChangeAction;
 import com.propertypro.property_platform.property.dto.PropertyResponse;
+import com.propertypro.property_platform.property.event.PropertyStatusChangedEvent;
 import com.propertypro.property_platform.property.exception.PropertyExceptions;
 import com.propertypro.property_platform.property.mapper.PropertyResponseMapper;
 import com.propertypro.property_platform.property.repository.PropertyProjectRepository;
 import com.propertypro.property_platform.security.CurrentActor;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -54,6 +56,7 @@ public class PropertyPublicationService {
 	private final PropertyStatusHistoryService statusHistory;
 	private final PropertyResponseMapper mapper;
 	private final Clock clock;
+	private final ApplicationEventPublisher events;
 
 	/**
 	 * Applies the action. Repeating an action whose target status the property already has (e.g. a
@@ -91,6 +94,8 @@ public class PropertyPublicationService {
 				cleanReason);
 		project.touch(clock.instant());
 		projectRepository.saveAndFlush(project);
+		events.publishEvent(new PropertyStatusChangedEvent(project.getId(), project.getUserId(),
+				project.getProjectName(), action.getTo().getValue(), cleanReason, actor.userId()));
 		return mapper.toResponse(project);
 	}
 

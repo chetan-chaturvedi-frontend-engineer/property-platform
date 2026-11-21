@@ -17,6 +17,10 @@ public interface PropertyProjectSummaryRepository
 
 	List<PropertyProjectSummary> findAllByIdIn(Collection<Long> ids);
 
+	/** Ids of a user's own properties that are not deleted (every publication status). */
+	@Query("select p.id from PropertyProjectSummary p where p.userId = :userId and p.deletedAt is null")
+	List<Long> findIdsByOwner(Long userId);
+
 	/** Property counts per publication and legal status, deleted ones in their own rows: one aggregate query. */
 	@Query(value = """
 			SELECT publication_status AS publicationStatus, legal_approval_status AS legalApprovalStatus,

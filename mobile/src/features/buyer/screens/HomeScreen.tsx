@@ -4,6 +4,7 @@ import { Button, Chip, IconButton, Screen, SectionTitle } from '../../../compone
 import { useRootNavigation } from '../../../navigation/useRootNavigation';
 import { colors, typography } from '../../../theme';
 import { BannerStrip } from '../components/BannerStrip';
+import { useUnreadNotifications } from '../UnreadNotificationsProvider';
 import { PropertyListCard } from '../components/PropertyListCard';
 import { SearchBox } from '../components/SearchBox';
 import { usePropertySearch } from '../hooks/useProperties';
@@ -11,6 +12,7 @@ import { usePropertyFilters } from '../PropertyFiltersProvider';
 
 export function HomeScreen() {
   const nav = useRootNavigation();
+  const { unread } = useUnreadNotifications();
   const { filters, activeCount } = usePropertyFilters();
   const { data: page, loading, error, reload } = usePropertySearch();
   const data = page?.items;
@@ -21,7 +23,7 @@ export function HomeScreen() {
           <Text style={typography.muted}>Location</Text>
           <Text style={typography.h2}>{filters.city.trim() || 'All Cities'}</Text>
         </View>
-        <IconButton name="notifications-outline" accessibilityLabel="Notifications" onPress={() => nav.navigate('Notifications')} />
+        <IconButton name="notifications-outline" badge={unread || undefined} accessibilityLabel="Notifications" onPress={() => nav.navigate('Notifications')} />
         <IconButton name="options-outline" badge={activeCount || undefined} accessibilityLabel="Filters" onPress={() => nav.navigate('Filters')} />
       </View>
       <View style={styles.search}>

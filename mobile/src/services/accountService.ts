@@ -1,13 +1,13 @@
 import { apiClient } from './api/apiClient';
-import { authService } from './authService';
+import { secureStorage } from './storage/secureStorage';
 
 export const accountService = {
   /**
-   * Permanently deletes the account and associated data server-side, then clears local credentials.
-   * Required in-app by Google Play (account deletion) and App Store guideline 5.1.1(v).
+   * Permanently deletes the account (soft delete on the server: sessions end and its properties are archived).
+   * The password confirms it is the owner. Required in-app by Google Play and App Store guideline 5.1.1(v).
    */
-  async deleteAccount(): Promise<void> {
-    await apiClient.delete<void>('/account');
-    await authService.signOut();
+  async deleteAccount(password: string): Promise<void> {
+    await apiClient.deleteWithBody<void>('/users/me', { password });
+    await secureStorage.clearSession();
   },
 };

@@ -10,12 +10,6 @@ import { useSettings } from '../hooks/useSettings';
 const { version } = require('../../../../package.json') as { version: string };
 
 interface Row { icon: IconName; title: string; sub: string; right?: string }
-const account: Row[] = [
-  { icon: 'person-outline', title: 'Personal Information', sub: 'Update your personal details' },
-  { icon: 'lock-closed-outline', title: 'Change Password', sub: 'Update your password regularly' },
-  { icon: 'call-outline', title: 'Mobile Number', sub: 'Update your registered mobile number' },
-  { icon: 'mail-outline', title: 'Email Address', sub: 'Update your registered email address' },
-];
 const more: Row[] = [
   { icon: 'shield-outline', title: 'Privacy & Security', sub: 'Manage your data and privacy' },
   { icon: 'document-text-outline', title: 'Terms & Conditions', sub: 'Read our terms and conditions' },
@@ -31,7 +25,7 @@ const legalTarget: Record<string, 'privacy' | 'terms'> = {
 export function SettingsScreen() {
   const nav = useRootNavigation();
 
-  const { status, signOut } = useAuth();
+  const { status, user, signOut } = useAuth();
   const { settings, update, error, signedIn } = useSettings();
 
   async function logOut() {
@@ -50,6 +44,13 @@ export function SettingsScreen() {
 
   const choose = (title: string, options: [string, () => void][]) =>
     Alert.alert(title, undefined, [...options.map(([label, run]) => ({ text: label, onPress: run })), { text: 'Cancel', style: 'cancel' as const }]);
+
+  const account: { icon: IconName; title: string; sub: string; onPress?: () => void }[] = [
+    { icon: 'person-outline', title: 'Personal Information', sub: user?.fullName ?? 'Update your personal details', onPress: () => needAccount(() => nav.navigate('EditProfile')) },
+    { icon: 'lock-closed-outline', title: 'Change Password', sub: 'Update your password regularly', onPress: () => needAccount(() => nav.navigate('ChangePassword')) },
+    { icon: 'call-outline', title: 'Mobile Number', sub: user?.phone || 'Your registered mobile number' },
+    { icon: 'mail-outline', title: 'Email Address', sub: user?.email ?? 'Your registered email address' },
+  ];
 
   const prefs: { icon: IconName; title: string; sub: string; right?: React.ReactNode; onPress?: () => void }[] = [
     {

@@ -14,10 +14,12 @@ export function DeleteAccountScreen() {
       <Card style={styles.card}>
         <View style={styles.row}><Icon name="warning-outline" size={22} color={colors.danger} /><Text style={typography.h3}>This cannot be undone</Text></View>
         <Text style={typography.muted}>
-          Deleting your account permanently removes your profile, shortlist, bookings, messages and any property listings. Some records may be retained where the law requires.
+          Deleting your account signs you out everywhere, closes your profile and archives your property listings. Some records may be retained where the law requires.
         </Text>
         <Text style={typography.body}>Type DELETE to confirm.</Text>
         <TextField placeholder="DELETE" autoCapitalize="characters" value={f.confirmText} onChangeText={f.setConfirmText} accessibilityLabel="Type DELETE to confirm" />
+        <Text style={typography.body}>Enter your password.</Text>
+        <TextField icon="lock-closed-outline" placeholder="Password" secureTextEntry autoCapitalize="none" value={f.password} onChangeText={f.setPassword} accessibilityLabel="Password" />
         {f.error ? <Text accessibilityLiveRegion="polite" style={styles.error}>{f.error}</Text> : null}
       </Card>
     </Screen>

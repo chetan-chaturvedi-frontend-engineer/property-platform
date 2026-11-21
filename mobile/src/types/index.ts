@@ -257,3 +257,23 @@ export interface PropertyDraft {
   amenityIds: number[];
   photos: PickedPhoto[];
 }
+
+export interface SellerEngagement {
+  views: number;
+  uniqueViewers: number;
+  saves: number;
+}
+
+export type NotificationKind = 'site_visit_booked' | 'property_status_changed';
+
+export interface AppNotification {
+  id: number;
+  kind: NotificationKind;
+  title: string;
+  body: string;
+  read: boolean;
+  /** ISO instant; shown as a relative time. */
+  createdAt: string;
+  /** Ids for opening the related screen. */
+  propertyId?: number;
+}

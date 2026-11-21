@@ -155,6 +155,14 @@ app:
     builder-team-write-user: { max-requests: 300, window: 1h }
     # Creation and updates of the caller's own settings.
     user-setting-write-user: { max-requests: 120, window: 1h }
+    # Marking notifications read and deleting them.
+    notification-write-user: { max-requests: 600, window: 1h }
+    # Own account changes: rename, change password, delete (the last two check the current password).
+    profile-write-user: { max-requests: 30, window: 1h }
+    # Saving and unsaving properties.
+    saved-property-write-user: { max-requests: 600, window: 1h }
+    # Recording property views; one per opened detail screen, so generous.
+    property-view-write-user: { max-requests: 1200, window: 1h }
     # Subscribing to a plan.
     user-subscription-write-user: { max-requests: 30, window: 1h }
     # Admin user management: create, update and delete.
@@ -167,6 +175,10 @@ app:
     placements: home_top, home_middle, property_list, property_detail
     # Routes internal banner links may open: the route or any path below it ("/" = home page only).
     internal-link-prefixes: /, /properties, /projects, /offers, /blogs, /pages, /faqs, /subscription-plans
+  notification:
+    # true: notifications are created on a small background executor after the booking or review committed.
+    # false (test profile): on the calling thread, so tests are deterministic.
+    async: true
   subscription:
     # false: only free plans can be taken without payment (a payment gateway activates paid ones).
     # true (dev profile only): any plan activates immediately, so the seller flow works without a gateway.

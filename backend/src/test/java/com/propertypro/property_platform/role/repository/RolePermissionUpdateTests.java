@@ -95,6 +95,18 @@ import static com.propertypro.property_platform.security.Permissions.ROLE_CREATE
 import static com.propertypro.property_platform.security.Permissions.ROLE_DELETE;
 import static com.propertypro.property_platform.security.Permissions.ROLE_UPDATE;
 import static com.propertypro.property_platform.security.Permissions.ROLE_VIEW;
+import static com.propertypro.property_platform.security.Permissions.NOTIFICATION_DELETE;
+import static com.propertypro.property_platform.security.Permissions.NOTIFICATION_LIST;
+import static com.propertypro.property_platform.security.Permissions.NOTIFICATION_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.PROFILE_CHANGE_PASSWORD;
+import static com.propertypro.property_platform.security.Permissions.PROFILE_DELETE;
+import static com.propertypro.property_platform.security.Permissions.PROFILE_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.RECENTLY_VIEWED_CREATE;
+import static com.propertypro.property_platform.security.Permissions.RECENTLY_VIEWED_DELETE;
+import static com.propertypro.property_platform.security.Permissions.RECENTLY_VIEWED_LIST;
+import static com.propertypro.property_platform.security.Permissions.SAVED_PROPERTY_CREATE;
+import static com.propertypro.property_platform.security.Permissions.SAVED_PROPERTY_DELETE;
+import static com.propertypro.property_platform.security.Permissions.SAVED_PROPERTY_LIST;
 import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_ASSIGN;
 import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_ASSIGN_ANY;
 import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_CREATE;
@@ -187,6 +199,16 @@ class RolePermissionUpdateTests {
 			USER_SETTING_UPDATE);
 	/** Added to the user role only, later, by V202611211100. */
 	private static final Set<String> USER_SUBSCRIPTION_PERMISSIONS = Set.of(SUBSCRIPTION_VIEW, SUBSCRIPTION_CREATE);
+	/** Added to the user role only, later, by V202611211220. */
+	private static final Set<String> USER_SAVED_AND_VIEWED_PERMISSIONS = Set.of(SAVED_PROPERTY_LIST,
+			SAVED_PROPERTY_CREATE, SAVED_PROPERTY_DELETE, RECENTLY_VIEWED_LIST, RECENTLY_VIEWED_CREATE,
+			RECENTLY_VIEWED_DELETE);
+	/** Added to the user role only, later, by V202611211230. */
+	private static final Set<String> USER_PROFILE_PERMISSIONS = Set.of(PROFILE_UPDATE, PROFILE_CHANGE_PASSWORD,
+			PROFILE_DELETE);
+	/** Added to the user role only, later, by V202611211310. */
+	private static final Set<String> USER_NOTIFICATION_PERMISSIONS = Set.of(NOTIFICATION_LIST, NOTIFICATION_UPDATE,
+			NOTIFICATION_DELETE);
 	private static final Set<String> ADMIN_PERMISSIONS = Set.of(ADMIN_PANEL_ACCESS, SUBSCRIPTION_PLAN_VIEW,
 			SUBSCRIPTION_PLAN_CREATE, SUBSCRIPTION_PLAN_UPDATE, ROLE_VIEW, ROLE_CREATE, ROLE_UPDATE, ROLE_DELETE,
 			LEAD_LIST_ANY, LEAD_VIEW_ANY, LEAD_UPDATE_ANY, LEAD_DELETE_ANY);
@@ -215,6 +237,9 @@ class RolePermissionUpdateTests {
 		afterAllMigrations.addAll(USER_BUILDER_TEAM_PERMISSIONS);
 		afterAllMigrations.addAll(USER_SETTING_PERMISSIONS);
 		afterAllMigrations.addAll(USER_SUBSCRIPTION_PERMISSIONS);
+		afterAllMigrations.addAll(USER_SAVED_AND_VIEWED_PERMISSIONS);
+		afterAllMigrations.addAll(USER_PROFILE_PERMISSIONS);
+		afterAllMigrations.addAll(USER_NOTIFICATION_PERMISSIONS);
 		assertThat(user.grantedPermissions()).containsExactlyInAnyOrderElementsOf(afterAllMigrations);
 		assertThat(user.isGranted("lead", "view_any")).isFalse();
 		assertThat(user.isGranted("admin_panel", "access")).isFalse();

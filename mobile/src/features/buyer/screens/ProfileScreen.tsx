@@ -8,29 +8,35 @@ import { useRootNavigation } from '../../../navigation/useRootNavigation';
 import { RootStackParamList } from '../../../navigation/types';
 import { colors, radius, typography } from '../../../theme';
 import { initialsOf } from '../../../utils/format';
+import { recentlyViewedService } from '../../../services/recentlyViewedService';
 import { useAuth } from '../../auth/AuthProvider';
+import { useSavedProperties } from '../SavedPropertiesProvider';
+import { useUnreadNotifications } from '../UnreadNotificationsProvider';
 
 interface MenuItem { icon: IconName; title: string; sub: string; badge?: string; to?: keyof RootStackParamList }
 
 export function ProfileScreen() {
   const nav = useRootNavigation();
+  const { unread } = useUnreadNotifications();
   const { status, user, signOut } = useAuth();
   const signedIn = status === 'signedIn';
   const { data: bookings } = useAsync(() => (signedIn ? bookingService.list() : Promise.resolve([])), [signedIn]);
+  const { ids: savedIds } = useSavedProperties();
+  const { data: viewed } = useAsync(() => (signedIn ? recentlyViewedService.list() : Promise.resolve([])), [signedIn]);
   const upcoming = (bookings ?? []).filter(b => b.status === 'Upcoming').length;
   const total = bookings?.length ?? 0;
-  // Counts without a backend endpoint yet (saved, viewed, compared) show a dash, never a made-up number.
+  // Compare is local to the device, so it has no count to show: a dash, never a made-up number.
   const activity: { icon: IconName; n: string; l: string }[] = [
-    { icon: 'heart-outline', n: '–', l: 'Shortlisted' },
+    { icon: 'heart-outline', n: signedIn ? String(savedIds.length) : '–', l: 'Shortlisted' },
     { icon: 'calendar-outline', n: signedIn ? String(upcoming) : '–', l: 'Scheduled' },
     { icon: 'document-text-outline', n: signedIn ? String(total) : '–', l: 'Bookings' },
-    { icon: 'eye-outline', n: '–', l: 'Viewed' },
+    { icon: 'eye-outline', n: signedIn ? String(viewed?.length ?? 0) : '–', l: 'Viewed' },
     { icon: 'git-compare-outline', n: '–', l: 'Compared' },
   ];
   const items: MenuItem[] = [
-    { icon: 'heart-outline', title: 'My Shortlist', sub: 'View and manage your saved properties' },
+    { icon: 'heart-outline', title: 'My Shortlist', sub: 'View and manage your saved properties', badge: signedIn ? `${savedIds.length} ${savedIds.length === 1 ? 'Property' : 'Properties'}` : undefined },
     { icon: 'calendar-outline', title: 'Scheduled Visits', sub: 'Manage your upcoming site visits', badge: signedIn ? `${upcoming} ${upcoming === 1 ? 'Visit' : 'Visits'}` : undefined, to: 'Bookings' },
-    { icon: 'eye-outline', title: 'Recently Viewed', sub: 'Properties you recently explored', to: 'RecentlyViewed' },
+    { icon: 'eye-outline', title: 'Recently Viewed', sub: 'Properties you recently explored', badge: signedIn ? `${viewed?.length ?? 0} Properties` : undefined, to: 'RecentlyViewed' },
     { icon: 'git-compare-outline', title: 'Compare Properties', sub: 'View and manage your comparisons', to: 'Compare' },
     { icon: 'document-text-outline', title: 'My Bookings', sub: 'View your booking history and details', badge: signedIn ? `${total} ${total === 1 ? 'Booking' : 'Bookings'}` : undefined, to: 'Bookings' },
     { icon: 'calculator-outline', title: 'Loan & EMI Calculator', sub: 'Check loan eligibility and EMI plans', to: 'EmiCalculator' },
@@ -44,7 +50,7 @@ export function ProfileScreen() {
         showBack={false}
         right={
           <View style={styles.row}>
-            <IconButton name="notifications-outline" accessibilityLabel="Notifications" onPress={() => nav.navigate('Notifications')} />
+            <IconButton name="notifications-outline" badge={unread || undefined} accessibilityLabel="Notifications" onPress={() => nav.navigate('Notifications')} />
             <IconButton name="settings-outline" accessibilityLabel="Settings" onPress={() => nav.navigate('Settings')} />
           </View>
         }

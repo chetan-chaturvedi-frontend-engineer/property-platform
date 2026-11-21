@@ -49,6 +49,17 @@ export const authService = {
     return toUser(tokens.user);
   },
 
+  /** Changes the display name; email and phone need re-verification and are not editable here. */
+  async rename(fullName: string): Promise<User> {
+    return toUser(await apiClient.patch<ApiUser>('/users/me', { fullName }));
+  },
+
+  /** Replaces the password. The backend ends every session, so the caller signs in again afterwards. */
+  async changePassword(currentPassword: string, password: string): Promise<void> {
+    await apiClient.post<void>('/users/me/change-password', { currentPassword, password, passwordConfirmation: password });
+    await secureStorage.clearSession();
+  },
+
   /** Ends the server session (best effort) and always clears local credentials. */
   async signOut(): Promise<void> {
     try {

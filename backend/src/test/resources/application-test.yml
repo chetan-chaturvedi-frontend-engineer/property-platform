@@ -4,6 +4,8 @@ spring:
     url: ${TEST_DB_URL:jdbc:postgresql://localhost:5432/property_app_test}
 
 app:
+  notification:
+    async: false
   media:
     storage-root: ${java.io.tmpdir}/property-platform-test-media
     # Small limits keep size tests fast.

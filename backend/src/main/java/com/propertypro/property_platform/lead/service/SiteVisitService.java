@@ -19,6 +19,7 @@ import com.propertypro.property_platform.lead.dto.SiteVisitStatsResponse;
 import com.propertypro.property_platform.lead.dto.SiteVisitStatusRequest;
 import com.propertypro.property_platform.lead.dto.SiteVisitSummaryResponse;
 import com.propertypro.property_platform.lead.dto.UpdateSiteVisitRequest;
+import com.propertypro.property_platform.lead.event.SiteVisitBookedEvent;
 import com.propertypro.property_platform.lead.exception.SiteVisitExceptions;
 import com.propertypro.property_platform.lead.mapper.SiteVisitResponseMapper;
 import com.propertypro.property_platform.lead.repository.SiteVisitRepository;
@@ -40,6 +41,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -121,6 +123,7 @@ public class SiteVisitService {
 	private final PhoneNumberNormalizer phoneNumberNormalizer;
 	private final SiteVisitProperties properties;
 	private final Clock clock;
+	private final ApplicationEventPublisher events;
 
 	/**
 	 * App booking. A published property books the caller as visitor; the caller's own property (any
@@ -141,7 +144,13 @@ public class SiteVisitService {
 		save(visit);
 		log.info("Site visit booked visitId={} propertyId={} by={} builderId={}", visit.getId(), property.id(),
 				actor.userId(), property.ownerId());
-		return mapper.toResponse(visit, ownProperty);
+		SiteVisitResponse response = mapper.toResponse(visit, ownProperty);
+		if (!ownProperty) {
+			events.publishEvent(new SiteVisitBookedEvent(visit.getId(), response.visitCode(), property.id(),
+					property.projectName(), property.ownerId(), actor.userId(), visit.getName(), visit.getVisitDate(),
+					visit.getVisitTime()));
+		}
+		return response;
 	}
 
 	/** Admin creation for any property that is not deleted; requires {@code SITE_VISIT_CREATE_ANY}. */

@@ -25,7 +25,7 @@ iOS builds need macOS + Xcode (`cd ios && bundle install && bundle exec pod inst
 
 ## API
 
-Uses the backend in `../backend`; endpoint contracts are in `../backend/docs/api`. Until endpoints are wired in, services return mock data from `src/services/mockData.ts`. Replace the service bodies with `apiClient` calls and delete the mock file before release.
+Uses the backend in `../backend`; endpoint contracts are in `../backend/docs/api`. Every service calls `apiClient` except chat, which still returns the fixtures in `src/services/mockData.ts` because the backend has no messaging endpoints yet. Replace the chat service body and delete the mock file when they exist. Map API shapes to app types in `src/services/mappers/`, keep wire types in `src/types/api.ts`.
 
 ## Releases
 
