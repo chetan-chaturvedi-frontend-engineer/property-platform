@@ -16,6 +16,8 @@ export const ROUTES = {
   blogNew: '/blogs/new',
   faqs: '/faqs',
   faqNew: '/faqs/new',
+  pages: '/pages',
+  pageNew: '/pages/new',
   profile: '/profile',
   unauthorized: '/unauthorized',
 } as const;
@@ -73,6 +75,11 @@ export const PERMISSIONS = {
   bannerChangeStatus: 'BANNER_CHANGE_STATUS',
   bannerDelete: 'BANNER_DELETE',
   pageView: 'PAGE_VIEW',
+  pageCreate: 'PAGE_CREATE',
+  pageUpdate: 'PAGE_UPDATE',
+  /** Needed in addition to create/update for any status change (publish or unpublish). */
+  pagePublish: 'PAGE_PUBLISH',
+  pageDelete: 'PAGE_DELETE',
   blogView: 'BLOG_VIEW',
   blogCreate: 'BLOG_CREATE',
   blogUpdate: 'BLOG_UPDATE',
@@ -112,6 +119,11 @@ export const faqRoutes = {
   edit: (id: number) => `${ROUTES.faqs}/${id}/edit`,
 } as const;
 
+/** Content page routes with an id. */
+export const contentPageRoutes = {
+  edit: (id: number) => `${ROUTES.pages}/${id}/edit`,
+} as const;
+
 /** Lead routes with an id. */
 export const leadRoutes = {
   detail: (id: number) => `${ROUTES.leads}/${id}`,
@@ -127,6 +139,7 @@ export const STORAGE_KEYS = {
   bannersPageSize: 'admin-web:banners-page-size',
   blogsPageSize: 'admin-web:blogs-page-size',
   faqsPageSize: 'admin-web:faqs-page-size',
+  contentPagesPageSize: 'admin-web:content-pages-page-size',
   sidebarCollapsed: 'admin-web:sidebar-collapsed',
 } as const;
 
@@ -143,6 +156,9 @@ export const LAYOUT = {
 } as const;
 
 export const SEARCH_DEBOUNCE_MS = 400;
+
+/** What search engines typically show; guidance only, not enforced by the backend. */
+export const SEO_RECOMMENDED = { title: 60, description: 160 } as const;
 
 /** Mirrors the backend password policy (`app.auth.password`). */
 export const PASSWORD_RULES = {

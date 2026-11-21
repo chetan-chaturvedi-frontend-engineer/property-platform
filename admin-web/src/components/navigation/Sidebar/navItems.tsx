@@ -1,6 +1,7 @@
 import ApartmentOutlined from '@mui/icons-material/ApartmentOutlined';
 import ArticleOutlined from '@mui/icons-material/ArticleOutlined';
 import DashboardOutlined from '@mui/icons-material/DashboardOutlined';
+import DescriptionOutlined from '@mui/icons-material/DescriptionOutlined';
 import EventAvailableOutlined from '@mui/icons-material/EventAvailableOutlined';
 import GroupOutlined from '@mui/icons-material/GroupOutlined';
 import HelpOutlineOutlined from '@mui/icons-material/HelpOutlineOutlined';
@@ -73,6 +74,12 @@ export const NAV_SECTIONS: readonly NavSection[] = [
         path: ROUTES.faqs,
         icon: <HelpOutlineOutlined />,
         requiredPermissions: [PERMISSIONS.faqView],
+      },
+      {
+        label: 'Pages',
+        path: ROUTES.pages,
+        icon: <DescriptionOutlined />,
+        requiredPermissions: [PERMISSIONS.pageView],
       },
     ],
   },

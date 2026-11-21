@@ -1,7 +1,9 @@
 import { z } from 'zod';
 
+import { hasVisibleContent } from '@/utils/html';
+import { SLUG_PATTERN } from '@/utils/slug';
+
 import { BLOG_LIMITS } from '../utils/blogDisplay';
-import { SLUG_PATTERN } from '../utils/blogSlug';
 
 /**
  * How the publication time is set when publishing: `now`, a chosen `schedule` time, or `keep` the
@@ -16,13 +18,6 @@ export type SaveIntent = (typeof SAVE_INTENTS)[number];
 
 /** `datetime-local` value (`yyyy-MM-ddTHH:mm`) as a timestamp, or NaN. */
 export const localTime = (value: string) => (value ? new Date(value).getTime() : Number.NaN);
-
-/** True when sanitized-or-not editor HTML has visible text or an image, as the backend requires. */
-export function hasVisibleContent(html: string): boolean {
-  if (!html) return false;
-  const doc = new DOMParser().parseFromString(html, 'text/html');
-  return (doc.body.textContent ?? '').trim() !== '' || doc.body.querySelector('img') !== null;
-}
 
 const optionalText = (max: number, label: string) =>
   z.string().trim().max(max, `${label} must be at most ${max.toLocaleString()} characters`);

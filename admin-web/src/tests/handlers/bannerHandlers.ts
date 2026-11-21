@@ -7,7 +7,6 @@ import {
   type Banner,
   type BannerLinkType,
   type BannerStatus,
-  type ContentPageOption,
 } from '@/features/banners/types/banner.types';
 import {
   BANNER_CONFIG,
@@ -16,12 +15,7 @@ import {
 } from '@/features/banners/utils/bannerOptions';
 import type { PageResponse } from '@/types/api.types';
 
-import {
-  decodeMockImage,
-  displayStateAt,
-  MOCK_CONTENT_PAGES,
-  type StoredBanner,
-} from '../mocks/bannerMockData';
+import { decodeMockImage, displayStateAt, type StoredBanner } from '../mocks/bannerMockData';
 import { mockDb } from '../mocks/mockDb';
 
 import { apiPath, csrfRejection, problem } from './problem';
@@ -415,24 +409,5 @@ export const bannerHandlers = [
       referenceType: 'Banner',
     });
     return new HttpResponse(null, { status: 204 });
-  }),
-
-  // Content pages (backend/docs/api/pages.md): only the list, used by the banner link picker.
-  http.get(apiPath('/admin/pages'), ({ request }) => {
-    const auth = authorize(request, 'PAGE_VIEW');
-    if ('error' in auth) return auth.error;
-    const params = new URL(request.url).searchParams;
-    const status = params.get('status');
-    const rows = MOCK_CONTENT_PAGES.filter((page) => !status || page.status === status).sort(
-      (a, b) => a.heading.localeCompare(b.heading),
-    );
-    const body: PageResponse<ContentPageOption> = {
-      content: rows,
-      page: 0,
-      size: rows.length,
-      totalElements: rows.length,
-      totalPages: 1,
-    };
-    return HttpResponse.json(body);
   }),
 ];

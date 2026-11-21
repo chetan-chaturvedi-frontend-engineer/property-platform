@@ -12,7 +12,7 @@ import { RichTextEditor } from '@/components/common/RichText';
 import { BlogCategoryField } from './BlogCategoryField';
 import { BlogSlugField } from './BlogSlugField';
 import { BlogTagsField } from './BlogTagsField';
-import { CharCount } from './CharCount';
+import { CharCount } from '@/components/common/CharCount';
 
 interface BlogContentFieldsProps {
   categories: {

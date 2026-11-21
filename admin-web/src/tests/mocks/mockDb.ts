@@ -13,6 +13,7 @@ import {
   type StoredBlog,
   type StoredBlogCategory,
 } from './blogMockData';
+import { buildContentPages, type StoredContentPage } from './contentPageMockData';
 import { buildFaqs, type StoredFaq } from './faqMockData';
 import { buildLeads } from './leadMockData';
 import { buildProperties, type StoredProperty } from './propertyMockData';
@@ -99,7 +100,12 @@ const ADMIN_USER: AdminUser = {
     'BANNER_UPDATE',
     'BANNER_CHANGE_STATUS',
     'BANNER_DELETE',
+    // The seeded admin role's page module (V202610261300__grant_page_permissions).
     'PAGE_VIEW',
+    'PAGE_CREATE',
+    'PAGE_UPDATE',
+    'PAGE_PUBLISH',
+    'PAGE_DELETE',
     // The seeded admin role's blog modules (V202610251900, V202610252000).
     'BLOG_VIEW',
     'BLOG_CREATE',
@@ -233,6 +239,16 @@ const FAQ_EDITOR_USER: AdminUser = {
   permissions: ['ADMIN_PANEL_ACCESS', 'FAQ_VIEW', 'FAQ_CREATE', 'FAQ_UPDATE'],
 };
 
+/** Writes page drafts and edits them, but may neither publish, unpublish nor delete. */
+const PAGE_EDITOR_USER: AdminUser = {
+  id: 14,
+  fullName: 'Pat Pages',
+  email: 'pages@example.com',
+  phone: null,
+  role: { slug: 'page-editor', name: 'Page Editor' },
+  permissions: ['ADMIN_PANEL_ACCESS', 'PAGE_VIEW', 'PAGE_CREATE', 'PAGE_UPDATE'],
+};
+
 export const mockUsers = {
   admin: ADMIN_USER,
   manager: MANAGER_USER,
@@ -246,6 +262,7 @@ export const mockUsers = {
   blogWriter: BLOG_WRITER_USER,
   blogViewer: BLOG_VIEWER_USER,
   faqEditor: FAQ_EDITOR_USER,
+  pageEditor: PAGE_EDITOR_USER,
 } as const;
 
 /** Mirrors the seeded roles plus two custom ones. Permissions match the sign-in accounts above. */
@@ -428,6 +445,7 @@ function createState() {
       [BLOG_WRITER_USER.email ?? '', { user: BLOG_WRITER_USER, password: MOCK_PASSWORD }],
       [BLOG_VIEWER_USER.email ?? '', { user: BLOG_VIEWER_USER, password: MOCK_PASSWORD }],
       [FAQ_EDITOR_USER.email ?? '', { user: FAQ_EDITOR_USER, password: MOCK_PASSWORD }],
+      [PAGE_EDITOR_USER.email ?? '', { user: PAGE_EDITOR_USER, password: MOCK_PASSWORD }],
     ]),
     jar: readJar(),
     csrfToken: 'mock-csrf-token-1',
@@ -454,6 +472,8 @@ function createState() {
     nextBlogCategoryId: 100,
     faqs: buildFaqs(),
     nextFaqId: 100,
+    contentPages: buildContentPages(),
+    nextContentPageId: 100,
     nextLogId: 10_000,
     /** Idempotency-Key -> created property id, per owner. */
     createKeys: new Map<string, number>(),
@@ -782,6 +802,30 @@ export const mockDb = {
 
   nextFaqId(): number {
     return state.nextFaqId++;
+  },
+
+  contentPages(): StoredContentPage[] {
+    return state.contentPages;
+  },
+
+  findContentPage(id: number): StoredContentPage | undefined {
+    return state.contentPages.find((page) => page.id === id);
+  },
+
+  saveContentPage(page: StoredContentPage): void {
+    const exists = state.contentPages.some((row) => row.id === page.id);
+    state.contentPages = exists
+      ? state.contentPages.map((row) => (row.id === page.id ? page : row))
+      : [...state.contentPages, page];
+  },
+
+  /** Permanent: pages have no soft delete. */
+  deleteContentPage(id: number): void {
+    state.contentPages = state.contentPages.filter((page) => page.id !== id);
+  },
+
+  nextContentPageId(): number {
+    return state.nextContentPageId++;
   },
 
   /** Appends an audit entry, as the backend's SystemLogInterceptor does for every admin write. */

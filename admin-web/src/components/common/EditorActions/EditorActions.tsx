@@ -4,27 +4,27 @@ import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined';
 import { Button } from '@/components/common/Button';
 
 /** `draft` saves as a draft; `save` saves with the status chosen in the form. */
-export type FaqSaveIntent = 'draft' | 'save';
+export type SaveIntent = 'draft' | 'save';
 
-interface FaqEditorActionsProps {
+interface EditorActionsProps {
   /** Show "Save as draft" (hidden when it would need a status change the user may not make). */
   showDraft: boolean;
   /** Label of the main save button. */
   saveLabel: string;
   /** The intent currently being saved, for its spinner. */
-  saving: FaqSaveIntent | null;
+  saving: SaveIntent | null;
   onCancel: () => void;
-  onSave: (intent: FaqSaveIntent) => void;
+  onSave: (intent: SaveIntent) => void;
 }
 
-/** Cancel, save as draft and save buttons of the FAQ form. */
-export function FaqEditorActions({
+/** Cancel, save as draft and save buttons in the header of an editor page. */
+export function EditorActions({
   showDraft,
   saveLabel,
   saving,
   onCancel,
   onSave,
-}: FaqEditorActionsProps) {
+}: EditorActionsProps) {
   const busy = saving !== null;
   return (
     <div className="flex flex-wrap gap-2 self-end sm:self-auto">

@@ -44,9 +44,6 @@ export const BLOG_LIMITS = {
 /** Recommended (not enforced) feature image size: the usual social sharing ratio. */
 export const RECOMMENDED_BLOG_IMAGE: ImageDimensions = { width: 1200, height: 630 };
 
-/** What search engines typically show; guidance only, not enforced by the backend. */
-export const SEO_RECOMMENDED = { title: 60, description: 160 } as const;
-
 const WORDS_PER_MINUTE = 200;
 
 /** Visible text of sanitized blog HTML, parsed inertly (`DOMParser` never runs scripts or loads images). */

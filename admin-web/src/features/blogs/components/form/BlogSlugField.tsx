@@ -7,9 +7,10 @@ import TextField from '@mui/material/TextField';
 import Tooltip from '@mui/material/Tooltip';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 
+import { cleanSlugInput, slugify } from '@/utils/slug';
+
 import type { BlogFormValues } from '../../schemas/blogSchema';
 import { BLOG_LIMITS } from '../../utils/blogDisplay';
-import { cleanSlugInput, slugify } from '../../utils/blogSlug';
 
 interface BlogSlugFieldProps {
   /** Title of another blog already using the slug shown, if any. */

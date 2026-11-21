@@ -12,6 +12,7 @@ import { BulkActionsBar } from '@/components/common/BulkActionsBar';
 import { Button } from '@/components/common/Button';
 import { DataTable } from '@/components/common/DataTable/DataTable';
 import { EmptyState } from '@/components/common/Feedback/EmptyState';
+import { FiltersPanel } from '@/components/common/FiltersPanel';
 import { ListToolbar, type ToolbarSelect } from '@/components/common/ListToolbar';
 import { PageHeading } from '@/components/common/PageHeading';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
@@ -20,7 +21,6 @@ import { faqRoutes, ROUTES, SEARCH_DEBOUNCE_MS, STORAGE_KEYS } from '@/utils/con
 import { buildFaqColumns } from '../components/faqColumns';
 import { type ActiveFaqDialog, FaqDialogs } from '../components/FaqDialogs';
 import { FaqExpandedRow } from '../components/FaqExpandedRow';
-import { FaqFiltersPanel, type FaqPanelFilters } from '../components/FaqFiltersPanel';
 import { FaqStatsCards } from '../components/FaqStatsCards';
 import { FaqViewDialog } from '../components/FaqViewDialog';
 import {
@@ -144,12 +144,12 @@ export function FaqsPage() {
     },
   ];
 
-  const appliedPanel: FaqPanelFilters = {
+  const appliedPanel = {
     category: list.category,
     status: list.status ?? '',
     sort: sortValue,
   };
-  const applyPanel = (next: FaqPanelFilters) => {
+  const applyPanel = (next: typeof appliedPanel) => {
     // The URL parser validates both parts; the default order is not stored.
     const [field = DEFAULT_FAQ_SORT.field, direction = 'asc'] = next.sort.split(',');
     const isDefault = field === DEFAULT_FAQ_SORT.field && direction === DEFAULT_FAQ_SORT.direction;
@@ -343,13 +343,26 @@ export function FaqsPage() {
 
       <Drawer anchor="right" open={panelOpen} onClose={() => setPanelOpen(false)}>
         <div className="w-[min(22rem,100vw)] p-4">
-          <FaqFiltersPanel
+          <FiltersPanel
             // A new key resets the draft whenever the applied filters change elsewhere.
             key={JSON.stringify(appliedPanel)}
+            label="FAQ filters"
+            fields={[
+              {
+                id: 'category',
+                label: 'Category',
+                options: categoryOptions,
+                allLabel: 'All categories',
+              },
+              {
+                id: 'status',
+                label: 'Status',
+                options: FAQ_STATUS_OPTIONS,
+                allLabel: 'All statuses',
+              },
+              { id: 'sort', label: 'Sort by', options: sortOptions },
+            ]}
             applied={appliedPanel}
-            categoryOptions={categoryOptions}
-            statusOptions={FAQ_STATUS_OPTIONS}
-            sortOptions={sortOptions}
             onApply={applyPanel}
             onReset={resetPanel}
           />

@@ -9,6 +9,7 @@ import { type ReactNode, useDeferredValue, useState } from 'react';
 import { FormProvider, useForm, useWatch } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 
+import { EditorActions, type SaveIntent } from '@/components/common/EditorActions';
 import { FormSection } from '@/components/common/FormSection';
 import { ConfirmDialog } from '@/components/common/Modal';
 import { useUnsavedChangesPrompt } from '@/hooks/useUnsavedChangesPrompt';
@@ -30,7 +31,6 @@ import {
 } from '../utils/faqForm';
 
 import { FaqContentFields } from './form/FaqContentFields';
-import { FaqEditorActions, type FaqSaveIntent } from './form/FaqEditorActions';
 import { FaqPreviewCard } from './form/FaqPreviewCard';
 import { FaqSettingsFields } from './form/FaqSettingsFields';
 
@@ -65,7 +65,7 @@ export function FaqEditor({ mode, heading }: FaqEditorProps) {
   const createFaq = useCreateFaq();
   const updateFaq = useUpdateFaq();
   const categories = useFaqCategories();
-  const [saving, setSaving] = useState<FaqSaveIntent | null>(null);
+  const [saving, setSaving] = useState<SaveIntent | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
 
   const form = useForm<FaqFormValues>({
@@ -95,12 +95,12 @@ export function FaqEditor({ mode, heading }: FaqEditorProps) {
   const leave = () => void navigate(ROUTES.faqs);
 
   /** The status to save: "draft", or the form's choice when the user may change it. */
-  const statusFor = (intent: FaqSaveIntent, values: FaqFormValues): FaqStatus => {
+  const statusFor = (intent: SaveIntent, values: FaqFormValues): FaqStatus => {
     if (!canPublish) return saved?.status ?? 'draft';
     return intent === 'draft' ? 'draft' : values.status;
   };
 
-  const save = (intent: FaqSaveIntent) => {
+  const save = (intent: SaveIntent) => {
     void handleSubmit(
       async (values) => {
         if (saving) return;
@@ -148,7 +148,7 @@ export function FaqEditor({ mode, heading }: FaqEditorProps) {
           </Tooltip>
           {heading}
         </div>
-        <FaqEditorActions
+        <EditorActions
           showDraft={canPublish}
           saveLabel={canPublish ? 'Save FAQ' : saved ? 'Save changes' : 'Save as draft'}
           saving={saving}
