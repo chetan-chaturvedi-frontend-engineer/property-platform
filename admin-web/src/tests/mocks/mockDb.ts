@@ -17,6 +17,7 @@ import { buildContentPages, type StoredContentPage } from './contentPageMockData
 import { buildFaqs, type StoredFaq } from './faqMockData';
 import { buildLeads } from './leadMockData';
 import { buildProperties, type StoredProperty } from './propertyMockData';
+import { ALL_PERMISSION_CODES } from './roleMockData';
 import { buildSiteVisits } from './siteVisitMockData';
 import { buildSubscriptionPlans } from './subscriptionPlanMockData';
 
@@ -25,10 +26,14 @@ export type StoredUser = Omit<ManagedUser, 'role'>;
 
 /** A `roles` row: slug (= users.user_type), name, status and granted permission codes. */
 export interface MockRole {
+  id: number;
   slug: string;
   name: string;
+  description: string | null;
   active: boolean;
   permissions: readonly string[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 /**
@@ -59,6 +64,11 @@ const ADMIN_USER: AdminUser = {
     'USER_UPDATE',
     'USER_CHANGE_STATUS',
     'USER_DELETE',
+    // The seeded admin role's role module (V202610251300__update_user_admin_role_permissions).
+    'ROLE_VIEW',
+    'ROLE_CREATE',
+    'ROLE_UPDATE',
+    'ROLE_DELETE',
     // The seeded admin role's property module.
     'PROPERTY_CREATE',
     'PROPERTY_CREATE_WITHOUT_SUBSCRIPTION',
@@ -249,6 +259,16 @@ const PAGE_EDITOR_USER: AdminUser = {
   permissions: ['ADMIN_PANEL_ACCESS', 'PAGE_VIEW', 'PAGE_CREATE', 'PAGE_UPDATE'],
 };
 
+/** Reads roles only. */
+const ROLE_VIEWER_USER: AdminUser = {
+  id: 15,
+  fullName: 'Rae Roles',
+  email: 'roles@example.com',
+  phone: null,
+  role: { slug: 'role-viewer', name: 'Role Viewer' },
+  permissions: ['ADMIN_PANEL_ACCESS', 'ROLE_VIEW'],
+};
+
 export const mockUsers = {
   admin: ADMIN_USER,
   manager: MANAGER_USER,
@@ -263,24 +283,47 @@ export const mockUsers = {
   blogViewer: BLOG_VIEWER_USER,
   faqEditor: FAQ_EDITOR_USER,
   pageEditor: PAGE_EDITOR_USER,
+  roleViewer: ROLE_VIEWER_USER,
 } as const;
 
-/** Mirrors the seeded roles plus two custom ones. Permissions match the sign-in accounts above. */
+/** Mirrors the seeded roles plus custom ones. Permissions match the sign-in accounts above. */
 function buildRoles(): MockRole[] {
+  const role = (
+    id: number,
+    slug: string,
+    name: string,
+    permissions: readonly string[],
+    { active = true, description = null as string | null } = {},
+  ): MockRole => ({
+    id,
+    slug,
+    name,
+    description,
+    active,
+    permissions,
+    createdAt: `2026-10-${String(10 + id).padStart(2, '0')}T09:00:00Z`,
+    updatedAt: `2026-11-${String(10 + id).padStart(2, '0')}T11:45:00Z`,
+  });
   return [
-    {
-      slug: 'super-admin',
-      name: 'Super Admin',
-      active: true,
-      permissions: [...ADMIN_USER.permissions, 'ROLE_CREATE', 'ROLE_UPDATE', 'ROLE_DELETE'],
-    },
-    { slug: 'admin', name: 'Administrator', active: true, permissions: ADMIN_USER.permissions },
-    { slug: 'manager', name: 'Manager', active: true, permissions: MANAGER_USER.permissions },
-    { slug: 'editor', name: 'User Editor', active: true, permissions: EDITOR_USER.permissions },
+    role(1, 'super-admin', 'Super Admin', ALL_PERMISSION_CODES, {
+      description: 'Full access to every feature; managed by migrations only.',
+    }),
+    role(2, 'admin', 'Administrator', ADMIN_USER.permissions, {
+      description: 'Manages the admin dashboard, content, users and listings.',
+    }),
+    role(3, 'manager', 'Manager', MANAGER_USER.permissions, { description: 'Browses users.' }),
+    role(4, 'editor', 'User Editor', EDITOR_USER.permissions, {
+      description: 'Creates and edits users.',
+    }),
+    role(5, 'role-viewer', 'Role Viewer', ROLE_VIEWER_USER.permissions),
     // App roles: owner-scoped app permissions only, no admin panel access.
-    { slug: 'user', name: 'User', active: true, permissions: ['PROPERTY_CREATE', 'LEAD_LIST'] },
-    { slug: 'sales-executive', name: 'Sales Executive', active: true, permissions: ['LEAD_LIST'] },
-    { slug: 'legacy-partner', name: 'Legacy Partner', active: false, permissions: [] },
+    role(6, 'user', 'User', ['PROPERTY_CREATE', 'LEAD_LIST'], {
+      description: 'App users: access to their own properties, leads and site visits.',
+    }),
+    role(7, 'sales-executive', 'Sales Executive', ['LEAD_LIST'], {
+      description: 'Handles enquiries in the app.',
+    }),
+    role(8, 'legacy-partner', 'Legacy Partner', [], { active: false }),
   ];
 }
 
@@ -446,6 +489,7 @@ function createState() {
       [BLOG_VIEWER_USER.email ?? '', { user: BLOG_VIEWER_USER, password: MOCK_PASSWORD }],
       [FAQ_EDITOR_USER.email ?? '', { user: FAQ_EDITOR_USER, password: MOCK_PASSWORD }],
       [PAGE_EDITOR_USER.email ?? '', { user: PAGE_EDITOR_USER, password: MOCK_PASSWORD }],
+      [ROLE_VIEWER_USER.email ?? '', { user: ROLE_VIEWER_USER, password: MOCK_PASSWORD }],
     ]),
     jar: readJar(),
     csrfToken: 'mock-csrf-token-1',
@@ -453,6 +497,9 @@ function createState() {
     logs: buildLogs(42),
     managedUsers: buildManagedUsers(33),
     roles: buildRoles(),
+    /** Slugs of soft-deleted roles: never reused. */
+    deletedRoleSlugs: new Set<string>(),
+    nextRoleId: 100,
     nextUserId: 1000,
     properties: buildProperties(26),
     nextPropertyId: 500,
@@ -600,6 +647,33 @@ export const mockDb = {
 
   findRole(slug: string): MockRole | undefined {
     return state.roles.find((role) => role.slug === slug);
+  },
+
+  findRoleById(id: number): MockRole | undefined {
+    return state.roles.find((role) => role.id === id);
+  },
+
+  saveRole(role: MockRole): void {
+    const exists = state.roles.some((row) => row.id === role.id);
+    state.roles = exists
+      ? state.roles.map((row) => (row.id === role.id ? role : row))
+      : [...state.roles, role];
+  },
+
+  /** Soft delete: the slug stays reserved. */
+  deleteRole(id: number): void {
+    const role = this.findRoleById(id);
+    if (!role) return;
+    state.deletedRoleSlugs.add(role.slug);
+    state.roles = state.roles.filter((row) => row.id !== id);
+  },
+
+  isRoleSlugTaken(slug: string): boolean {
+    return state.deletedRoleSlugs.has(slug) || state.roles.some((role) => role.slug === slug);
+  },
+
+  nextRoleId(): number {
+    return state.nextRoleId++;
   },
 
   replaceManagedUser(user: StoredUser): void {

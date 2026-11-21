@@ -103,6 +103,7 @@ describe('useUserRoles', () => {
       editor: true,
       'legacy-partner': false,
       manager: true,
+      'role-viewer': true,
       'sales-executive': true,
       'super-admin': false,
       user: true,

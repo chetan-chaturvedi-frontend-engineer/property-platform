@@ -14,6 +14,9 @@ public enum RoleStatus implements PersistableEnum {
 	ACTIVE("active"),
 	INACTIVE("inactive");
 
+	/** Every value, for request validation. */
+	public static final String VALUES = "active|inactive";
+
 	private final String value;
 
 	public static RoleStatus fromValue(String value) {

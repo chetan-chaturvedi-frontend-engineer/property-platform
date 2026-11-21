@@ -5,6 +5,7 @@ import { contentPageHandlers } from './contentPageHandlers';
 import { faqHandlers } from './faqHandlers';
 import { leadHandlers } from './leadHandlers';
 import { propertyHandlers } from './propertyHandlers';
+import { roleHandlers } from './roleHandlers';
 import { siteVisitHandlers } from './siteVisitHandlers';
 import { subscriptionPlanHandlers } from './subscriptionPlanHandlers';
 import { systemLogHandlers } from './systemLogHandlers';
@@ -22,4 +23,5 @@ export const handlers = [
   ...blogHandlers,
   ...faqHandlers,
   ...contentPageHandlers,
+  ...roleHandlers,
 ];

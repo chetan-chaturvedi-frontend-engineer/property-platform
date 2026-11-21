@@ -48,5 +48,7 @@ public record RateLimitProperties(
 		/** Creation and updates of the caller's own settings. */
 		RateLimit userSettingWriteUser,
 		/** Admin user management writes: create, update and delete. */
-		RateLimit userManagementWriteUser) {
+		RateLimit userManagementWriteUser,
+		/** Admin role management writes: create, update and delete. */
+		RateLimit roleWriteUser) {
 }

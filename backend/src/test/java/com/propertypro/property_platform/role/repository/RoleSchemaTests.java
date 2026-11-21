@@ -196,6 +196,7 @@ class RoleSchemaTests {
 		jdbc.execute(script("db/migration/V202610251200__create_roles.sql"));
 		jdbc.execute(script("db/migration/V202610251210__seed_roles.sql"));
 		jdbc.execute(script("db/migration/V202610251300__update_user_admin_role_permissions.sql"));
+		jdbc.execute(script("db/migration/V202611211000__add_roles_description.sql"));
 		assertThat(jdbc.queryForObject("SELECT count(*) FROM roles", Integer.class)).isEqualTo(3);
 		assertThat(roleRepository.findBySlug("user").orElseThrow().grantedPermissions()).contains("LEAD_LIST");
 	}

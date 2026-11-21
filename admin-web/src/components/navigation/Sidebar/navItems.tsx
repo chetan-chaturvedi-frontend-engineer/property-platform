@@ -9,6 +9,7 @@ import HistoryOutlined from '@mui/icons-material/HistoryOutlined';
 import Inventory2Outlined from '@mui/icons-material/Inventory2Outlined';
 import PermMediaOutlined from '@mui/icons-material/PermMediaOutlined';
 import PersonOutline from '@mui/icons-material/PersonOutline';
+import ShieldOutlined from '@mui/icons-material/ShieldOutlined';
 import SupportAgentOutlined from '@mui/icons-material/SupportAgentOutlined';
 
 import type { NavSection } from '@/types/common.types';
@@ -80,6 +81,17 @@ export const NAV_SECTIONS: readonly NavSection[] = [
         path: ROUTES.pages,
         icon: <DescriptionOutlined />,
         requiredPermissions: [PERMISSIONS.pageView],
+      },
+    ],
+  },
+  {
+    title: 'Configuration',
+    items: [
+      {
+        label: 'Roles & permissions',
+        path: ROUTES.roles,
+        icon: <ShieldOutlined />,
+        requiredPermissions: [PERMISSIONS.roleView],
       },
     ],
   },
