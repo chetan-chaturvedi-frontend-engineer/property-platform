@@ -269,6 +269,16 @@ const ROLE_VIEWER_USER: AdminUser = {
   permissions: ['ADMIN_PANEL_ACCESS', 'ROLE_VIEW'],
 };
 
+/** Lists system logs but cannot open their details (no `SYSTEM_LOG_VIEW`) or list users. */
+const LOG_VIEWER_USER: AdminUser = {
+  id: 16,
+  fullName: 'Lou Logs',
+  email: 'logs@example.com',
+  phone: null,
+  role: { slug: 'log-viewer', name: 'Log Viewer' },
+  permissions: ['ADMIN_PANEL_ACCESS', 'SYSTEM_LOG_LIST'],
+};
+
 export const mockUsers = {
   admin: ADMIN_USER,
   manager: MANAGER_USER,
@@ -284,6 +294,7 @@ export const mockUsers = {
   faqEditor: FAQ_EDITOR_USER,
   pageEditor: PAGE_EDITOR_USER,
   roleViewer: ROLE_VIEWER_USER,
+  logViewer: LOG_VIEWER_USER,
 } as const;
 
 /** Mirrors the seeded roles plus custom ones. Permissions match the sign-in accounts above. */
@@ -337,11 +348,17 @@ const MODULES = [
 ] as const;
 const LEVELS: readonly SystemLogLevel[] = ['success', 'info', 'warning'];
 
+const MOCK_IPS = ['203.0.113.5', '198.51.100.24', '192.0.2.77'] as const;
+const MOCK_USER_AGENT =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0 Safari/537.36';
+
 function buildLogs(count: number): SystemLog[] {
   const start = Date.parse('2026-11-18T10:00:00Z');
   return Array.from({ length: count }, (_, index) => {
     const module = MODULES[index % MODULES.length] ?? 'faqs';
     const level = LEVELS[index % LEVELS.length] ?? 'info';
+    // Every tenth row is a scheduled job: no user and no request details.
+    const isJob = index % 10 === 9;
     return {
       id: count - index,
       user:
@@ -358,10 +375,10 @@ function buildLogs(count: number): SystemLog[] {
       action:
         level === 'warning' ? `Access denied: ${module}` : `Updated ${module.replace('_', ' ')}`,
       logLevel: level,
-      ipAddress: '203.0.113.5',
-      userAgent: 'Mozilla/5.0',
-      requestMethod: level === 'info' ? 'GET' : 'POST',
-      requestUrl: `/api/v1/admin/${module}`,
+      ipAddress: isJob ? null : (MOCK_IPS[index % MOCK_IPS.length] ?? null),
+      userAgent: isJob ? null : MOCK_USER_AGENT,
+      requestMethod: isJob ? null : level === 'info' ? 'GET' : 'POST',
+      requestUrl: isJob ? null : `/api/v1/admin/${module}`,
       referenceId: index + 10,
       referenceType: 'Record',
       additionalData: { status: level === 'warning' ? 403 : 200 },
@@ -490,6 +507,7 @@ function createState() {
       [FAQ_EDITOR_USER.email ?? '', { user: FAQ_EDITOR_USER, password: MOCK_PASSWORD }],
       [PAGE_EDITOR_USER.email ?? '', { user: PAGE_EDITOR_USER, password: MOCK_PASSWORD }],
       [ROLE_VIEWER_USER.email ?? '', { user: ROLE_VIEWER_USER, password: MOCK_PASSWORD }],
+      [LOG_VIEWER_USER.email ?? '', { user: LOG_VIEWER_USER, password: MOCK_PASSWORD }],
     ]),
     jar: readJar(),
     csrfToken: 'mock-csrf-token-1',

@@ -20,9 +20,9 @@ const RegisterPage = lazy(() =>
 const DashboardPage = lazy(() =>
   import('@/features/dashboard/pages/DashboardPage').then((m) => ({ default: m.DashboardPage })),
 );
-const ActivityLogPage = lazy(() =>
-  import('@/features/dashboard/pages/ActivityLogPage').then((m) => ({
-    default: m.ActivityLogPage,
+const SystemLogsPage = lazy(() =>
+  import('@/features/dashboard/pages/SystemLogsPage').then((m) => ({
+    default: m.SystemLogsPage,
   })),
 );
 const UsersPage = lazy(() =>
@@ -138,7 +138,10 @@ export const routes: RouteObject[] = [
               // Role-based: only roles that grant the permission.
               {
                 element: <ProtectedRoute requiredPermissions={[PERMISSIONS.systemLogList]} />,
-                children: [{ path: ROUTES.activity, element: <ActivityLogPage /> }],
+                children: [
+                  { path: ROUTES.systemLogs, element: <SystemLogsPage /> },
+                  { path: ROUTES.activity, element: <Navigate to={ROUTES.systemLogs} replace /> },
+                ],
               },
               {
                 element: <ProtectedRoute requiredPermissions={[PERMISSIONS.userList]} />,

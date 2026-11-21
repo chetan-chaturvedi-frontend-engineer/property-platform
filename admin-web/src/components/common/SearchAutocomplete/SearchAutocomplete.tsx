@@ -1,7 +1,15 @@
 import Autocomplete, { type AutocompleteProps } from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 
-import type { PickerOption } from '../types/siteVisit.types';
+import type { EntityId } from '@/types/common.types';
+
+/** An option from a search-as-you-type picker; restored URL filters may only know id and label. */
+export interface PickerOption {
+  id: EntityId;
+  label: string;
+  /** Second line, e.g. an email or a city. */
+  detail?: string;
+}
 
 export interface SearchAutocompleteProps<TOption extends PickerOption> extends Omit<
   AutocompleteProps<PickerOption, false, false, false>,

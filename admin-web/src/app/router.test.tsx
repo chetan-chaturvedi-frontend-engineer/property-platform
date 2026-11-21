@@ -50,7 +50,7 @@ describe('app routes', () => {
     expect(await screen.findByRole('heading', { name: /welcome back, asha/i })).toBeInTheDocument();
     const table = await screen.findByRole('table', { name: /five most recent/i });
     expect(await within(table).findAllByRole('row')).toHaveLength(6);
-    expect(screen.getByRole('link', { name: /activity log/i })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: /system logs/i })).toBeInTheDocument();
   });
 
   it('hides permission-gated navigation and content for roles without it', async () => {
@@ -58,7 +58,7 @@ describe('app routes', () => {
     renderRoutes(routes, { initialPath: '/dashboard' });
 
     expect(await screen.findByRole('heading', { name: /welcome back, mira/i })).toBeInTheDocument();
-    expect(screen.queryByRole('link', { name: /activity log/i })).not.toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: /system logs/i })).not.toBeInTheDocument();
     expect(screen.queryByText(/recent activity/i)).not.toBeInTheDocument();
   });
 
