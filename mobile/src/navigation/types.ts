@@ -29,12 +29,9 @@ export type RootStackParamList = {
   DeleteAccount: undefined;
   // Seller
   SellerRegistration: undefined;
-  SellerVerification: undefined;
   AddProperty: undefined;
-  PreviewListing: undefined;
   Published: undefined;
   SellerPropertyDetails: { id: string };
-  PropertyPerformance: { id: string };
 };
 
 export type BuyerTabParamList = {

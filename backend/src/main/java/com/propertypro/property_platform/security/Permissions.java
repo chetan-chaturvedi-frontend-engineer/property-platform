@@ -123,6 +123,10 @@ public final class Permissions {
 	public static final String USER_SETTING_CREATE = "USER_SETTING_CREATE";
 	public static final String USER_SETTING_UPDATE = "USER_SETTING_UPDATE";
 
+	// The caller's own subscription: plans are public, subscribing and viewing are always for oneself.
+	public static final String SUBSCRIPTION_VIEW = "SUBSCRIPTION_VIEW";
+	public static final String SUBSCRIPTION_CREATE = "SUBSCRIPTION_CREATE";
+
 	// Subscription plan catalog (admin dashboard). Plans have no owner, so there is no _ANY variant.
 	public static final String SUBSCRIPTION_PLAN_LIST = "SUBSCRIPTION_PLAN_LIST";
 	public static final String SUBSCRIPTION_PLAN_VIEW = "SUBSCRIPTION_PLAN_VIEW";

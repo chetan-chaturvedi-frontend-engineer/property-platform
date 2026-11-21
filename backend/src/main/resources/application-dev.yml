@@ -22,3 +22,6 @@ app:
       # Prints codes to the console instead of sending them. Refused outside the dev profile.
       email-provider: ${OTP_EMAIL_PROVIDER:log}
       sms-provider: ${OTP_SMS_PROVIDER:log}
+  subscription:
+    # No payment gateway locally: let any plan be taken so the seller flow can be tried end to end.
+    allow-unpaid-activation: true

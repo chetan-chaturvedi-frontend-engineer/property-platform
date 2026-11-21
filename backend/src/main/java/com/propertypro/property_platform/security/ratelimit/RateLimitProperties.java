@@ -47,6 +47,8 @@ public record RateLimitProperties(
 		RateLimit builderTeamWriteUser,
 		/** Creation and updates of the caller's own settings. */
 		RateLimit userSettingWriteUser,
+		/** Subscribing to a plan. */
+		RateLimit userSubscriptionWriteUser,
 		/** Admin user management writes: create, update and delete. */
 		RateLimit userManagementWriteUser,
 		/** Admin role management writes: create, update and delete. */

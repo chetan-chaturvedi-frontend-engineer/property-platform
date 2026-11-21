@@ -196,3 +196,55 @@ export interface ApiUserSettings {
   smsNotifications: boolean;
   timezone: string;
 }
+
+export interface ApiSubscriptionPlan {
+  id: number;
+  title: string;
+  slug: string;
+  price: number;
+  currency: string;
+  billingInterval: 'month' | 'year' | 'lifetime';
+  billingIntervalCount: number;
+  description: string | null;
+  noOfProperties: number | null;
+  noOfTeamMembers: number;
+  features: string[];
+  popular: boolean;
+}
+
+export interface ApiUserSubscription {
+  id: number;
+  planId: number;
+  planTitle: string;
+  status: string;
+  noOfProperties: number | null;
+  endsAt: string | null;
+}
+
+export interface ApiWizard {
+  currentStep: number;
+  completedSteps: number[];
+  readyToSubmit: boolean;
+  steps: { step: number; key: string; title: string; complete: boolean; missing: string[] }[];
+}
+
+export interface ApiOwnerApartment extends ApiApartment {
+  bedrooms: number;
+  bathrooms: number;
+}
+
+/** Full owner view of one property (GET /properties/{id}, /preview). */
+export interface ApiOwnerPropertyDetail {
+  id: number;
+  slug: string;
+  version: number;
+  publicationStatus: ApiPublicationStatus;
+  details: { propertyType: string; projectName: string; builderCompanyName: string; projectEmail: string; projectPhone: string };
+  location: { projectAddress: string | null; city: string | null; locality: string | null; pincode: string | null; state: string | null };
+  apartments: ApiOwnerApartment[];
+  projectInfo: { projectStatus: ApiProjectStatus; projectDescription: string | null; possessionEndDate: string | null };
+  amenities: ApiAmenity[];
+  media: ApiMedia[];
+  wizard: ApiWizard;
+  statusHistory: { action: string; toStatus: string; reason: string | null }[];
+}

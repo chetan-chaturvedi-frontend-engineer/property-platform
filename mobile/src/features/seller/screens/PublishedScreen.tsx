@@ -5,9 +5,9 @@ import { useRootNavigation } from '../../../navigation/useRootNavigation';
 import { colors, typography } from '../../../theme';
 
 const next = [
-  { icon: 'eye-outline', t: 'Your property is now live', s: 'Buyers can view your listing and contact you.' },
-  { icon: 'megaphone-outline', t: 'Get more visibility', s: 'Share your listing to reach more interested buyers.' },
-  { icon: 'create-outline', t: 'Manage anytime', s: 'You can edit or update your property anytime from My Properties.' },
+  { icon: 'time-outline', t: 'We review your listing', s: 'Our team checks the details and photos, usually within a day.' },
+  { icon: 'eye-outline', t: 'It goes live once approved', s: 'Buyers can then find it and book site visits.' },
+  { icon: 'create-outline', t: 'Track it anytime', s: 'See its status under My Properties.' },
 ] as const;
 
 export function PublishedScreen() {
@@ -16,8 +16,8 @@ export function PublishedScreen() {
     <Screen>
       <View style={styles.hero}>
         <View style={styles.tick}><Icon name="checkmark" size={44} color={colors.textInverse} /></View>
-        <Text style={typography.h1}>Property Published!</Text>
-        <Text style={[typography.muted, styles.center]}>Your property has been published successfully and is now live for buyers to see.</Text>
+        <Text style={typography.h1}>Submitted for Review</Text>
+        <Text style={[typography.muted, styles.center]}>Your property has been submitted. It will go live after it is approved.</Text>
       </View>
       <Text style={styles.h}>What happens next?</Text>
       {next.map(n => (
@@ -28,7 +28,6 @@ export function PublishedScreen() {
       ))}
       <View style={styles.actions}>
         <Button label="View My Properties" onPress={() => nav.reset({ index: 0, routes: [{ name: 'SellerTabs' }] })} />
-        <Button variant="outline" icon="share-social-outline" label="Share Property" />
       </View>
     </Screen>
   );

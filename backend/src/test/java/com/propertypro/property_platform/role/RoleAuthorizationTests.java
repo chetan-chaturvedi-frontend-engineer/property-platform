@@ -51,6 +51,8 @@ import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_
 import static com.propertypro.property_platform.security.Permissions.SITE_VISIT_VIEW;
 import static com.propertypro.property_platform.security.Permissions.USER_SETTING_CREATE;
 import static com.propertypro.property_platform.security.Permissions.USER_SETTING_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_CREATE;
+import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_VIEW;
 import static com.propertypro.property_platform.security.Permissions.USER_SETTING_VIEW;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.jwt;
@@ -102,7 +104,7 @@ class RoleAuthorizationTests extends AbstractIntegrationTest {
 					SITE_VISIT_SUBMIT_REPORT, SITE_VISIT_ASSIGN, BUILDER_TEAM_LIST, BUILDER_TEAM_VIEW, BUILDER_TEAM_CREATE,
 					BUILDER_TEAM_UPDATE, BUILDER_TEAM_DELETE, BUILDER_TEAM_ASSIGN_ROLE, BUILDER_TEAM_MANAGE_PERMISSIONS,
 					BUILDER_TEAM_MANAGE_STATUS, BUILDER_TEAM_MEMBERSHIP_VIEW, BUILDER_TEAM_MEMBERSHIP_RESPOND,
-					USER_SETTING_VIEW, USER_SETTING_CREATE, USER_SETTING_UPDATE);
+					USER_SETTING_VIEW, USER_SETTING_CREATE, USER_SETTING_UPDATE, SUBSCRIPTION_VIEW, SUBSCRIPTION_CREATE);
 
 		getWithToken(ADMIN_PLANS, accessToken).andExpect(status().isForbidden());
 	}

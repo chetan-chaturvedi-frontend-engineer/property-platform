@@ -120,6 +120,8 @@ import static com.propertypro.property_platform.security.Permissions.SYSTEM_LOG_
 import static com.propertypro.property_platform.security.Permissions.SYSTEM_LOG_VIEW;
 import static com.propertypro.property_platform.security.Permissions.USER_SETTING_CREATE;
 import static com.propertypro.property_platform.security.Permissions.USER_SETTING_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_CREATE;
+import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_VIEW;
 import static com.propertypro.property_platform.security.Permissions.USER_SETTING_VIEW;
 import static com.propertypro.property_platform.security.Permissions.USER_CHANGE_STATUS;
 import static com.propertypro.property_platform.security.Permissions.USER_CREATE;
@@ -183,6 +185,8 @@ class RolePermissionUpdateTests {
 	/** Added to the user and admin roles later by V202610291010. */
 	private static final Set<String> USER_SETTING_PERMISSIONS = Set.of(USER_SETTING_VIEW, USER_SETTING_CREATE,
 			USER_SETTING_UPDATE);
+	/** Added to the user role only, later, by V202611211100. */
+	private static final Set<String> USER_SUBSCRIPTION_PERMISSIONS = Set.of(SUBSCRIPTION_VIEW, SUBSCRIPTION_CREATE);
 	private static final Set<String> ADMIN_PERMISSIONS = Set.of(ADMIN_PANEL_ACCESS, SUBSCRIPTION_PLAN_VIEW,
 			SUBSCRIPTION_PLAN_CREATE, SUBSCRIPTION_PLAN_UPDATE, ROLE_VIEW, ROLE_CREATE, ROLE_UPDATE, ROLE_DELETE,
 			LEAD_LIST_ANY, LEAD_VIEW_ANY, LEAD_UPDATE_ANY, LEAD_DELETE_ANY);
@@ -210,6 +214,7 @@ class RolePermissionUpdateTests {
 		afterAllMigrations.addAll(USER_SITE_VISIT_PERMISSIONS);
 		afterAllMigrations.addAll(USER_BUILDER_TEAM_PERMISSIONS);
 		afterAllMigrations.addAll(USER_SETTING_PERMISSIONS);
+		afterAllMigrations.addAll(USER_SUBSCRIPTION_PERMISSIONS);
 		assertThat(user.grantedPermissions()).containsExactlyInAnyOrderElementsOf(afterAllMigrations);
 		assertThat(user.isGranted("lead", "view_any")).isFalse();
 		assertThat(user.isGranted("admin_panel", "access")).isFalse();
