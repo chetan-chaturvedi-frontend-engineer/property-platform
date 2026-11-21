@@ -18,6 +18,7 @@ export const ROUTES = {
   faqNew: '/faqs/new',
   pages: '/pages',
   pageNew: '/pages/new',
+  roles: '/roles-permissions',
   profile: '/profile',
   unauthorized: '/unauthorized',
 } as const;
@@ -36,6 +37,10 @@ export const PERMISSIONS = {
   userUpdate: 'USER_UPDATE',
   userChangeStatus: 'USER_CHANGE_STATUS',
   userDelete: 'USER_DELETE',
+  roleView: 'ROLE_VIEW',
+  roleCreate: 'ROLE_CREATE',
+  roleUpdate: 'ROLE_UPDATE',
+  roleDelete: 'ROLE_DELETE',
   propertyCreate: 'PROPERTY_CREATE',
   propertyListAny: 'PROPERTY_LIST_ANY',
   propertyViewAny: 'PROPERTY_VIEW_ANY',

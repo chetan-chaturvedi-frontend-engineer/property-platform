@@ -88,6 +88,9 @@ const ContentPageFormPage = lazy(() =>
     default: m.ContentPageFormPage,
   })),
 );
+const RolesPage = lazy(() =>
+  import('@/features/roles/pages/RolesPage').then((m) => ({ default: m.RolesPage })),
+);
 const ProfilePage = lazy(() =>
   import('@/features/profile/pages/ProfilePage').then((m) => ({ default: m.ProfilePage })),
 );
@@ -226,6 +229,10 @@ export const routes: RouteObject[] = [
                     ],
                   },
                 ],
+              },
+              {
+                element: <ProtectedRoute requiredPermissions={[PERMISSIONS.roleView]} />,
+                children: [{ path: ROUTES.roles, element: <RolesPage /> }],
               },
               {
                 element: <ProtectedRoute requiredPermissions={[PERMISSIONS.propertyListAny]} />,
