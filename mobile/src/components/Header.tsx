@@ -19,7 +19,7 @@ export function Header({ title, subtitle, showBack = true, right }: HeaderProps)
         <IconButton name="chevron-back" accessibilityLabel="Go back" onPress={navigation.goBack} />
       ) : null}
       <View style={styles.flex}>
-        <Text accessibilityRole="header" style={typography.h2} numberOfLines={1}>
+        <Text accessibilityRole="header" style={typography.display} numberOfLines={1}>
           {title}
         </Text>
         {subtitle ? (

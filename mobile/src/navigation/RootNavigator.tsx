@@ -30,13 +30,14 @@ import { SellerPropertyDetailsScreen } from '../features/seller/screens/SellerPr
 import { SellerRegistrationScreen } from '../features/seller/screens/SellerRegistrationScreen';
 import { BuyerTabs } from './BuyerTabs';
 import { SellerTabs } from './SellerTabs';
+import { navigationTheme } from './navigationTheme';
 import { RootStackParamList } from './types';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export function RootNavigator() {
   return (
-    <NavigationContainer>
+    <NavigationContainer theme={navigationTheme}>
       <Stack.Navigator initialRouteName="BuyerTabs" screenOptions={{ headerShown: false }}>
         <Stack.Screen name="BuyerTabs" component={BuyerTabs} />
         <Stack.Screen name="SellerTabs" component={SellerTabs} />
