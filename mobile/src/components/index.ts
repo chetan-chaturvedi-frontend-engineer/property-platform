@@ -3,6 +3,7 @@ export { Card } from './Card';
 export { Chip } from './Chip';
 export { Header } from './Header';
 export { Icon } from './Icon';
+export { Logo } from './Logo';
 export type { IconName } from './Icon';
 export { IconButton } from './IconButton';
 export { ListRow } from './ListRow';

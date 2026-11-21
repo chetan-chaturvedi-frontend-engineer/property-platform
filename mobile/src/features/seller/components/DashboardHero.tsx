@@ -1,7 +1,7 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Button, Icon } from '../../../components';
+import { Button, Icon, Logo } from '../../../components';
 import { colors, radius, typography } from '../../../theme';
 
 interface Props {
@@ -21,7 +21,7 @@ export function DashboardHero({ firstName, planLabel, unreadNotifications, onAdd
     <View style={[styles.hero, { paddingTop: insets.top + 12 }]}>
       <View style={styles.top}>
         <View style={styles.brand}>
-          <Icon name="home-outline" size={26} color={colors.accent} />
+          <Logo size={34} />
           <Text style={styles.wordmark}>Dwellery</Text>
         </View>
         <Pressable accessibilityRole="button" accessibilityLabel="Notifications" onPress={onNotifications} style={styles.bell}>
