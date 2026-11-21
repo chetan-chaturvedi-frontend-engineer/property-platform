@@ -42,6 +42,11 @@ import static com.propertypro.property_platform.security.Permissions.PROPERTY_DE
 import static com.propertypro.property_platform.security.Permissions.PROPERTY_LIST;
 import static com.propertypro.property_platform.security.Permissions.PROPERTY_UPDATE;
 import static com.propertypro.property_platform.security.Permissions.PROPERTY_VIEW;
+import static com.propertypro.property_platform.security.Permissions.CONVERSATION_CREATE;
+import static com.propertypro.property_platform.security.Permissions.CONVERSATION_LIST;
+import static com.propertypro.property_platform.security.Permissions.CONVERSATION_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.MESSAGE_CREATE;
+import static com.propertypro.property_platform.security.Permissions.MESSAGE_LIST;
 import static com.propertypro.property_platform.security.Permissions.NOTIFICATION_DELETE;
 import static com.propertypro.property_platform.security.Permissions.NOTIFICATION_LIST;
 import static com.propertypro.property_platform.security.Permissions.NOTIFICATION_UPDATE;
@@ -119,7 +124,8 @@ class RoleAuthorizationTests extends AbstractIntegrationTest {
 					USER_SETTING_VIEW, USER_SETTING_CREATE, USER_SETTING_UPDATE, SUBSCRIPTION_VIEW, SUBSCRIPTION_CREATE, SAVED_PROPERTY_LIST, SAVED_PROPERTY_CREATE,
 					SAVED_PROPERTY_DELETE, RECENTLY_VIEWED_LIST, RECENTLY_VIEWED_CREATE, RECENTLY_VIEWED_DELETE, PROFILE_UPDATE,
 					PROFILE_CHANGE_PASSWORD, PROFILE_DELETE, NOTIFICATION_LIST, NOTIFICATION_UPDATE,
-					NOTIFICATION_DELETE);
+					NOTIFICATION_DELETE, CONVERSATION_LIST, CONVERSATION_CREATE, CONVERSATION_UPDATE, MESSAGE_LIST,
+					MESSAGE_CREATE);
 
 		getWithToken(ADMIN_PLANS, accessToken).andExpect(status().isForbidden());
 	}

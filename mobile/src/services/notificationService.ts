@@ -5,7 +5,7 @@ import { apiClient } from './api/apiClient';
 const PAGE_SIZE = 50;
 
 function toNotification(n: ApiNotification): AppNotification {
-  return { id: n.id, kind: n.type, title: n.title, body: n.body, read: n.read, createdAt: n.createdAt, propertyId: n.data?.propertyId };
+  return { id: n.id, kind: n.type, title: n.title, body: n.body, read: n.read, createdAt: n.createdAt, propertyId: n.data?.propertyId, conversationId: n.data?.conversationId };
 }
 
 /** The signed-in user's in-app notifications, created by the server from bookings and review decisions. */

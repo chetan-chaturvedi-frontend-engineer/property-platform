@@ -95,6 +95,11 @@ import static com.propertypro.property_platform.security.Permissions.ROLE_CREATE
 import static com.propertypro.property_platform.security.Permissions.ROLE_DELETE;
 import static com.propertypro.property_platform.security.Permissions.ROLE_UPDATE;
 import static com.propertypro.property_platform.security.Permissions.ROLE_VIEW;
+import static com.propertypro.property_platform.security.Permissions.CONVERSATION_CREATE;
+import static com.propertypro.property_platform.security.Permissions.CONVERSATION_LIST;
+import static com.propertypro.property_platform.security.Permissions.CONVERSATION_UPDATE;
+import static com.propertypro.property_platform.security.Permissions.MESSAGE_CREATE;
+import static com.propertypro.property_platform.security.Permissions.MESSAGE_LIST;
 import static com.propertypro.property_platform.security.Permissions.NOTIFICATION_DELETE;
 import static com.propertypro.property_platform.security.Permissions.NOTIFICATION_LIST;
 import static com.propertypro.property_platform.security.Permissions.NOTIFICATION_UPDATE;
@@ -209,6 +214,9 @@ class RolePermissionUpdateTests {
 	/** Added to the user role only, later, by V202611211310. */
 	private static final Set<String> USER_NOTIFICATION_PERMISSIONS = Set.of(NOTIFICATION_LIST, NOTIFICATION_UPDATE,
 			NOTIFICATION_DELETE);
+	/** Added to the user role only, later, by V202611221020. */
+	private static final Set<String> USER_CONVERSATION_PERMISSIONS = Set.of(CONVERSATION_LIST, CONVERSATION_CREATE,
+			CONVERSATION_UPDATE, MESSAGE_LIST, MESSAGE_CREATE);
 	private static final Set<String> ADMIN_PERMISSIONS = Set.of(ADMIN_PANEL_ACCESS, SUBSCRIPTION_PLAN_VIEW,
 			SUBSCRIPTION_PLAN_CREATE, SUBSCRIPTION_PLAN_UPDATE, ROLE_VIEW, ROLE_CREATE, ROLE_UPDATE, ROLE_DELETE,
 			LEAD_LIST_ANY, LEAD_VIEW_ANY, LEAD_UPDATE_ANY, LEAD_DELETE_ANY);
@@ -240,6 +248,7 @@ class RolePermissionUpdateTests {
 		afterAllMigrations.addAll(USER_SAVED_AND_VIEWED_PERMISSIONS);
 		afterAllMigrations.addAll(USER_PROFILE_PERMISSIONS);
 		afterAllMigrations.addAll(USER_NOTIFICATION_PERMISSIONS);
+		afterAllMigrations.addAll(USER_CONVERSATION_PERMISSIONS);
 		assertThat(user.grantedPermissions()).containsExactlyInAnyOrderElementsOf(afterAllMigrations);
 		assertThat(user.isGranted("lead", "view_any")).isFalse();
 		assertThat(user.isGranted("admin_panel", "access")).isFalse();

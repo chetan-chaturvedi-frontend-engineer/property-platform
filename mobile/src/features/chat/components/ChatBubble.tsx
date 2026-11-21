@@ -2,6 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 import { colors, radius, typography } from '../../../theme';
 import { ChatMessage } from '../../../types';
+import { formatListTime } from '../../../utils/dates';
 
 export function ChatBubble({ message }: { message: ChatMessage }) {
   return (
@@ -9,7 +10,7 @@ export function ChatBubble({ message }: { message: ChatMessage }) {
       <View style={[styles.bubble, message.fromMe ? styles.mine : styles.theirs]}>
         <Text style={[typography.body, message.fromMe && { color: colors.textInverse }]}>{message.text}</Text>
       </View>
-      <Text style={typography.tiny}>{message.time}</Text>
+      <Text style={typography.tiny}>{formatListTime(message.createdAt)}</Text>
     </View>
   );
 }

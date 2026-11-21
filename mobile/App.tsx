@@ -2,6 +2,7 @@ import React from 'react';
 import { StatusBar } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/features/auth/AuthProvider';
+import { UnreadMessagesProvider } from './src/features/chat/UnreadMessagesProvider';
 import { UnreadNotificationsProvider } from './src/features/buyer/UnreadNotificationsProvider';
 import { SavedPropertiesProvider } from './src/features/buyer/SavedPropertiesProvider';
 import { PropertyFiltersProvider } from './src/features/buyer/PropertyFiltersProvider';
@@ -13,11 +14,13 @@ export default function App() {
       <StatusBar barStyle="dark-content" />
       <AuthProvider>
         <UnreadNotificationsProvider>
-          <SavedPropertiesProvider>
-            <PropertyFiltersProvider>
-              <RootNavigator />
-            </PropertyFiltersProvider>
-          </SavedPropertiesProvider>
+          <UnreadMessagesProvider>
+            <SavedPropertiesProvider>
+              <PropertyFiltersProvider>
+                <RootNavigator />
+              </PropertyFiltersProvider>
+            </SavedPropertiesProvider>
+          </UnreadMessagesProvider>
         </UnreadNotificationsProvider>
       </AuthProvider>
     </SafeAreaProvider>

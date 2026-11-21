@@ -123,6 +123,15 @@ public final class Permissions {
 	public static final String USER_SETTING_CREATE = "USER_SETTING_CREATE";
 	public static final String USER_SETTING_UPDATE = "USER_SETTING_UPDATE";
 
+	// Conversations between a buyer and a property's owner: only the two participants, so no _ANY variant.
+	public static final String CONVERSATION_LIST = "CONVERSATION_LIST";
+	/** Starting a conversation ("Enquire now"). */
+	public static final String CONVERSATION_CREATE = "CONVERSATION_CREATE";
+	/** Marking a conversation read. */
+	public static final String CONVERSATION_UPDATE = "CONVERSATION_UPDATE";
+	public static final String MESSAGE_LIST = "MESSAGE_LIST";
+	public static final String MESSAGE_CREATE = "MESSAGE_CREATE";
+
 	// The caller's own in-app notifications: always for oneself, so no _ANY variant.
 	public static final String NOTIFICATION_LIST = "NOTIFICATION_LIST";
 	/** Marking one or all of the caller's notifications read. */

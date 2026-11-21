@@ -2,6 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Icon, IconName } from '../components';
 import { ChatListScreen } from '../features/chat/screens/ChatListScreen';
+import { useUnreadMessages } from '../features/chat/UnreadMessagesProvider';
 import { HomeScreen } from '../features/buyer/screens/HomeScreen';
 import { MapSearchScreen } from '../features/buyer/screens/MapSearchScreen';
 import { ProfileScreen } from '../features/buyer/screens/ProfileScreen';
@@ -25,6 +26,7 @@ const tabIcon =
     <Icon name={icons[name][focused ? 0 : 1]} size={size} color={color} />;
 
 export function BuyerTabs() {
+  const { unread } = useUnreadMessages();
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -36,7 +38,7 @@ export function BuyerTabs() {
       })}>
       <Tab.Screen name="Home" component={HomeScreen} />
       <Tab.Screen name="Search" component={MapSearchScreen} />
-      <Tab.Screen name="Chats" component={ChatListScreen} />
+      <Tab.Screen name="Chats" component={ChatListScreen} options={{ tabBarBadge: unread || undefined }} />
       <Tab.Screen name="Saved" component={SavedScreen} />
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>

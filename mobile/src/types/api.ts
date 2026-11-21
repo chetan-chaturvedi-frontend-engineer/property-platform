@@ -251,10 +251,28 @@ export interface ApiOwnerPropertyDetail {
 
 export interface ApiNotification {
   id: number;
-  type: 'site_visit_booked' | 'property_status_changed';
+  type: 'site_visit_booked' | 'property_status_changed' | 'new_message';
   title: string;
   body: string;
-  data: { propertyId?: number; visitId?: number } | null;
+  data: { propertyId?: number; visitId?: number; conversationId?: number } | null;
   read: boolean;
+  createdAt: string;
+}
+
+export interface ApiConversation {
+  id: number;
+  property: { id: number; projectName: string | null; slug: string | null };
+  otherParty: { id: number; fullName: string | null };
+  role: 'buyer' | 'seller';
+  lastMessage: { id: number; body: string; mine: boolean; createdAt: string } | null;
+  unread: number;
+  lastMessageAt: string;
+}
+
+export interface ApiChatMessage {
+  id: number;
+  conversationId: number;
+  mine: boolean;
+  body: string;
   createdAt: string;
 }

@@ -1,5 +1,6 @@
 package com.propertypro.property_platform.notification.service;
 
+import com.propertypro.property_platform.conversation.event.MessageSentEvent;
 import com.propertypro.property_platform.lead.event.SiteVisitBookedEvent;
 import com.propertypro.property_platform.notification.config.NotificationAsyncConfig;
 import com.propertypro.property_platform.notification.domain.NotificationType;
@@ -62,6 +63,14 @@ public class NotificationEventListener {
 		String body = event.projectName() + (event.reason() == null ? "" : ": " + event.reason());
 		safely(() -> notifications.notify(event.ownerId(), NotificationType.PROPERTY_STATUS_CHANGED, title, body,
 				Map.of("propertyId", event.propertyId())));
+	}
+
+	@Async(NotificationAsyncConfig.EXECUTOR)
+	@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+	public void onMessageSent(MessageSentEvent event) {
+		safely(() -> notifications.notify(event.recipientId(), NotificationType.NEW_MESSAGE, "New message",
+				"%s (%s): %s".formatted(event.senderName(), event.projectName(), event.preview()),
+				Map.of("conversationId", event.conversationId(), "propertyId", event.propertyId())));
 	}
 
 	private static void safely(Runnable action) {

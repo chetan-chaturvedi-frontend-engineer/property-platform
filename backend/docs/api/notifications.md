@@ -45,6 +45,7 @@ limited (600 per hour per user, **429**).
 |---|---|---|
 | A visitor books a site visit on a published property | `site_visit_booked` | the builder ("New site visit booked") and the visitor ("Site visit booked") |
 | Someone other than the owner approves, rejects, publishes or suspends a property | `property_status_changed` | the owner; the body names the property and the reason, if any |
+| A message arrives for someone with no unread messages in that conversation | `new_message` | the recipient; the body is "Sender (Property): preview" and `data` has `conversationId` and `propertyId`. Further messages in the same unread stretch add no notification |
 
 Creation runs after the originating transaction committed (`@TransactionalEventListener` `AFTER_COMMIT`) and off the
 request thread, so a notification failure can never undo a booking or a review decision. A user who switched

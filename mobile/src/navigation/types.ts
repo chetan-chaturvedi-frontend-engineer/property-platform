@@ -24,7 +24,8 @@ export type RootStackParamList = {
   Settings: undefined;
   Filters: undefined;
   EmiCalculator: undefined;
-  Chat: { id: string; title: string };
+  /** An existing conversation (`id`), or an enquiry about a property (`propertyId`) found or created on first send. */
+  Chat: { id?: string; propertyId?: number; title: string; subtitle?: string };
   Legal: { doc: 'privacy' | 'terms' };
   DeleteAccount: undefined;
   ChangePassword: undefined;
