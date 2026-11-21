@@ -94,7 +94,7 @@ Writes are limited to 120 per admin per hour (429 with `Retry-After`). Bodies mu
   "subHeading": "How we handle your data",
   "content": "<h2>What we collect</h2><p>See our <a href=\"https://example.com/contact\">contact page</a>.</p>",
   "type": "static", "status": "draft",
-  "metaTitle": "Privacy policy | PropertyPro",
+  "metaTitle": "Privacy policy | Dwellery",
   "metaDescription": "What we collect and why.",
   "metaKeywords": "privacy, data protection" }
 ```
@@ -110,7 +110,7 @@ Writes are limited to 120 per admin per hour (429 with `Retry-After`). Bodies mu
   "content": "<h2>What we collect</h2><p>See our <a href=\"https://example.com/contact\" rel=\"nofollow noopener noreferrer\">contact page</a>.</p>",
   "type": "static",
   "status": "draft",
-  "metaTitle": "Privacy policy | PropertyPro",
+  "metaTitle": "Privacy policy | Dwellery",
   "metaDescription": "What we collect and why.",
   "metaKeywords": "privacy, data protection",
   "createdAt": "2026-10-26T12:00:00Z",
@@ -209,7 +209,7 @@ GET /api/v1/public/pages/privacy-policy
   "subHeading": "How we handle your data",
   "slug": "privacy-policy",
   "content": "<h2>What we collect</h2><p>...</p>",
-  "metaTitle": "Privacy policy | PropertyPro",
+  "metaTitle": "Privacy policy | Dwellery",
   "metaDescription": "What we collect and why.",
   "metaKeywords": "privacy, data protection"
 }

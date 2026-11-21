@@ -129,7 +129,7 @@ export function buildBlogs(now = Date.now()): {
         status,
         publishedAt:
           publishedDays === null ? null : new Date(now + publishedDays * DAY).toISOString(),
-        metaTitle: index % 3 === 0 ? `${title} | PropertyPro` : null,
+        metaTitle: index % 3 === 0 ? `${title} | Dwellery` : null,
         metaDescription: null,
         tags,
         createdAt,

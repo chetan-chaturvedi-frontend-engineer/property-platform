@@ -1,4 +1,4 @@
-# Store readiness — PropertyPro
+# Store readiness — Dwellery
 
 Honest status of what is done in code and what must still happen before submitting to Google Play and the App Store. No store reviews can be guaranteed; this lists the common rejection causes and where this project stands.
 
@@ -30,7 +30,7 @@ Honest status of what is done in code and what must still happen before submitti
 6. **App icons / splash / screenshots / feature graphic.** Still the default React Native assets. Store listings need your own.
 7. **Store listing forms.** Play: Data safety form, content rating, target audience, ads declaration. Apple: App Privacy "nutrition labels", age rating, review notes with a demo account.
 8. **Developer accounts.** Google Play Console (one-time fee), Apple Developer Program (annual fee). Personal Play accounts created recently must run a closed test (12+ testers, 14 days) before production access.
-9. **iOS build.** Requires macOS + Xcode (cannot be built on Windows). Run `bundle install && bundle exec pod install` in `ios/`, set signing team, archive in Xcode. Keep `ios/PropertyProApp/PrivacyInfo.xcprivacy` accurate for any SDK you add.
+9. **iOS build.** Requires macOS + Xcode (cannot be built on Windows). Run `bundle install && bundle exec pod install` in `ios/`, set signing team, archive in Xcode. Keep `ios/DwelleryApp/PrivacyInfo.xcprivacy` accurate for any SDK you add.
 10. **Accessibility / QA.** Interactive controls carry `accessibilityRole`/labels; do a TalkBack/VoiceOver pass, test on small and large screens and Android 8–16.
 11. **Target API level.** `targetSdkVersion` is set by the RN template (36). Check Play's current minimum before each release.
 

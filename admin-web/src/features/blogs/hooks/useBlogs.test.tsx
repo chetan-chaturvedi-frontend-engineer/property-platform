@@ -81,7 +81,7 @@ describe('blog hooks', () => {
       id: 1,
       publicState: 'live',
       category: { id: 1, title: 'Buying Tips', status: 'active' },
-      metaTitle: 'Top 10 Tips for First-Time Home Buyers | PropertyPro',
+      metaTitle: 'Top 10 Tips for First-Time Home Buyers | Dwellery',
     });
     expect(result.current.data?.content).toContain('<h2>');
   });

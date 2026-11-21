@@ -62,7 +62,7 @@ export function buildContentPages(): StoredContentPage[] {
       content: `<h2>${seed.heading}</h2><p>Content of the ${seed.heading.toLowerCase()} page.</p>`,
       type: seed.type,
       status: seed.status,
-      metaTitle: seed.slug === 'privacy-policy' ? 'Privacy policy | PropertyPro' : null,
+      metaTitle: seed.slug === 'privacy-policy' ? 'Privacy policy | Dwellery' : null,
       metaDescription: seed.slug === 'privacy-policy' ? 'What we collect and why.' : null,
       metaKeywords: seed.slug === 'privacy-policy' ? 'privacy, data protection' : null,
       createdAt,

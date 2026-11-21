@@ -18,7 +18,7 @@ const PAGE: ContentPage = {
   content: '<p>We collect little.</p>',
   type: 'system',
   status: 'publish',
-  metaTitle: 'Privacy | PropertyPro',
+  metaTitle: 'Privacy | Dwellery',
   metaDescription: null,
   metaKeywords: 'privacy, data',
   createdAt: '2026-11-01T10:00:00Z',

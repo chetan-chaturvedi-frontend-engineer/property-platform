@@ -1,4 +1,4 @@
-# PropertyPro (React Native CLI)
+# Dwellery (React Native CLI)
 
 Property buying & selling app: buyer flow (16 screens) and individual-seller flow, built from the reference PDFs (exported images are in `design/`).
 
