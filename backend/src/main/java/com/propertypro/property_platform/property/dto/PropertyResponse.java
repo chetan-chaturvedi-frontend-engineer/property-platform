@@ -26,9 +26,14 @@ public record PropertyResponse(Long id, String slug, long version, PublicationSt
 		@JsonInclude(JsonInclude.Include.NON_NULL) UserSummary owner,
 		@JsonInclude(JsonInclude.Include.NON_NULL) Instant deletedAt) {
 
-	/** Step 1. */
+	/**
+	 * Step 1. {@code builderUserId} and {@code builder} (the linked builder account's current contact
+	 * details; absent if that account was deleted) appear only in the admin view and only when linked.
+	 */
 	public record Details(PropertyType propertyType, String projectName, String builderCompanyName, String reraNumber,
-			String gstNumber, String projectEmail, String projectPhone) {
+			String gstNumber, String projectEmail, String projectPhone,
+			@JsonInclude(JsonInclude.Include.NON_NULL) Long builderUserId,
+			@JsonInclude(JsonInclude.Include.NON_NULL) UserSummary builder) {
 	}
 
 	/** Step 2. Coordinates are as entered, not geocoded. */

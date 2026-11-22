@@ -14,7 +14,7 @@ token also works. Every endpoint needs `ADMIN_PANEL_ACCESS` plus:
 
 | Permission (`roles.permissions` key) | Seeded for | Allows |
 |---|---|---|
-| `USER_LIST` (`user.list`) | admin, super-admin | `GET /admin/users`, `/stats`, `/roles` |
+| `USER_LIST` (`user.list`) | admin, super-admin, and dashboard roles that can create or edit any property (for the property form's Builder field) | `GET /admin/users`, `/stats`, `/roles` |
 | `USER_VIEW` (`user.view`) | admin, super-admin | `GET /admin/users/{id}` (list alone does **not** allow details) |
 | `USER_CREATE` (`user.create`) | admin, super-admin | `POST /admin/users`; also `/roles` |
 | `USER_UPDATE` (`user.update`) | admin, super-admin | `PATCH /admin/users/{id}` (name, email, phone, role); also `/roles` |

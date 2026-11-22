@@ -29,7 +29,9 @@ import com.propertypro.property_platform.property.exception.PropertyExceptions;
 import com.propertypro.property_platform.property.mapper.PropertyResponseMapper;
 import com.propertypro.property_platform.property.repository.PropertyProjectRepository;
 import com.propertypro.property_platform.property.repository.PropertyProjectSummaryRepository;
+import com.propertypro.property_platform.property.repository.PropertyStatusChangeRepository;
 import com.propertypro.property_platform.security.CurrentActor;
+import com.propertypro.property_platform.user.dto.UserSummary;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
@@ -44,6 +46,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -85,6 +89,9 @@ public class PropertyService {
 	private final MediaUploadService mediaUploadService;
 	private final MediaProperties mediaProperties;
 	private final PropertyListExtras listExtras;
+	private final PropertyStatusChangeRepository statusChangeRepository;
+	private final PropertyBuilderService builders;
+	private final Clock clock;
 
 	/**
 	 * Creates a draft from step 1. With an {@code idempotencyKey}, a retry returns the property the
@@ -106,12 +113,14 @@ public class PropertyService {
 			}
 		}
 		eligibility.requireCanCreate(actor);
+		UserSummary builder = request.builderUserId() == null ? null : linkableBuilder(actor, request.builderUserId());
 		String projectName = request.projectName().strip();
 		PropertyProject project = new PropertyProject(actor.userId(), slugGenerator.generate(projectName, null),
 				idempotencyKey);
 		project.setPropertyType(PropertyType.fromValue(request.propertyType()));
 		project.setProjectName(projectName);
-		project.setBuilderCompanyName(request.builderCompanyName().strip());
+		project.setBuilderCompanyName(builder != null ? builder.fullName() : request.builderCompanyName().strip());
+		project.setBuilderUserId(builder != null ? builder.id() : null);
 		project.setReraNumber(stripToNull(request.reraNumber()));
 		project.setGstNumber(stripToNull(request.gstNumber()));
 		project.setProjectEmail(request.projectEmail().strip().toLowerCase(Locale.ROOT));
@@ -166,6 +175,8 @@ public class PropertyService {
 		return PageResponse.of(found, listExtras.adminSummaries(found.getContent()));
 	}
 
+	private static final Duration RECENT_SUBMISSION_WINDOW = Duration.ofDays(7);
+
 	/** Counts for the admin dashboard; requires {@code PROPERTY_LIST_ANY} (checked by the controller). */
 	@Transactional(readOnly = true)
 	public PropertyStatsResponse stats() {
@@ -188,7 +199,9 @@ public class PropertyService {
 			byPublication.merge(count.getPublicationStatus(), count.getTotal(), Long::sum);
 			byLegal.merge(count.getLegalApprovalStatus(), count.getTotal(), Long::sum);
 		}
-		return new PropertyStatsResponse(total, byPublication, byLegal, deleted);
+		long submittedRecently = statusChangeRepository.countProjectsWithActionSince(StatusChangeAction.SUBMITTED,
+				clock.instant().minus(RECENT_SUBMISSION_WINDOW));
+		return new PropertyStatsResponse(total, byPublication, byLegal, deleted, submittedRecently);
 	}
 
 	/** Step 1. The slug stays the same when the project name changes, so published URLs keep working. */
@@ -196,7 +209,7 @@ public class PropertyService {
 	public PropertyResponse updateDetails(Long id, CurrentActor actor, UpdatePropertyDetailsRequest request,
 			Long expectedVersion) {
 		PropertyProject project = access.requireEditable(id, actor, expectedVersion);
-		applyDetails(project, request);
+		applyDetails(project, request, actor);
 		return saved(project, actor);
 	}
 
@@ -232,7 +245,7 @@ public class PropertyService {
 	public PropertyResponse update(Long id, CurrentActor actor, UpdatePropertyRequest request, Long expectedVersion) {
 		PropertyProject project = access.requireEditable(id, actor, expectedVersion);
 		if (request.getDetails() != null) {
-			applyDetails(project, request.getDetails());
+			applyDetails(project, request.getDetails(), actor);
 		}
 		if (request.getLocation() != null) {
 			applyLocation(project, request.getLocation());
@@ -246,10 +259,23 @@ public class PropertyService {
 		return saved(project, actor);
 	}
 
-	private void applyDetails(PropertyProject project, UpdatePropertyDetailsRequest request) {
+	private void applyDetails(PropertyProject project, UpdatePropertyDetailsRequest request, CurrentActor actor) {
 		apply(request.getPropertyType(), value -> project.setPropertyType(PropertyType.fromValue(value)));
 		apply(request.getProjectName(), value -> project.setProjectName(value.strip()));
-		apply(request.getBuilderCompanyName(), value -> project.setBuilderCompanyName(value.strip()));
+		// A typed name replaces a linked builder; a builder link (applied after) sets the name.
+		apply(request.getBuilderCompanyName(), value -> {
+			project.setBuilderCompanyName(value.strip());
+			project.setBuilderUserId(null);
+		});
+		apply(request.getBuilderUserId(), value -> {
+			if (value == null) {
+				project.setBuilderUserId(null);
+				return;
+			}
+			UserSummary builder = linkableBuilder(actor, value);
+			project.setBuilderUserId(builder.id());
+			project.setBuilderCompanyName(builder.fullName());
+		});
 		apply(request.getReraNumber(), value -> project.setReraNumber(stripToNull(value)));
 		apply(request.getGstNumber(), value -> project.setGstNumber(stripToNull(value)));
 		apply(request.getProjectEmail(), value -> project.setProjectEmail(value.strip().toLowerCase(Locale.ROOT)));
@@ -357,6 +383,14 @@ public class PropertyService {
 	}
 
 	/** PATCH field: {@code null} = omitted (skip); otherwise set the value, or null for an explicit JSON null. */
+	/** Only the admin dashboard links builder accounts; app users type the builder's name. */
+	private UserSummary linkableBuilder(CurrentActor actor, Long builderUserId) {
+		if (!actor.has(PROPERTY_VIEW_ANY)) {
+			throw new FieldValidationException("builderUserId", "is not allowed");
+		}
+		return builders.require(builderUserId);
+	}
+
 	private static <T> void apply(Optional<T> field, Consumer<T> setter) {
 		if (field != null) {
 			setter.accept(field.orElse(null));

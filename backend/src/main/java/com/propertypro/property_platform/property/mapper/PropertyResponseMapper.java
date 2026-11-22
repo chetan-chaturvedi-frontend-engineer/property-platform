@@ -116,7 +116,14 @@ public class PropertyResponseMapper {
 
 	private PropertyResponse toResponse(PropertyProject p, boolean admin) {
 		String base = (admin ? ADMIN_BASE : PRIVATE_BASE) + p.getId();
-		UserSummary owner = admin ? userAccountService.findSummaries(List.of(p.getUserId())).get(p.getUserId()) : null;
+		// Owner and builder accounts in one lookup (admin view only).
+		Map<Long, UserSummary> accounts = admin
+				? userAccountService.findSummaries(p.getBuilderUserId() == null ? List.of(p.getUserId())
+						: List.of(p.getUserId(), p.getBuilderUserId()))
+				: Map.of();
+		UserSummary owner = accounts.get(p.getUserId());
+		Long builderUserId = admin ? p.getBuilderUserId() : null;
+		UserSummary builder = builderUserId == null ? null : accounts.get(builderUserId);
 		List<StatusChangeResponse> history = statusChangeRepository
 			.findByPropertyProjectIdOrderByCreatedAtAscIdAsc(p.getId()).stream()
 			.map(c -> new StatusChangeResponse(c.getAction(), c.getFromStatus(), c.getToStatus(), c.getReason(),
@@ -124,7 +131,8 @@ public class PropertyResponseMapper {
 			.toList();
 		return new PropertyResponse(p.getId(), p.getSlug(), p.getVersion(), p.getPublicationStatus(),
 				new PropertyResponse.Details(p.getPropertyType(), p.getProjectName(), p.getBuilderCompanyName(),
-						p.getReraNumber(), p.getGstNumber(), p.getProjectEmail(), p.getProjectPhone()),
+						p.getReraNumber(), p.getGstNumber(), p.getProjectEmail(), p.getProjectPhone(), builderUserId,
+						builder),
 				location(p), apartments(p, base),
 				new PropertyResponse.ProjectInfo(p.getTotalTowersBlocks(), p.getTotalUnitsFlats(), p.getProjectStatus(),
 						p.getLegalApprovalStatus(), p.getLandArea(), p.getLandAreaUnit(), p.getPossessionStartDate(),

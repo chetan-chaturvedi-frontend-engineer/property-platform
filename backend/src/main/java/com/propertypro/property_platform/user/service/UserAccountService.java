@@ -47,6 +47,14 @@ public class UserAccountService {
 			.collect(Collectors.toMap(User::getId, UserSummary::from, (a, b) -> a));
 	}
 
+	/** The account if it exists, is active and has this role; empty otherwise (deleted, blocked, other role). */
+	@Transactional(readOnly = true)
+	public Optional<UserSummary> findActiveOfType(Long userId, String userType) {
+		return userRepository.findById(userId)
+			.filter(user -> user.getStatus() == UserStatus.ACTIVE && userType.equals(user.getUserType()))
+			.map(UserSummary::from);
+	}
+
 	/** Profiles of the users that exist, soft-deleted ones included, by id. */
 	@Transactional(readOnly = true)
 	public Map<Long, UserAuditProfile> findAuditProfiles(Collection<Long> userIds) {

@@ -35,7 +35,9 @@ class PropertyMigrationRollbackTests {
 			"202610251030__create_property_amenities",
 			"202610251040__create_property_amenity_links",
 			"202610251050__create_property_project_nearby_places",
-			"202610251500__property_wizard_workflow");
+			"202610251500__property_wizard_workflow",
+			"202611221030__index_property_status_changes_activity",
+			"202611221100__add_property_builder_user");
 
 	private static final List<String> TABLES = List.of("property_projects", "property_apartments",
 			"property_project_media", "property_apartment_media", "property_amenities", "property_project_amenities",

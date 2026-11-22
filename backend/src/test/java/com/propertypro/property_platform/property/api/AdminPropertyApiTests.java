@@ -19,6 +19,7 @@ import static com.propertypro.property_platform.security.Permissions.PROPERTY_LI
 import static com.propertypro.property_platform.security.Permissions.PROPERTY_PUBLISH;
 import static com.propertypro.property_platform.security.Permissions.PROPERTY_VIEW_ANY;
 import static org.hamcrest.Matchers.contains;
+import static org.hamcrest.Matchers.hasItems;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.startsWith;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
@@ -73,7 +74,8 @@ class AdminPropertyApiTests extends PropertyApiTestSupport {
 				.andExpect(jsonPath("$.byPublicationStatus.pending_review").value(0))
 				.andExpect(jsonPath("$.byPublicationStatus.archived").value(0))
 				.andExpect(jsonPath("$.byLegalApprovalStatus.pending").value(2))
-				.andExpect(jsonPath("$.byLegalApprovalStatus.approved").value(0));
+				.andExpect(jsonPath("$.byLegalApprovalStatus.approved").value(0))
+				.andExpect(jsonPath("$.submittedLast7Days").value(1));
 		}
 
 		@Test
@@ -111,6 +113,144 @@ class AdminPropertyApiTests extends PropertyApiTestSupport {
 			// The owner list stays as it was.
 			getAs(BASE, owner).andExpect(jsonPath("$.content[0].coverUrl").doesNotExist())
 				.andExpect(jsonPath("$.content[0].apartmentTypes").doesNotExist());
+		}
+
+		@Test
+		void adminItemsCarryReraAddressAreaParkingMediaOwnerAndSubmission() throws Exception {
+			RequestPostProcessor owner = owner(subscribedOwner("owner@example.com"));
+			long id = createProperty(owner);
+			completeWizard(id, owner);
+			send(put(BASE + "/" + id + "/apartments"), owner, "{\"apartments\":[" + APARTMENT_2BHK_B + ","
+					+ APARTMENT_2BHK_A.replace("\"balconies\":1", "\"balconies\":1,\"carParking\":2") + "]}")
+				.andExpect(status().isOk());
+			createProperty(owner, DETAILS.replace("Green Valley Residency", "Empty Draft"));
+			Long mediaFiles = jdbc.queryForObject(
+					"SELECT count(*) FROM property_project_media WHERE property_project_id = ?", Long.class, id);
+
+			getAs(ADMIN_BASE + "?sort=projectName,asc", admin)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content[0].mediaCount").value(0))
+				.andExpect(jsonPath("$.content[0].startingArea").doesNotExist())
+				.andExpect(jsonPath("$.content[0].carParkingMin").doesNotExist())
+				.andExpect(jsonPath("$.content[0].submittedAt").doesNotExist())
+				.andExpect(jsonPath("$.content[1].reraNumber").value("P52100012345"))
+				.andExpect(jsonPath("$.content[1].projectAddress").value("Plot 12, Baner Road"))
+				.andExpect(jsonPath("$.content[1].ownerName").value("Test User"))
+				.andExpect(jsonPath("$.content[1].mediaCount").value(mediaFiles.intValue()))
+				// Area of the cheapest configuration (Type A), so price per area compares like with like.
+				.andExpect(jsonPath("$.content[1].startingPrice").value(7500000))
+				.andExpect(jsonPath("$.content[1].startingArea").value(950))
+				.andExpect(jsonPath("$.content[1].startingAreaUnit").value("sq_ft"))
+				.andExpect(jsonPath("$.content[1].carParkingMin").value(0))
+				.andExpect(jsonPath("$.content[1].carParkingMax").value(2))
+				.andExpect(jsonPath("$.content[1].submittedAt").doesNotExist());
+
+			mvc.perform(post(BASE + "/" + id + "/submit").with(owner)).andExpect(status().isOk());
+			getAs(ADMIN_BASE + "?sort=projectName,asc", admin)
+				.andExpect(jsonPath("$.content[1].submittedAt").isNotEmpty());
+
+			getAs(BASE, owner).andExpect(jsonPath("$.content[0].reraNumber").doesNotExist())
+				.andExpect(jsonPath("$.content[0].ownerName").doesNotExist())
+				.andExpect(jsonPath("$.content[0].mediaCount").doesNotExist());
+		}
+
+	}
+
+	@Nested
+	class Builders {
+
+		private long builder(String email, String name, String status) {
+			return jdbc.queryForObject("""
+					INSERT INTO users (email, password_hash, full_name, phone, status, email_verified, user_type)
+					VALUES (?, 'hash', ?, ?, ?, now(), 'builder') RETURNING id""",
+					Long.class, email, name, "+9198765" + String.format("%05d", Math.abs(email.hashCode()) % 100000), status);
+		}
+
+		@Test
+		void createsWithALinkedBuilderWhoseNameAndContactsAreShown() throws Exception {
+			long aurum = builder("aurum@example.com", "Aurum Developers", "active");
+			String body = adminSend(post(ADMIN_BASE),
+					DETAILS.replace("\"builderCompanyName\":\"Green Builders\",", "\"builderUserId\":" + aurum + ","))
+				.andExpect(status().isCreated())
+				.andExpect(jsonPath("$.details.builderUserId").value(aurum))
+				.andExpect(jsonPath("$.details.builderCompanyName").value("Aurum Developers"))
+				.andExpect(jsonPath("$.details.builder.email").value("aurum@example.com"))
+				.andReturn().getResponse().getContentAsString();
+			long id = Long.parseLong(json(body, "$.id"));
+
+			getAs(ADMIN_BASE, admin)
+				.andExpect(jsonPath("$.content[0].builderUserId").value(aurum))
+				.andExpect(jsonPath("$.content[0].builder.fullName").value("Aurum Developers"))
+				.andExpect(jsonPath("$.content[0].builder.phone").value(startsWith("+9198765")));
+
+			// A typed name replaces the link; linking again sets the name from the account.
+			adminSendIfMatch(patch(ADMIN_BASE + "/" + id + "/steps/1"), "{\"builderCompanyName\":\"Typed Builders\"}",
+					version(id))
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.details.builderCompanyName").value("Typed Builders"))
+				.andExpect(jsonPath("$.details.builderUserId").doesNotExist());
+			adminSendIfMatch(patch(ADMIN_BASE + "/" + id + "/steps/1"), "{\"builderUserId\":" + aurum + "}", version(id))
+				.andExpect(jsonPath("$.details.builderCompanyName").value("Aurum Developers"))
+				.andExpect(jsonPath("$.details.builderUserId").value(aurum));
+			adminSendIfMatch(patch(ADMIN_BASE + "/" + id + "/steps/1"), "{\"builderUserId\":null}", version(id))
+				.andExpect(jsonPath("$.details.builderUserId").doesNotExist())
+				.andExpect(jsonPath("$.details.builderCompanyName").value("Aurum Developers"));
+		}
+
+		@Test
+		void rejectsAccountsThatAreNotActiveBuilders() throws Exception {
+			long buyer = insertUser("buyer@example.com");
+			long blocked = builder("blocked@example.com", "Blocked Builder", "suspended");
+			for (long id : new long[] { buyer, blocked, 999_999 }) {
+				adminSend(post(ADMIN_BASE), DETAILS.replace("\"builderCompanyName\":\"Green Builders\",",
+						"\"builderUserId\":" + id + ","))
+					.andExpect(status().isBadRequest())
+					.andExpect(jsonPath("$.errors.builderUserId").value("must be an active user with the builder role"));
+			}
+			adminSend(post(ADMIN_BASE), DETAILS.replace("\"builderCompanyName\":\"Green Builders\",", ""))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.errors.builderCompanyName").value("must not be blank"));
+		}
+
+		@Test
+		void appUsersCannotLinkBuilderAccounts() throws Exception {
+			long aurum = builder("aurum@example.com", "Aurum Developers", "active");
+			RequestPostProcessor owner = owner(subscribedOwner("owner@example.com"));
+			send(post(BASE), owner, DETAILS.replace("\"builderCompanyName\":\"Green Builders\",",
+					"\"builderUserId\":" + aurum + ","))
+				.andExpect(status().isBadRequest())
+				.andExpect(jsonPath("$.errors.builderUserId").value("is not allowed"));
+		}
+
+	}
+
+	@Nested
+	class Activity {
+
+		@Test
+		void listsEveryPropertysStatusChangesNewestFirstWithNamesAndActors() throws Exception {
+			RequestPostProcessor owner = owner(subscribedOwner("owner@example.com"));
+			long id = publishedProperty(owner, admin);
+
+			getAs(ADMIN_BASE + "/activity", admin)
+				.andExpect(status().isOk())
+				.andExpect(jsonPath("$.content[0].action").value("published"))
+				.andExpect(jsonPath("$.content[0].propertyId").value(id))
+				.andExpect(jsonPath("$.content[0].projectName").value("Green Valley Residency"))
+				.andExpect(jsonPath("$.content[0].actorName").value("Test User"))
+				.andExpect(jsonPath("$.content[0].toStatus").value("published"))
+				.andExpect(jsonPath("$.content[*].action", hasItems("submitted", "approved", "published")));
+
+			getAs(ADMIN_BASE + "/activity?size=2", admin)
+				.andExpect(jsonPath("$.content", hasSize(2)))
+				.andExpect(jsonPath("$.size").value(2));
+		}
+
+		@Test
+		void requiresListAnyAndAuthentication() throws Exception {
+			getAs(ADMIN_BASE + "/activity", as(adminId, ADMIN_PANEL_ACCESS, PROPERTY_VIEW_ANY))
+				.andExpect(status().isForbidden());
+			mvc.perform(get(ADMIN_BASE + "/activity")).andExpect(status().isUnauthorized());
 		}
 
 	}
