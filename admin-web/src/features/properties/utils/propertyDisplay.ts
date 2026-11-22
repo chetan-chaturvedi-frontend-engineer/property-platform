@@ -1,3 +1,4 @@
+import type { BadgeTone } from '@/components/common/Badge';
 import { PERMISSIONS } from '@/utils/constants';
 
 import type { WorkflowTarget } from '../components/WorkflowActionDialog';
@@ -13,26 +14,28 @@ import type {
   PublicationStatus,
 } from '../types/property.types';
 
-export type ChipColor = 'default' | 'success' | 'warning' | 'error' | 'info' | 'primary';
-
+/**
+ * Table and detail badges. Approved green, pending yellow, rejected red (as agreed for the list);
+ * published is teal so live listings stand apart from approved-but-unpublished ones.
+ */
 export const PUBLICATION_STATUS_META: Record<
   PublicationStatus,
-  { label: string; color: ChipColor }
+  { label: string; tone: BadgeTone }
 > = {
-  draft: { label: 'Draft', color: 'default' },
-  pending_review: { label: 'Pending review', color: 'warning' },
-  approved: { label: 'Approved', color: 'info' },
-  published: { label: 'Published', color: 'success' },
-  rejected: { label: 'Rejected', color: 'error' },
-  suspended: { label: 'Suspended', color: 'error' },
-  archived: { label: 'Archived', color: 'default' },
+  draft: { label: 'Draft', tone: 'neutral' },
+  pending_review: { label: 'Pending review', tone: 'warning' },
+  approved: { label: 'Approved', tone: 'success' },
+  published: { label: 'Published', tone: 'secondary' },
+  rejected: { label: 'Rejected', tone: 'error' },
+  suspended: { label: 'Suspended', tone: 'errorStrong' },
+  archived: { label: 'Archived', tone: 'neutral' },
 };
 
-export const LEGAL_STATUS_META: Record<LegalApprovalStatus, { label: string; color: ChipColor }> = {
-  pending: { label: 'Legal pending', color: 'warning' },
-  approved: { label: 'Legal approved', color: 'success' },
-  rejected: { label: 'Legal rejected', color: 'error' },
-  not_applicable: { label: 'Legal N/A', color: 'default' },
+export const LEGAL_STATUS_META: Record<LegalApprovalStatus, { label: string; tone: BadgeTone }> = {
+  pending: { label: 'Legal pending', tone: 'warning' },
+  approved: { label: 'Legal approved', tone: 'success' },
+  rejected: { label: 'Legal rejected', tone: 'error' },
+  not_applicable: { label: 'Legal N/A', tone: 'neutral' },
 };
 
 export const PROPERTY_TYPE_LABELS: Record<PropertyType, string> = {
@@ -222,4 +225,80 @@ export function parsePropertyId(raw: string | undefined): number | null {
   }
   const id = Number(raw);
   return id > 0 ? id : null;
+}
+
+const SQ_FT_PER_SQ_M = 10.763_910_4;
+
+/** An apartment area in square feet; `null` when missing, not positive or in another unit. */
+export function areaInSqFt(area: number | null | undefined, unit: AreaUnit | null | undefined) {
+  if (area == null || !Number.isFinite(area) || area <= 0) {
+    return null;
+  }
+  if (unit === 'sq_ft' || unit == null) {
+    return area;
+  }
+  return unit === 'sq_m' ? area * SQ_FT_PER_SQ_M : null;
+}
+
+/**
+ * Total price ÷ area in sq.ft, rounded to whole rupees. `null` when either value is missing or invalid, so
+ * callers never show a figure computed from a zero or unknown area.
+ */
+export function pricePerSqFt(
+  price: number | null | undefined,
+  area: number | null | undefined,
+  unit: AreaUnit | null | undefined,
+): number | null {
+  const sqFt = areaInSqFt(area, unit);
+  if (price == null || !Number.isFinite(price) || price < 0 || sqFt === null) {
+    return null;
+  }
+  return Math.round(price / sqFt);
+}
+
+const inrFormatter = new Intl.NumberFormat('en-IN', {
+  style: 'currency',
+  currency: 'INR',
+  maximumFractionDigits: 0,
+});
+const wholeFormatter = new Intl.NumberFormat('en-IN', { maximumFractionDigits: 0 });
+
+/** Full rupee amount with Indian digit grouping: ₹1,25,00,000. */
+export function formatInr(value: number | null | undefined): string {
+  return value == null ? '—' : inrFormatter.format(value);
+}
+
+export function formatSqFt(value: number | null | undefined): string {
+  return value == null ? '—' : `${wholeFormatter.format(value)} sq.ft`;
+}
+
+/** "1 parking", "1–2 parking" or "No parking"; `null` when unknown. */
+export function formatParking(min: number | undefined, max: number | undefined): string | null {
+  if (min === undefined || max === undefined) {
+    return null;
+  }
+  if (max === 0) {
+    return 'No parking';
+  }
+  return min === max ? `${min} parking` : `${min}–${max} parking`;
+}
+
+export function formatApartmentTypes(types: readonly ApartmentType[] | undefined): string {
+  return types?.length ? types.map((type) => APARTMENT_TYPE_LABELS[type]).join(', ') : '';
+}
+
+const timeFormatter = new Intl.DateTimeFormat(undefined, { timeStyle: 'short' });
+
+/** Date and time on separate lines, in the viewer's time zone (API instants are UTC). */
+export function formatDateAndTime(
+  value: string | null | undefined,
+): { date: string; time: string } | null {
+  if (!value) {
+    return null;
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return null;
+  }
+  return { date: dateFormatter.format(parsed), time: timeFormatter.format(parsed) };
 }

@@ -145,7 +145,7 @@ and is rejected (400) for a required one.
 
 | Step | Endpoint | Fields |
 |---|---|---|
-| 1 Property details | `POST /properties`, `PATCH .../steps/1` | `propertyType` (apartment, villa, commercial), `projectName` (≤150), `builderCompanyName` (≤150), `reraNumber` (≤50), `gstNumber` (GSTIN, upper case), `projectEmail`, `projectPhone` (stored E.164, default region IN). The slug is generated from the name once and never changes. |
+| 1 Property details | `POST /properties`, `PATCH .../steps/1` | `propertyType` (apartment, villa, commercial), `projectName` (≤150), `builderCompanyName` (≤150; required on create unless `builderUserId` is given), `builderUserId` (admin routes only, see below), `reraNumber` (≤50), `gstNumber` (GSTIN, upper case), `projectEmail`, `projectPhone` (stored E.164, default region IN). The slug is generated from the name once and never changes. |
 | 2 Location | `PATCH .../steps/2` | `projectAddress`, `city`, `locality`, `pincode` (6 digits), `state`, `landmark`, `latitude` (−90..90), `longitude` (−180..180) — both coordinates or neither; stored as given, not geocoded |
 | 3 Unit types | `/properties/{id}/apartments` | see below |
 | 4 Project information | `PATCH .../steps/4` | `totalTowersBlocks`, `totalUnitsFlats` (≥0), `projectStatus`, `landArea` (>0, needs `landAreaUnit`: sq_ft, sq_m, acre, hectare), `possessionStartDate` ≤ `possessionEndDate`, `projectDescription` (≤10 000), `projectHighlights` (≤20 strings of ≤200) |
@@ -241,8 +241,9 @@ the single child item), so the dashboard gets the new `version` in one response.
 
 | Method | Path | Extra permission | Description |
 |---|---|---|---|
-| GET | `/admin/properties` | `PROPERTY_LIST_ANY` (not `_VIEW_ANY`) | all owners; extra filters `ownerId`, `deleted` = exclude (default), only, include. Items add `ownerId`, `deletedAt`, and the display extras `startingPrice` (lowest configuration price), `apartmentTypes` (distinct, display order) and `coverUrl` (primary photo, else the first; admin content path). Extras without a value are omitted |
+| GET | `/admin/properties` | `PROPERTY_LIST_ANY` (not `_VIEW_ANY`) | all owners; extra filters `ownerId`, `deleted` = exclude (default), only, include. Items add `ownerId`, `deletedAt`, and the display extras `startingPrice` (lowest configuration price), `apartmentTypes` (distinct, display order), `coverUrl` (primary photo, else the first; admin content path), `ownerName`, `reraNumber`, `projectAddress`, `mediaCount` (project media of every type), `startingArea` + `startingAreaUnit` (`areaMin` of the configuration with the lowest price, so price ÷ area compares like with like), `carParkingMin` / `carParkingMax` (across configurations) and `submittedAt` (latest submission). Extras without a value are omitted; `mediaCount` is 0 when there are none |
 | GET | `/admin/properties/stats` | `PROPERTY_LIST_ANY` (not `_VIEW_ANY`) | counts, see below |
+| GET | `/admin/properties/activity` | `PROPERTY_LIST_ANY` (not `_VIEW_ANY`) | every property's status history, newest first; see below |
 | POST | `/admin/properties` | `PROPERTY_CREATE` | create a draft owned by the signed-in admin (201; 200 for an idempotent retry) |
 | GET | `/admin/properties/{id}` | | admin view |
 | PATCH | `/admin/properties/{id}` | (service: `PROPERTY_UPDATE_ANY` or owner) | several steps at once |
@@ -268,6 +269,18 @@ the single child item), so the dashboard gets the new `version` in one response.
 "(service: ...)" means the permission is checked in the service, as for the app routes: a visible
 property without it is 403 `property_action_forbidden`.
 
+**Builder accounts.** The dashboard lists the builders to choose from with the users API:
+`GET /api/v1/admin/users?userType=builder&status=active&search=...&sort=fullName,asc` (`USER_LIST`, which
+V202611221200 grants to dashboard roles that can create or edit any property). On admin routes, step 1 (`POST /admin/properties`, `PATCH .../steps/1` and the
+`details` section of `PATCH /admin/properties/{id}`) accepts `builderUserId`: an active user whose role
+slug is `builder` (otherwise **400** `errors.builderUserId`). Linking sets `builderCompanyName` to that
+user's name; a typed `builderCompanyName` replaces the link; `"builderUserId": null` removes the link and
+keeps the name. App routes reject `builderUserId` (**400** "is not allowed"), so owners keep typing the
+name. The admin view adds `details.builderUserId` and `details.builder` (`id`, `fullName`, `email`,
+`phone`; current values, absent if that account was deleted), and admin list items add `builderUserId`
+and `builder`. The owner (`ownerId`) never changes: subscriptions, limits and editing rights stay with
+whoever listed the property.
+
 **Statistics** (`GET /admin/properties/stats`, one aggregate query). `total` and both maps count
 non-deleted properties, so each map adds up to `total`; every status is present (0 when none).
 `deleted` counts soft-deleted properties separately.
@@ -277,7 +290,25 @@ non-deleted properties, so each map adds up to `total`; every status is present 
   "byPublicationStatus": { "draft": 4, "pending_review": 5, "approved": 5, "published": 6,
                            "rejected": 2, "suspended": 2, "archived": 2 },
   "byLegalApprovalStatus": { "pending": 7, "approved": 13, "rejected": 6, "not_applicable": 0 },
-  "deleted": 1 }
+  "deleted": 1, "submittedLast7Days": 3 }
+```
+
+`submittedLast7Days` counts distinct properties (deleted ones included) with a `submitted` status change in
+the last 7 days.
+
+**Activity** (`GET /admin/properties/activity`): the status history of every property, newest first.
+`page` (0-based) and `size` (default 10, max 100); `sort` is ignored. `action` is a status history action
+(`created`, `submitted`, `approved`, `rejected`, `published`, `unpublished`, `suspended`, `resumed`,
+`archived`, `reverted_to_draft`, `deleted`, `restored`, `legal_status_changed`); for
+`legal_status_changed`, `fromStatus` / `toStatus` are legal approval statuses. `projectName` and
+`actorName` are read when the page is served; `actorName` is `null` if the account is gone. Edits that
+do not change a status are not part of the history.
+
+```json
+{ "content": [ { "id": 88, "propertyId": 101, "projectName": "Green Valley Residency",
+  "action": "rejected", "fromStatus": "pending_review", "toStatus": "rejected",
+  "reason": "RERA certificate missing", "actorName": "Asha Admin", "createdAt": "2026-11-22T09:15:00Z" } ],
+  "page": 0, "size": 10, "totalElements": 1, "totalPages": 1 }
 ```
 
 ### Public — `/api/v1/public/properties` (no login)

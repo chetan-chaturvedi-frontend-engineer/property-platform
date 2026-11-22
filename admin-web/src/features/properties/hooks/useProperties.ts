@@ -24,6 +24,9 @@ export const propertyKeys = {
   lists: () => [...propertyKeys.all, 'list'] as const,
   list: (filters: PropertyFilters) => [...propertyKeys.lists(), filters] as const,
   stats: () => [...propertyKeys.all, 'stats'] as const,
+  activities: () => [...propertyKeys.all, 'activity'] as const,
+  builders: (search: string) => [...propertyKeys.all, 'builders', search] as const,
+  activity: (size: number) => [...propertyKeys.activities(), size] as const,
   amenities: () => [...propertyKeys.all, 'amenities'] as const,
   details: () => [...propertyKeys.all, 'detail'] as const,
   detail: (id: EntityId) => [...propertyKeys.details(), id] as const,
@@ -47,6 +50,26 @@ export function usePropertyStats({ enabled = true }: EnabledOption = {}) {
   return useQuery({
     queryKey: propertyKeys.stats(),
     queryFn: ({ signal }) => propertyService.stats(signal),
+    enabled,
+  });
+}
+
+/** The newest status changes of every property (the dashboard's activity feed). */
+export function usePropertyActivity(size = 8, { enabled = true }: EnabledOption = {}) {
+  return useQuery({
+    queryKey: propertyKeys.activity(size),
+    queryFn: ({ signal }) => propertyService.activity(size, signal),
+    enabled,
+  });
+}
+
+/** Builder accounts for the step 1 picker; loaded only while the list is open. */
+export function useBuilderOptions(search: string, { enabled = true }: EnabledOption = {}) {
+  return useQuery({
+    queryKey: propertyKeys.builders(search),
+    queryFn: ({ signal }) => propertyService.builders(search, signal),
+    placeholderData: keepPreviousData,
+    staleTime: 60_000,
     enabled,
   });
 }
@@ -79,8 +102,10 @@ export function usePropertyPreview(id: EntityId) {
   });
 }
 
-// Writes change counts and list rows; the property itself comes back in the response.
-const REFRESH_LISTS = { invalidates: [propertyKeys.lists(), propertyKeys.stats()] };
+// Writes change counts, list rows and the activity feed; the property itself comes back in the response.
+const REFRESH_LISTS = {
+  invalidates: [propertyKeys.lists(), propertyKeys.stats(), propertyKeys.activities()],
+};
 
 /**
  * A write that returns the updated property: it replaces the cached detail, so the next write sends

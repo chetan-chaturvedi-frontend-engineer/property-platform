@@ -7,6 +7,7 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.Setter;
@@ -29,7 +30,14 @@ public class UpdatePropertyDetailsRequest {
 
 	private Optional<@NotBlank @Size(max = 150) String> projectName;
 
+	/** A typed name; it replaces a linked builder. */
 	private Optional<@NotBlank @Size(max = 150) String> builderCompanyName;
+
+	/**
+	 * Admin dashboard only: links an active builder user, whose name becomes {@code builderCompanyName}.
+	 * An explicit {@code null} removes the link and keeps the name.
+	 */
+	private Optional<@Positive Long> builderUserId;
 
 	private Optional<@Size(max = 50) @Pattern(regexp = PropertyFieldRules.RERA, message = "must be a valid RERA number") String> reraNumber;
 

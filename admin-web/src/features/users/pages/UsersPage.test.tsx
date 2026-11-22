@@ -10,8 +10,8 @@ import { renderWithProviders, signInAs } from '@/tests/utils/testUtils';
 
 import { UsersPage } from './UsersPage';
 
-/** The mock has 38 users: 33 generated and 5 staff accounts (see mockDb). */
-const TOTAL = 38;
+/** The mock has 44 users: 33 generated, 5 staff and 6 builder accounts (see mockDb). */
+const TOTAL = 44;
 
 function renderPage() {
   // The app's client, so writes refresh lists and stats like in the browser.
@@ -31,6 +31,23 @@ async function findRow(name: RegExp | string) {
   return within(row);
 }
 
+/** Captures CSV downloads (jsdom has no object URLs). */
+function captureDownloads() {
+  const blobs: Blob[] = [];
+  Object.assign(URL, {
+    createObjectURL: jest.fn((blob: Blob) => {
+      blobs.push(blob);
+      return 'blob:csv';
+    }),
+    revokeObjectURL: jest.fn(),
+  });
+  // jsdom cannot follow the download link ("Not implemented: navigation").
+  jest.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+  return blobs;
+}
+
+const messages = () => useNotificationStore.getState().queue.map((item) => item.message);
+
 async function waitForRows(count: number) {
   await waitFor(() => expect(within(table()).getAllByRole('row')).toHaveLength(count + 1));
 }
@@ -42,13 +59,13 @@ describe('UsersPage', () => {
 
     const stats = screen.getByRole('region', { name: 'User statistics' });
     expect(await within(stats).findByText(String(TOTAL))).toBeInTheDocument();
-    expect(within(stats).getByText('20')).toBeInTheDocument();
+    expect(within(stats).getByText('25')).toBeInTheDocument();
     expect(within(stats).getByText('Pending users')).toBeInTheDocument();
-    expect(within(stats).getByText('52.6% of all users')).toBeInTheDocument();
+    expect(within(stats).getByText('56.8% of all users')).toBeInTheDocument();
     expect(await screen.findByRole('tab', { name: 'Pending (6)' })).toBeInTheDocument();
 
     await waitForRows(20);
-    expect(screen.getByText(`1–20 of ${TOTAL}`)).toBeInTheDocument();
+    expect(screen.getByText(`Showing 1 to 20 of ${TOTAL} entries`)).toBeInTheDocument();
   });
 
   it('shows role names resolved from the roles table', async () => {
@@ -57,6 +74,76 @@ describe('UsersPage', () => {
 
     expect((await findRow('Mira Manager')).getByText('Manager')).toBeInTheDocument();
     expect((await findRow('Sam Super')).getByText('Super Admin')).toBeInTheDocument();
+  });
+
+  it('shows user (with phone), role, email, status and date columns', async () => {
+    signInAs(mockUsers.admin);
+    renderPage();
+    await waitForRows(20);
+
+    const headers = within(table())
+      .getAllByRole('columnheader')
+      .map((header) => header.textContent);
+    expect(headers).toEqual([
+      'User',
+      'Role',
+      'Email',
+      'Status',
+      'Joined on',
+      'Last Active',
+      'Actions',
+    ]);
+    const row = await findRow('Mira Manager');
+    expect(row.getByText('manager@example.com')).toHaveAttribute('title', 'manager@example.com');
+    expect(row.getByText('Active')).toBeInTheDocument();
+  });
+
+  it('filters blocked (suspended) users with the Blocked tab', async () => {
+    signInAs(mockUsers.admin);
+    const { user } = renderPage();
+    await waitForRows(20);
+
+    await user.click(await screen.findByRole('tab', { name: /^blocked/i }));
+    await waitFor(() => {
+      const rows = within(table()).getAllByRole('row').slice(1);
+      expect(rows.length).toBeGreaterThan(0);
+      for (const row of rows) expect(row).toHaveTextContent('Blocked');
+    });
+  });
+
+  it('exports the filtered users as CSV', async () => {
+    signInAs(mockUsers.admin);
+    const blobs = captureDownloads();
+    const { user } = renderPage();
+    await waitForRows(20);
+
+    await user.click(await screen.findByRole('tab', { name: /^inactive/i }));
+    await waitForRows(5);
+    await user.click(screen.getByRole('button', { name: /export csv/i }));
+
+    await waitFor(() => expect(blobs).toHaveLength(1));
+    const lines = (await blobs[0]!.text()).trim().split('\r\n');
+    expect(lines[0]).toContain('Name,Phone,Email,Role,Status,Joined date (UTC)');
+    expect(lines).toHaveLength(6);
+    expect(lines.slice(1).every((line) => line.includes(',Inactive,'))).toBe(true);
+    expect(messages()).toContain('Exported 5 users.');
+  });
+
+  it('reports a failed export', async () => {
+    signInAs(mockUsers.admin);
+    const blobs = captureDownloads();
+    const { user } = renderPage();
+    await waitForRows(20);
+    server.use(
+      http.get(apiPath('/admin/users'), () =>
+        problem(500, 'internal_error', 'The server had a problem.'),
+      ),
+    );
+
+    await user.click(screen.getByRole('button', { name: /export csv/i }));
+
+    await waitFor(() => expect(messages()).toContain('Export failed: The server had a problem.'));
+    expect(blobs).toHaveLength(0);
   });
 
   it('combines status tab, dynamic role filter and search, and clears them', async () => {
@@ -272,11 +359,12 @@ describe('UsersPage', () => {
     await user.click(within(dialog).getByLabelText(/^status/i));
     // An account never returns to pending.
     expect(screen.queryByRole('option', { name: 'Pending' })).not.toBeInTheDocument();
-    await user.click(screen.getByRole('option', { name: 'Suspended' }));
+    // Suspended accounts are labelled "Blocked".
+    await user.click(screen.getByRole('option', { name: 'Blocked' }));
     await user.click(within(dialog).getByRole('button', { name: 'Save changes' }));
 
     await waitFor(() => expect(dialog).not.toBeInTheDocument());
-    expect((await findRow('Uma U. User')).getByText('Suspended')).toBeInTheDocument();
+    expect((await findRow('Uma U. User')).getByText('Blocked')).toBeInTheDocument();
     expect(mockDb.findManagedUser(mockUsers.appUser.id)?.status).toBe('suspended');
   });
 
@@ -361,7 +449,7 @@ describe('UsersPage', () => {
     expect(mockDb.findManagedUser(mockUsers.manager.id)).toBeDefined();
   });
 
-  it('shows read-only details with the resolved role in a drawer', async () => {
+  it('shows read-only details with the resolved role in a drawer, without duplicates', async () => {
     signInAs(mockUsers.admin);
     const { user } = renderPage();
 
@@ -371,7 +459,13 @@ describe('UsersPage', () => {
     const drawer = await screen.findByRole('dialog', { name: 'User details' });
     expect(await within(drawer).findByText('manager@example.com')).toBeInTheDocument();
     expect(within(drawer).getByText('Contact')).toBeInTheDocument();
-    expect(within(drawer).getByText('manager')).toBeInTheDocument();
+    expect(within(drawer).getByText('Manager')).toBeInTheDocument();
+    // Status once (in the header); no role slug and no user ID.
+    expect(within(drawer).getAllByText('Active')).toHaveLength(1);
+    expect(within(drawer).queryByText('Status')).not.toBeInTheDocument();
+    expect(within(drawer).queryByText('manager')).not.toBeInTheDocument();
+    expect(within(drawer).queryByText(/user id/i)).not.toBeInTheDocument();
+    expect(within(drawer).queryByText(/role slug/i)).not.toBeInTheDocument();
     expect(within(drawer).queryByRole('textbox')).not.toBeInTheDocument();
 
     await user.click(within(drawer).getByRole('button', { name: 'Close details' }));

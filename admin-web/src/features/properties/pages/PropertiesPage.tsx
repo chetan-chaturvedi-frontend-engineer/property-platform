@@ -1,22 +1,25 @@
 import Add from '@mui/icons-material/Add';
+import CancelOutlined from '@mui/icons-material/CancelOutlined';
+import EditNoteOutlined from '@mui/icons-material/EditNoteOutlined';
+import FileDownloadOutlined from '@mui/icons-material/FileDownloadOutlined';
 import FilterAltOff from '@mui/icons-material/FilterAltOff';
-import NavigateNext from '@mui/icons-material/NavigateNext';
+import HourglassTopOutlined from '@mui/icons-material/HourglassTopOutlined';
 import Search from '@mui/icons-material/Search';
-import Breadcrumbs from '@mui/material/Breadcrumbs';
+import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined';
 import InputAdornment from '@mui/material/InputAdornment';
-import Link from '@mui/material/Link';
 import MenuItem from '@mui/material/MenuItem';
 import Paper from '@mui/material/Paper';
 import Tab from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Link as RouterLink, useNavigate, useSearchParams } from 'react-router-dom';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 
 import { Button } from '@/components/common/Button';
 import { DataTable, type SortDirection } from '@/components/common/DataTable/DataTable';
 import { ConfirmDialog } from '@/components/common/Modal';
+import { PageHeading } from '@/components/common/PageHeading';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
@@ -32,7 +35,10 @@ import { formatNumber } from '@/utils/formatters';
 
 import { buildPropertyColumns } from '../components/propertyColumns';
 import { PropertyStatsCards } from '../components/PropertyStatsCards';
+import type { QuickAction } from '../components/sidebar/QuickActionsCard';
+import { PropertySidebar } from '../components/sidebar/PropertySidebar';
 import { WorkflowActionDialog } from '../components/WorkflowActionDialog';
+import { type PropertyExportFilters, usePropertyExport } from '../hooks/usePropertyExport';
 import {
   useDeleteProperty,
   useProperties,
@@ -76,6 +82,17 @@ const DEFAULT_SORT: { field: PropertySortField; direction: SortDirection } = {
   field: 'updatedAt',
   direction: 'desc',
 };
+/** Sort orders offered in the toolbar (the property and location headers also sort). */
+const SORT_OPTIONS: ReadonlyArray<{ value: string; label: string }> = [
+  { value: 'updatedAt,desc', label: 'Recently updated' },
+  { value: 'createdAt,desc', label: 'Newest first' },
+  { value: 'createdAt,asc', label: 'Oldest first' },
+  { value: 'publishedAt,desc', label: 'Recently published' },
+  { value: 'projectName,asc', label: 'Name (A–Z)' },
+  { value: 'projectName,desc', label: 'Name (Z–A)' },
+  { value: 'city,asc', label: 'City (A–Z)' },
+  { value: 'city,desc', label: 'City (Z–A)' },
+];
 const SEARCH_MAX_LENGTH = 100;
 const PLACE_MAX_LENGTH = 100;
 
@@ -143,7 +160,14 @@ function useListParams() {
     [setParams],
   );
 
-  return { ...state, update, clear: () => setParams({}, { replace: true }) };
+  return {
+    ...state,
+    update,
+    clear: () => setParams({}, { replace: true }),
+    /** Only this status tab, with every other filter cleared. */
+    showTab: (value: StatusTab) =>
+      setParams(value === 'all' ? {} : { tab: value }, { replace: true }),
+  };
 }
 
 export function PropertiesPage() {
@@ -185,25 +209,27 @@ export function PropertiesPage() {
   const dateRangeIsValid =
     !list.createdFrom || !list.createdTo || list.createdFrom <= list.createdTo;
   const stats = usePropertyStats();
+  // Shared by the table and the CSV export, so the export holds exactly the filtered properties.
+  const filters: PropertyExportFilters = {
+    sort: `${list.sort.field},${list.sort.direction}`,
+    search: list.search || undefined,
+    publicationStatus: list.tab === 'all' || list.tab === 'deleted' ? undefined : list.tab,
+    deleted: list.tab === 'deleted' ? 'only' : undefined,
+    propertyType: list.propertyType,
+    projectStatus: list.projectStatus,
+    city: list.city || undefined,
+    state: list.state || undefined,
+    createdFrom: list.createdFrom ? dayStart(list.createdFrom) : undefined,
+    createdTo: list.createdTo ? dayEnd(list.createdTo) : undefined,
+  };
   const { data, isPending, isFetching, error, refetch } = useProperties(
-    {
-      page: list.page,
-      size: Math.min(pageSize, PAGINATION.maxPageSize),
-      sort: `${list.sort.field},${list.sort.direction}`,
-      search: list.search || undefined,
-      publicationStatus: list.tab === 'all' || list.tab === 'deleted' ? undefined : list.tab,
-      deleted: list.tab === 'deleted' ? 'only' : undefined,
-      propertyType: list.propertyType,
-      projectStatus: list.projectStatus,
-      city: list.city || undefined,
-      state: list.state || undefined,
-      createdFrom: list.createdFrom ? dayStart(list.createdFrom) : undefined,
-      createdTo: list.createdTo ? dayEnd(list.createdTo) : undefined,
-    },
+    { ...filters, page: list.page, size: Math.min(pageSize, PAGINATION.maxPageSize) },
     { enabled: dateRangeIsValid },
   );
   const deleteProperty = useDeleteProperty();
   const restoreProperty = useRestoreProperty();
+  const exporter = usePropertyExport();
+  const listRef = useRef<HTMLDivElement>(null);
 
   // A page past the end (e.g. after deletions elsewhere or an edited URL) jumps to the last page.
   useEffect(() => {
@@ -256,12 +282,132 @@ export function PropertiesPage() {
   const sortChanged =
     list.sort.field !== DEFAULT_SORT.field || list.sort.direction !== DEFAULT_SORT.direction;
 
-  const resetFilters = () => {
+  const clearInputs = () => {
     setSearchInput('');
     setCityInput('');
     setStateInput('');
+  };
+
+  const resetFilters = () => {
+    clearInputs();
     list.clear();
   };
+
+  const showTab = (tab: StatusTab) => {
+    clearInputs();
+    list.showTab(tab);
+    // The sidebar can sit below the list, so bring the list into view.
+    listRef.current?.scrollIntoView?.({ behavior: 'smooth', block: 'start' });
+  };
+
+  const countLabel = (count: number | undefined, noun: string) =>
+    count === undefined ? undefined : `${formatNumber(count)} ${noun}`;
+  const quickActions: QuickAction[] = [
+    ...(canCreate
+      ? [
+          {
+            id: 'add',
+            label: 'Add new property',
+            description: 'Start the listing wizard',
+            icon: <Add />,
+            tone: 'primary' as const,
+            onClick: () => void navigate(ROUTES.propertyNew),
+          },
+        ]
+      : []),
+    {
+      id: 'pending',
+      label: 'View pending properties',
+      description: countLabel(tabCount('pending_review'), 'awaiting review'),
+      icon: <HourglassTopOutlined />,
+      tone: 'warning',
+      onClick: () => showTab('pending_review'),
+    },
+    {
+      id: 'approved',
+      label: 'View approved properties',
+      description: countLabel(tabCount('approved'), 'ready to publish'),
+      icon: <TaskAltOutlined />,
+      tone: 'success',
+      onClick: () => showTab('approved'),
+    },
+    {
+      id: 'rejected',
+      label: 'View rejected properties',
+      description: countLabel(tabCount('rejected'), 'sent back'),
+      icon: <CancelOutlined />,
+      tone: 'error',
+      onClick: () => showTab('rejected'),
+    },
+    {
+      id: 'drafts',
+      label: 'View drafts',
+      description: countLabel(tabCount('draft'), 'not submitted'),
+      icon: <EditNoteOutlined />,
+      tone: 'neutral',
+      onClick: () => showTab('draft'),
+    },
+  ];
+
+  const sortValue = `${list.sort.field},${list.sort.direction}`;
+  const setSort = useCallback(
+    (field: string, direction: SortDirection) => {
+      const isDefault = field === DEFAULT_SORT.field && direction === DEFAULT_SORT.direction;
+      update({ sort: isDefault ? undefined : field, dir: isDefault ? undefined : direction });
+    },
+    [update],
+  );
+
+  // Typing in the search, city or state boxes re-renders the page on every keystroke; the table only
+  // changes with its data, so it is kept as is until then.
+  const sortField = list.sort.field;
+  const sortDirection = list.sort.direction;
+  const page = list.page;
+  const table = useMemo(
+    () => (
+      <DataTable
+        caption="Properties"
+        columns={columns}
+        rows={data?.content}
+        getRowId={(p) => p.id}
+        isLoading={isPending && dateRangeIsValid}
+        error={error}
+        onRetry={() => void refetch()}
+        emptyMessage={
+          hasFilters ? 'No properties match these filters.' : 'No properties have been added yet.'
+        }
+        sort={{ field: sortField, direction: sortDirection, onChange: setSort }}
+        pagination={{
+          page,
+          pageSize,
+          totalElements: data?.totalElements ?? 0,
+          pageSizeOptions: PAGINATION.pageSizeOptions,
+          variant: 'numbered',
+          onPageChange: (next) => update({ page: next }, false),
+          onPageSizeChange: (size) => {
+            setPageSize(size);
+            update({ page: undefined });
+          },
+        }}
+      />
+    ),
+    [
+      columns,
+      data,
+      isPending,
+      dateRangeIsValid,
+      error,
+      refetch,
+      hasFilters,
+      sortField,
+      sortDirection,
+      setSort,
+      page,
+      pageSize,
+      setPageSize,
+      update,
+    ],
+  );
 
   const confirmDelete = () => {
     if (!deleting || deleteProperty.isPending) {
@@ -283,193 +429,189 @@ export function PropertiesPage() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <Typography variant="h1">Properties</Typography>
-          <Breadcrumbs
-            aria-label="Breadcrumb"
-            separator={<NavigateNext fontSize="small" />}
-            className="mt-1"
-          >
-            <Link component={RouterLink} to={ROUTES.dashboard} underline="hover">
-              Dashboard
-            </Link>
-            <Typography color="text.secondary" aria-current="page">
-              Properties
-            </Typography>
-          </Breadcrumbs>
-        </div>
-        {canCreate && (
+        <PageHeading
+          title="Properties"
+          crumbs={[{ label: 'Dashboard', to: ROUTES.dashboard }, { label: 'Properties' }]}
+        />
+        <div className="flex flex-wrap gap-2 self-start sm:self-auto">
           <Button
-            startIcon={<Add />}
+            variant="outlined"
             size="large"
-            onClick={() => void navigate(ROUTES.propertyNew)}
-            className="self-start sm:self-auto"
+            startIcon={<FileDownloadOutlined />}
+            loading={exporter.isExporting}
+            loadingPosition="start"
+            disabled={!dateRangeIsValid}
+            onClick={() => void exporter.exportMatching(filters)}
           >
-            Add property
+            {exporter.progress && exporter.progress.total > 0
+              ? `Exporting ${exporter.progress.loaded}/${exporter.progress.total}`
+              : 'Export CSV'}
           </Button>
-        )}
+          {canCreate && (
+            <Button
+              startIcon={<Add />}
+              size="large"
+              onClick={() => void navigate(ROUTES.propertyNew)}
+            >
+              Add property
+            </Button>
+          )}
+        </div>
       </header>
 
       <PropertyStatsCards />
 
-      <Paper className="overflow-hidden">
-        <div className="border-b px-4 pt-2">
-          <Tabs
-            value={list.tab}
-            onChange={(_, value: StatusTab) => update({ tab: value === 'all' ? undefined : value })}
-            variant="scrollable"
-            allowScrollButtonsMobile
-            aria-label="Filter properties by status"
-            textColor="inherit"
-            sx={{
-              '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, minHeight: 52 },
-              '& .Mui-selected': { color: 'var(--app-primary-strong)' },
-              '& .MuiTabs-indicator': { backgroundColor: 'var(--app-primary-strong)', height: 3 },
-            }}
+      <div className="flex grid-cols-1 gap-6 min-[1800px]:grid-cols-[minmax(0,1fr)_320px]">
+        <Paper ref={listRef} className="min-w-0 scroll-mt-4 overflow-hidden">
+          <div className="border-b px-4 pt-2">
+            <Tabs
+              value={list.tab}
+              onChange={(_, value: StatusTab) =>
+                update({ tab: value === 'all' ? undefined : value })
+              }
+              variant="scrollable"
+              allowScrollButtonsMobile
+              aria-label="Filter properties by status"
+              textColor="inherit"
+              sx={{
+                '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, minHeight: 52 },
+                '& .Mui-selected': { color: 'var(--app-primary-strong)' },
+                '& .MuiTabs-indicator': { backgroundColor: 'var(--app-primary-strong)', height: 3 },
+              }}
+            >
+              {visibleTabs.map((tab) => {
+                const count = tabCount(tab.value);
+                return (
+                  <Tab
+                    key={tab.value}
+                    value={tab.value}
+                    label={
+                      count === undefined ? tab.label : `${tab.label} (${formatNumber(count)})`
+                    }
+                  />
+                );
+              })}
+            </Tabs>
+          </div>
+          <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4">
+            <TextField
+              size="small"
+              type="search"
+              placeholder="Search by name, builder or slug…"
+              value={searchInput}
+              onChange={(event) => setSearchInput(event.target.value)}
+              className="sm:col-span-2"
+              slotProps={{
+                htmlInput: { maxLength: SEARCH_MAX_LENGTH, 'aria-label': 'Search properties' },
+                input: {
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <Search fontSize="small" />
+                    </InputAdornment>
+                  ),
+                },
+              }}
+            />
+            <TextField
+              select
+              size="small"
+              label="Type"
+              value={list.propertyType ?? ''}
+              onChange={(event) => update({ type: event.target.value })}
+            >
+              <MenuItem value="">All types</MenuItem>
+              {PROPERTY_TYPES.map((type) => (
+                <MenuItem key={type} value={type}>
+                  {PROPERTY_TYPE_LABELS[type]}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              select
+              size="small"
+              label="Construction"
+              value={list.projectStatus ?? ''}
+              onChange={(event) => update({ construction: event.target.value })}
+            >
+              <MenuItem value="">Any stage</MenuItem>
+              {PROJECT_STATUSES.map((status) => (
+                <MenuItem key={status} value={status}>
+                  {PROJECT_STATUS_LABELS[status]}
+                </MenuItem>
+              ))}
+            </TextField>
+            <TextField
+              size="small"
+              label="City"
+              value={cityInput}
+              onChange={(event) => setCityInput(event.target.value)}
+              helperText="Exact name"
+              slotProps={{ htmlInput: { maxLength: PLACE_MAX_LENGTH } }}
+            />
+            <TextField
+              size="small"
+              label="State"
+              value={stateInput}
+              onChange={(event) => setStateInput(event.target.value)}
+              helperText="Exact name"
+              slotProps={{ htmlInput: { maxLength: PLACE_MAX_LENGTH } }}
+            />
+            <TextField
+              size="small"
+              type="date"
+              label="Created from"
+              value={list.createdFrom}
+              onChange={(event) => update({ from: event.target.value })}
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+            <TextField
+              size="small"
+              type="date"
+              label="Created to"
+              value={list.createdTo}
+              onChange={(event) => update({ to: event.target.value })}
+              error={!dateRangeIsValid}
+              helperText={dateRangeIsValid ? undefined : 'Must not be before the start date'}
+              slotProps={{ inputLabel: { shrink: true } }}
+            />
+            <TextField
+              select
+              size="small"
+              label="Sort by"
+              value={sortValue}
+              onChange={(event) => {
+                const [field = DEFAULT_SORT.field, direction] = event.target.value.split(',');
+                setSort(field, direction === 'asc' ? 'asc' : 'desc');
+              }}
+            >
+              {SORT_OPTIONS.map((option) => (
+                <MenuItem key={option.value} value={option.value}>
+                  {option.label}
+                </MenuItem>
+              ))}
+            </TextField>
+            {(hasFilters || sortChanged) && (
+              <Button
+                variant="text"
+                startIcon={<FilterAltOff />}
+                onClick={resetFilters}
+                className="self-start sm:col-span-2 sm:justify-self-start lg:col-span-1"
+              >
+                Clear filters
+              </Button>
+            )}
+          </div>
+          {/* Compact cells, a divider between rows; columns fold away instead of scrolling. */}
+          <div
+            className={`[&_.MuiTypography-body2]:text-[13px] [&_.MuiTypography-caption]:text-[11.5px] [&_.MuiTypography-caption]:leading-[1.45] [&_td]:px-2 [&_td]:py-2 [&_td_.MuiIconButton-root]:p-1 [&_tbody_td]:border-b [&_tbody_td]:border-line [&_tbody_tr:last-child>td]:border-b-0 [&_th]:px-2 [&_th]:text-[13px] [&_th]:whitespace-nowrap ${
+              isFetching && !isPending ? 'opacity-60 transition-opacity' : ''
+            }`}
           >
-            {visibleTabs.map((tab) => {
-              const count = tabCount(tab.value);
-              return (
-                <Tab
-                  key={tab.value}
-                  value={tab.value}
-                  label={count === undefined ? tab.label : `${tab.label} (${formatNumber(count)})`}
-                />
-              );
-            })}
-          </Tabs>
-        </div>
-        <div className="grid grid-cols-1 gap-3 p-4 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-[2fr_repeat(6,1fr)_auto]">
-          <TextField
-            size="small"
-            type="search"
-            placeholder="Search by name, builder or slug…"
-            value={searchInput}
-            onChange={(event) => setSearchInput(event.target.value)}
-            className="sm:col-span-2 lg:col-span-2 xl:col-span-1"
-            slotProps={{
-              htmlInput: { maxLength: SEARCH_MAX_LENGTH, 'aria-label': 'Search properties' },
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search fontSize="small" />
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
-          <TextField
-            select
-            size="small"
-            label="Type"
-            value={list.propertyType ?? ''}
-            onChange={(event) => update({ type: event.target.value })}
-          >
-            <MenuItem value="">All types</MenuItem>
-            {PROPERTY_TYPES.map((type) => (
-              <MenuItem key={type} value={type}>
-                {PROPERTY_TYPE_LABELS[type]}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            select
-            size="small"
-            label="Construction"
-            value={list.projectStatus ?? ''}
-            onChange={(event) => update({ construction: event.target.value })}
-          >
-            <MenuItem value="">Any stage</MenuItem>
-            {PROJECT_STATUSES.map((status) => (
-              <MenuItem key={status} value={status}>
-                {PROJECT_STATUS_LABELS[status]}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            size="small"
-            label="City"
-            value={cityInput}
-            onChange={(event) => setCityInput(event.target.value)}
-            helperText="Exact name"
-            slotProps={{ htmlInput: { maxLength: PLACE_MAX_LENGTH } }}
-          />
-          <TextField
-            size="small"
-            label="State"
-            value={stateInput}
-            onChange={(event) => setStateInput(event.target.value)}
-            helperText="Exact name"
-            slotProps={{ htmlInput: { maxLength: PLACE_MAX_LENGTH } }}
-          />
-          <TextField
-            size="small"
-            type="date"
-            label="Created from"
-            value={list.createdFrom}
-            onChange={(event) => update({ from: event.target.value })}
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-          <TextField
-            size="small"
-            type="date"
-            label="Created to"
-            value={list.createdTo}
-            onChange={(event) => update({ to: event.target.value })}
-            error={!dateRangeIsValid}
-            helperText={dateRangeIsValid ? undefined : 'Must not be before the start date'}
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-          {(hasFilters || sortChanged) && (
-            <Button variant="text" startIcon={<FilterAltOff />} onClick={resetFilters}>
-              Clear filters
-            </Button>
-          )}
-        </div>
-        <div className={isFetching && !isPending ? 'opacity-60 transition-opacity' : undefined}>
-          <DataTable
-            caption="Properties"
-            columns={columns}
-            rows={data?.content}
-            getRowId={(p) => p.id}
-            isLoading={isPending && dateRangeIsValid}
-            error={error}
-            onRetry={() => void refetch()}
-            emptyMessage={
-              hasFilters
-                ? 'No properties match these filters.'
-                : 'No properties have been added yet.'
-            }
-            minWidth={1180}
-            sort={{
-              field: list.sort.field,
-              direction: list.sort.direction,
-              onChange: (field, direction) =>
-                update({
-                  sort:
-                    field === DEFAULT_SORT.field && direction === DEFAULT_SORT.direction
-                      ? undefined
-                      : field,
-                  dir:
-                    field === DEFAULT_SORT.field && direction === DEFAULT_SORT.direction
-                      ? undefined
-                      : direction,
-                }),
-            }}
-            pagination={{
-              page: list.page,
-              pageSize,
-              totalElements: data?.totalElements ?? 0,
-              pageSizeOptions: PAGINATION.pageSizeOptions,
-              onPageChange: (page) => update({ page }, false),
-              onPageSizeChange: (size) => {
-                setPageSize(size);
-                update({ page: undefined });
-              },
-            }}
-          />
-        </div>
-      </Paper>
+            {table}
+          </div>
+        </Paper>
+        <PropertySidebar quickActions={quickActions} canViewProperties={canView} />
+      </div>
 
       {workflow && (
         <WorkflowActionDialog

@@ -110,6 +110,7 @@ const NAMES = [
   'Tech Hub Plaza',
 ];
 const BUILDERS = ['Dream Homes Pvt Ltd', 'Skyline Builders', 'Green Valley Infra', 'Urban Infra'];
+
 const PLACES: Array<[string, string, string, string]> = [
   ['Vaishali Nagar', 'Jaipur', 'Rajasthan', '302021'],
   ['Dwarka Expressway', 'Gurugram', 'Haryana', '122004'],
@@ -247,6 +248,7 @@ export function buildProperties(count: number): StoredProperty[] {
         propertyType: TYPES[index % TYPES.length] ?? 'apartment',
         projectName: `${NAMES[index % NAMES.length] ?? 'Property'}${index >= NAMES.length ? ` ${id}` : ''}`,
         builderCompanyName: BUILDERS[index % BUILDERS.length] ?? 'Builder',
+        builderUserId: 501 + (index % BUILDERS.length),
         reraNumber: `RAJ/A/2026/${1000 + id}`,
         gstNumber: null,
         projectEmail: 'sales@example.com',

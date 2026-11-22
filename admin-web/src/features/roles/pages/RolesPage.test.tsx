@@ -9,8 +9,8 @@ import { renderRoutes, signInAs } from '@/tests/utils/testUtils';
 import { RolesPage } from './RolesPage';
 
 /**
- * Mock roles by name: Administrator (the admin's own role), Legacy Partner (inactive), Manager, Role
- * Viewer, Sales Executive, Super Admin, User, User Editor. See mockDb `buildRoles`.
+ * Mock roles by name: Administrator (the admin's own role), Builder, Legacy Partner (inactive), Manager,
+ * Role Viewer, Sales Executive, Super Admin, User, User Editor. See mockDb `buildRoles`.
  */
 const LONG_FLOW_MS = 30_000;
 
@@ -47,12 +47,12 @@ describe('RolesPage', () => {
     renderPage();
 
     const stats = within(screen.getByRole('region', { name: 'Role statistics' }));
-    expect(await stats.findByText('8')).toBeInTheDocument();
+    expect(await stats.findByText('9')).toBeInTheDocument();
     expect(stats.getByText(String(ALL_PERMISSION_CODES.length))).toBeInTheDocument();
     expect(stats.getByText('3')).toBeInTheDocument();
-    expect(stats.getByText('7 active')).toBeInTheDocument();
+    expect(stats.getByText('8 active')).toBeInTheDocument();
 
-    await waitFor(() => expect(within(rolesList()).getAllByRole('listitem')).toHaveLength(8));
+    await waitFor(() => expect(within(rolesList()).getAllByRole('listitem')).toHaveLength(9));
     const own = within(await editor('Administrator'));
     expect(within(rolesList()).getByRole('button', { name: /^Administrator/ })).toHaveAttribute(
       'aria-current',
@@ -217,7 +217,7 @@ describe('RolesPage', () => {
       await user.type(dialog.getByRole('textbox', { name: 'Role name' }), 'manager');
       await user.click(dialog.getByRole('button', { name: 'Create role' }));
       expect(await dialog.findByText('is already in use')).toBeInTheDocument();
-      expect(mockDb.roles()).toHaveLength(8);
+      expect(mockDb.roles()).toHaveLength(9);
     },
     LONG_FLOW_MS,
   );

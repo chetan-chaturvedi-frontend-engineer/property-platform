@@ -73,6 +73,7 @@ export const API_ENDPOINTS = {
   properties: {
     list: '/admin/properties',
     stats: '/admin/properties/stats',
+    activity: '/admin/properties/activity',
     amenities: '/admin/properties/amenities',
     detail: (id: EntityId) => `/admin/properties/${id}`,
     restore: (id: EntityId) => `/admin/properties/${id}/restore`,

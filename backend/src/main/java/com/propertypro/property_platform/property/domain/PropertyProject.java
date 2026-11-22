@@ -89,6 +89,11 @@ public class PropertyProject {
 	@Column(name = "builder_company_name", nullable = false, length = 150)
 	private String builderCompanyName;
 
+	/** The builder's user account (admin dashboard); null when only the name is known. */
+	@Setter
+	@Column(name = "builder_user_id")
+	private Long builderUserId;
+
 	@Setter
 	@Size(max = 50)
 	@Column(name = "rera_number", length = 50)

@@ -29,7 +29,7 @@ describe('useUsers', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data?.content).toHaveLength(5);
-    expect(result.current.data?.totalElements).toBe(38);
+    expect(result.current.data?.totalElements).toBe(44);
     expect(queryClient.getQueryData(userKeys.list(filters))).toEqual(result.current.data);
   });
 
@@ -82,8 +82,8 @@ describe('useUserStats', () => {
 
     await waitFor(() => expect(result.current.isSuccess).toBe(true));
     expect(result.current.data).toEqual({
-      total: 38,
-      byStatus: { pending: 6, active: 20, suspended: 3, rejected: 2, inactive: 5, closed: 2 },
+      total: 44,
+      byStatus: { pending: 6, active: 25, suspended: 4, rejected: 2, inactive: 5, closed: 2 },
     });
   });
 });
@@ -100,6 +100,7 @@ describe('useUserRoles', () => {
     );
     expect(assignable).toEqual({
       admin: true,
+      builder: true,
       editor: true,
       'legacy-partner': false,
       manager: true,
@@ -181,7 +182,7 @@ describe('user mutations', () => {
       expect(created.phone).toBe('+919000011111');
       expect(created.emailVerified).toBe(true);
     });
-    await waitFor(() => expect(result.current.stats.data?.total).toBe(39));
+    await waitFor(() => expect(result.current.stats.data?.total).toBe(45));
 
     await act(async () => {
       const updated = await result.current.update.mutateAsync({
@@ -196,7 +197,7 @@ describe('user mutations', () => {
     await act(async () => {
       await result.current.remove.mutateAsync(createdId);
     });
-    await waitFor(() => expect(result.current.stats.data?.total).toBe(38));
+    await waitFor(() => expect(result.current.stats.data?.total).toBe(44));
     expect(mockDb.findManagedUser(createdId)).toBeUndefined();
     expect(useNotificationStore.getState().queue.map((item) => item.message)).toEqual([
       'User created.',

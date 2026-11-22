@@ -20,6 +20,20 @@ public interface PropertyProjectMediaRepository extends JpaRepository<PropertyPr
 	/** Scoped to the parent, so a media id of another property is never found. */
 	Optional<PropertyProjectMedia> findByIdAndPropertyProjectId(Long id, Long propertyProjectId);
 
+	/** Media files (every type) per project for list views: one grouped query for a page. */
+	@Query("""
+			select m.propertyProjectId as projectId, count(m) as total from PropertyProjectMedia m
+			where m.propertyProjectId in :projectIds group by m.propertyProjectId""")
+	List<ProjectCount> countByProjectIds(Collection<Long> projectIds);
+
+	interface ProjectCount {
+
+		Long getProjectId();
+
+		long getTotal();
+
+	}
+
 	long countByPropertyProjectIdAndMediaType(Long propertyProjectId, ProjectMediaType mediaType);
 
 	Optional<PropertyProjectMedia> findFirstByPropertyProjectIdAndPrimaryTrue(Long propertyProjectId);

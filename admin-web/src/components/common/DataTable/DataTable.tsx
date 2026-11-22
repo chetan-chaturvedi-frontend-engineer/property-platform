@@ -30,6 +30,8 @@ export interface DataTableColumn<TRow> {
   cell: (row: TRow) => ReactNode;
   align?: 'left' | 'right' | 'center';
   width?: number | string;
+  /** Classes for the header and body cells, e.g. `hidden lg:table-cell` to drop a column on small screens. */
+  className?: string;
   /** API sort field; the header becomes a sort toggle when the table has `sort`. */
   sortField?: string;
 }
@@ -171,6 +173,7 @@ export function DataTable<TRow, TId extends string | number = string | number>({
                   <TableCell
                     key={column.id}
                     align={column.align}
+                    className={column.className}
                     style={{ width: column.width }}
                     sortDirection={isSorted && sort ? sort.direction : false}
                   >
@@ -203,7 +206,7 @@ export function DataTable<TRow, TId extends string | number = string | number>({
                   {selection && <TableCell padding="checkbox" />}
                   {expansion && <TableCell padding="checkbox" />}
                   {columns.map((column) => (
-                    <TableCell key={column.id}>
+                    <TableCell key={column.id} className={column.className}>
                       <Skeleton variant="text" />
                     </TableCell>
                   ))}
@@ -249,7 +252,7 @@ export function DataTable<TRow, TId extends string | number = string | number>({
                       </TableCell>
                     )}
                     {columns.map((column) => (
-                      <TableCell key={column.id} align={column.align}>
+                      <TableCell key={column.id} align={column.align} className={column.className}>
                         {column.cell(row)}
                       </TableCell>
                     ))}

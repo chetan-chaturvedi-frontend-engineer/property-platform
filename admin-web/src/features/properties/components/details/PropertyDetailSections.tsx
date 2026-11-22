@@ -30,6 +30,7 @@ import {
   PROJECT_STATUS_LABELS,
   PUBLICATION_STATUS_META,
 } from '../../utils/propertyDisplay';
+import { BuilderAccountCard } from '../BuilderAccountCard';
 import { PropertyThumbnail } from '../PropertyThumbnail';
 
 export function Section({
@@ -433,9 +434,15 @@ export function BuilderSection({ property }: { property: Property }) {
   return (
     <div className="grid grid-cols-1 gap-4 xl:grid-cols-2">
       <Section title="Builder information">
+        {details.builder && <BuilderAccountCard builder={details.builder} className="mb-4" />}
         <Specs
           rows={[
-            ['Builder / company', details.builderCompanyName],
+            [
+              'Builder',
+              details.builderUserId
+                ? (details.builder?.fullName ?? details.builderCompanyName)
+                : `${details.builderCompanyName} (not linked to an account)`,
+            ],
             ['RERA number', details.reraNumber ?? '—'],
             ['GST number', details.gstNumber ?? '—'],
             [

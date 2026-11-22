@@ -6,6 +6,7 @@ import com.propertypro.property_platform.property.domain.LegalApprovalStatus;
 import com.propertypro.property_platform.property.domain.PublicationAction;
 import com.propertypro.property_platform.property.dto.CreatePropertyRequest;
 import com.propertypro.property_platform.property.dto.LegalStatusRequest;
+import com.propertypro.property_platform.property.dto.PropertyActivityResponse;
 import com.propertypro.property_platform.property.dto.PropertyFilter;
 import com.propertypro.property_platform.property.dto.PropertyResponse;
 import com.propertypro.property_platform.property.dto.PropertyStatsResponse;
@@ -17,6 +18,7 @@ import com.propertypro.property_platform.property.dto.UpdatePropertyDetailsReque
 import com.propertypro.property_platform.property.dto.UpdatePropertyLocationRequest;
 import com.propertypro.property_platform.property.dto.UpdatePropertyRequest;
 import com.propertypro.property_platform.property.dto.WizardResponse;
+import com.propertypro.property_platform.property.service.PropertyActivityService;
 import com.propertypro.property_platform.property.service.PropertyPublicationService;
 import com.propertypro.property_platform.property.service.PropertyService;
 import com.propertypro.property_platform.security.CurrentActor;
@@ -29,6 +31,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.data.web.SortDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -65,6 +68,7 @@ public class AdminPropertyController {
 
 	private final PropertyService propertyService;
 	private final PropertyPublicationService publicationService;
+	private final PropertyActivityService activityService;
 	private final RateLimiter rateLimiter;
 	private final RateLimitProperties limits;
 
@@ -85,6 +89,15 @@ public class AdminPropertyController {
 	@PreAuthorize("hasAuthority('PROPERTY_LIST_ANY')")
 	public PropertyStatsResponse stats() {
 		return propertyService.stats();
+	}
+
+	@Operation(summary = "Recent lifecycle events of every property", description = """
+			Status history of all properties (created, submitted, approved, rejected, published, legal status \
+			changes, ...), newest first, with the property name and who made the change. Paged; sort is ignored.""")
+	@GetMapping("/activity")
+	@PreAuthorize("hasAuthority('PROPERTY_LIST_ANY')")
+	public PageResponse<PropertyActivityResponse> activity(@PageableDefault(size = 10) Pageable pageable) {
+		return activityService.recent(pageable);
 	}
 
 	@Operation(summary = "Create a draft (wizard step 1) owned by the signed-in admin", description = """

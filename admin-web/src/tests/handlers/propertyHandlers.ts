@@ -5,11 +5,14 @@ import {
   LEGAL_APPROVAL_STATUSES,
   type LegalApprovalStatus,
   PUBLICATION_STATUSES,
+  type BuilderAccount,
   type Property,
+  type PropertyActivity,
   type PropertyStats,
   type PropertySummary,
   type PublicationAction,
   type PublicationStatus,
+  type StatusChangeAction,
 } from '@/features/properties/types/property.types';
 import type { PageResponse } from '@/types/api.types';
 
@@ -41,7 +44,7 @@ const TRANSITIONS: Record<
     permission: 'PROPERTY_UPDATE_ANY',
   },
 };
-const HISTORY_ACTION: Record<PublicationAction, string> = {
+const HISTORY_ACTION: Record<PublicationAction, StatusChangeAction> = {
   submit: 'submitted',
   approve: 'approved',
   reject: 'rejected',
@@ -79,7 +82,30 @@ const forbidden = () =>
 
 function toResponse(p: StoredProperty): Property {
   const { ownerId: _ownerId, ...rest } = p;
-  return { ...rest, wizard: evaluateWizard(p) };
+  const builder = builderAccount(p.details.builderUserId);
+  return {
+    ...rest,
+    details: { ...rest.details, ...(builder ? { builder } : {}) },
+    wizard: evaluateWizard(p),
+  };
+}
+
+/** A builder account: a managed user with the builder role (any status), by id. */
+function builderAccount(id: number | undefined): BuilderAccount | undefined {
+  const user = id === undefined ? undefined : mockDb.findManagedUser(id);
+  return user?.userType === 'builder'
+    ? { id: user.id, fullName: user.fullName, email: user.email, phone: user.phone }
+    : undefined;
+}
+
+/** Mirrors `PropertyBuilderService.require`: an active builder account, else a 400 on builderUserId. */
+function activeBuilder(id: unknown): BuilderAccount | Response {
+  const user = typeof id === 'number' ? mockDb.findManagedUser(id) : undefined;
+  return user?.userType === 'builder' && user.status === 'active'
+    ? { id: user.id, fullName: user.fullName, email: user.email, phone: user.phone }
+    : problem(400, 'validation_failed', 'Validation failed', {
+        errors: { builderUserId: 'must be an active user with the builder role' },
+      });
 }
 
 function respond(p: StoredProperty, status = 200) {
@@ -90,6 +116,10 @@ function toSummary(p: StoredProperty): PropertySummary {
   const photos = p.media.filter((m) => m.mediaType === 'photo');
   const cover = photos.find((m) => m.primary) ?? photos[0];
   const prices = p.apartments.map((a) => a.startingPrice);
+  // Area of the cheapest configuration, as the backend does.
+  const cheapest = [...p.apartments].sort((a, b) => a.startingPrice - b.startingPrice)[0];
+  const parking = p.apartments.map((a) => a.carParking);
+  const submittedAt = p.statusHistory.filter((c) => c.action === 'submitted').at(-1)?.createdAt;
   return {
     id: p.id,
     slug: p.slug,
@@ -113,8 +143,25 @@ function toSummary(p: StoredProperty): PropertySummary {
     ...(prices.length ? { startingPrice: Math.min(...prices) } : {}),
     apartmentTypes: [...new Set(p.apartments.map((a) => a.apartmentType))],
     ...(cover ? { coverUrl: cover.url } : {}),
+    ...(p.owner?.fullName ? { ownerName: p.owner.fullName } : {}),
+    ...(p.details.reraNumber ? { reraNumber: p.details.reraNumber } : {}),
+    ...(p.location.projectAddress ? { projectAddress: p.location.projectAddress } : {}),
+    mediaCount: p.media.length,
+    ...(cheapest?.areaMin != null
+      ? { startingArea: cheapest.areaMin, startingAreaUnit: cheapest.areaUnit }
+      : {}),
+    ...(parking.length
+      ? { carParkingMin: Math.min(...parking), carParkingMax: Math.max(...parking) }
+      : {}),
+    ...(submittedAt ? { submittedAt } : {}),
+    ...(p.details.builderUserId ? { builderUserId: p.details.builderUserId } : {}),
+    ...(builderAccount(p.details.builderUserId)
+      ? { builder: builderAccount(p.details.builderUserId) }
+      : {}),
   };
 }
+
+const RECENT_SUBMISSION_MS = 7 * 24 * 3_600_000;
 
 /** A visible (not deleted) property, its version checked against If-Match. */
 function editable(
@@ -309,6 +356,51 @@ export const propertyHandlers = [
       byPublicationStatus,
       byLegalApprovalStatus,
       deleted: mockDb.properties().length - live.length,
+      submittedLast7Days: mockDb
+        .properties()
+        .filter((p) =>
+          p.statusHistory.some(
+            (c) =>
+              c.action === 'submitted' &&
+              Date.now() - Date.parse(c.createdAt) <= RECENT_SUBMISSION_MS,
+          ),
+        ).length,
+    };
+    return HttpResponse.json(body);
+  }),
+
+  http.get(apiPath(`${BASE}/activity`), ({ request }) => {
+    const auth = authorize(request, [], { base: 'PROPERTY_LIST_ANY' });
+    if ('error' in auth) return auth.error;
+    const q = new URL(request.url).searchParams;
+    const page = Math.max(0, Number(q.get('page') ?? 0));
+    const size = Math.min(Math.max(1, Number(q.get('size') ?? 10)), 100);
+    let id = 0;
+    const all: PropertyActivity[] = mockDb
+      .properties()
+      .flatMap((p) =>
+        p.statusHistory.map((c) => ({
+          id: ++id,
+          propertyId: p.id,
+          projectName: p.details.projectName,
+          action: c.action,
+          fromStatus: c.fromStatus,
+          toStatus: c.toStatus,
+          reason: c.reason,
+          actorName:
+            c.actorUserId === undefined
+              ? null
+              : (mockDb.findManagedUser(c.actorUserId)?.fullName ?? null),
+          createdAt: c.createdAt,
+        })),
+      )
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt) || b.id - a.id);
+    const body: PageResponse<PropertyActivity> = {
+      content: all.slice(page * size, page * size + size),
+      page,
+      size,
+      totalElements: all.length,
+      totalPages: Math.ceil(all.length / size),
     };
     return HttpResponse.json(body);
   }),
@@ -328,7 +420,21 @@ export const propertyHandlers = [
       const found = mockDb.findProperty(existing);
       if (found) return respond(found);
     }
-    const body = (await request.json()) as Property['details'];
+    const { builderUserId, builderCompanyName, ...body } = (await request.json()) as Omit<
+      Property['details'],
+      'builderCompanyName'
+    > & { builderCompanyName?: string };
+    let builderName = builderCompanyName?.trim() ?? '';
+    if (builderUserId !== undefined) {
+      const linked = activeBuilder(builderUserId);
+      if (linked instanceof Response) return linked;
+      builderName = linked.fullName;
+    }
+    if (!builderName) {
+      return problem(400, 'validation_failed', 'Validation failed', {
+        errors: { builderCompanyName: 'must not be blank' },
+      });
+    }
     if (body.projectName?.toLowerCase().includes('duplicate')) {
       return problem(400, 'validation_failed', 'Validation failed', {
         errors: { projectName: 'is already used by another project' },
@@ -348,7 +454,13 @@ export const propertyHandlers = [
         email: auth.user.email,
         phone: auth.user.phone,
       },
-      details: { ...body, reraNumber: body.reraNumber ?? null, gstNumber: body.gstNumber ?? null },
+      details: {
+        ...body,
+        builderCompanyName: builderName,
+        ...(builderUserId !== undefined ? { builderUserId } : {}),
+        reraNumber: body.reraNumber ?? null,
+        gstNumber: body.gstNumber ?? null,
+      },
       location: {
         projectAddress: null,
         city: null,
@@ -426,9 +538,18 @@ export const propertyHandlers = [
     const body = (await request.json()) as Record<string, unknown>;
     const { property } = found;
     if (params.step === '1') {
-      return respond(
-        save({ ...property, details: { ...property.details, ...body } }, auth.user.id),
-      );
+      const { builderUserId, ...fields } = body;
+      const details: Property['details'] = { ...property.details, ...fields };
+      if (typeof fields.builderCompanyName === 'string') delete details.builderUserId;
+      if (builderUserId === null) delete details.builderUserId;
+      if (builderUserId !== undefined && builderUserId !== null) {
+        const linked = activeBuilder(builderUserId);
+        if (linked instanceof Response) return linked;
+        details.builderUserId = linked.id;
+        details.builderCompanyName = linked.fullName;
+      }
+      delete details.builder;
+      return respond(save({ ...property, details }, auth.user.id));
     }
     if (params.step === '2') {
       if (typeof body.pincode === 'string' && !PINCODE.test(body.pincode)) {

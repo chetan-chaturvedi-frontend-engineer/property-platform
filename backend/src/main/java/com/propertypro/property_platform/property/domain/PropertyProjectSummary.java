@@ -40,6 +40,15 @@ public class PropertyProjectSummary {
 	@Column(name = "builder_company_name")
 	private String builderCompanyName;
 
+	@Column(name = "builder_user_id")
+	private Long builderUserId;
+
+	@Column(name = "rera_number")
+	private String reraNumber;
+
+	@Column(name = "project_address")
+	private String projectAddress;
+
 	private String city;
 
 	private String locality;
