@@ -3,6 +3,7 @@ import { z } from 'zod';
 import {
   APARTMENT_AREA_UNITS,
   APARTMENT_TYPES,
+  type BuilderAccount,
   LAND_AREA_UNITS,
   NEARBY_PLACE_TYPES,
   PROJECT_STATUSES,
@@ -90,7 +91,8 @@ function requiredText(label: string, max: number) {
 export const detailsSchema = z.object({
   propertyType: z.enum(PROPERTY_TYPES, { error: 'Select a property type' }),
   projectName: requiredText('Project name', 150),
-  builderCompanyName: requiredText('Builder / company name', 150),
+  /** The builder account picked from the list; see `detailsSchemaFor` for when it is required. */
+  builder: z.custom<BuilderAccount>().nullable(),
   reraNumber: z
     .string()
     .trim()
@@ -114,6 +116,18 @@ export const detailsSchema = z.object({
     .max(32, 'Must be at most 32 characters')
     .regex(PHONE, 'Enter a valid phone number'),
 });
+/**
+ * New properties must link a builder account. Older ones that only have a typed builder name may keep it
+ * until an account is linked.
+ */
+export function detailsSchemaFor(requireBuilder: boolean) {
+  return detailsSchema.superRefine((values, ctx) => {
+    if (requireBuilder && !values.builder) {
+      ctx.addIssue({ code: 'custom', path: ['builder'], message: 'Select a builder' });
+    }
+  });
+}
+
 export type DetailsFormValues = z.input<typeof detailsSchema>;
 export type DetailsFormOutput = z.output<typeof detailsSchema>;
 

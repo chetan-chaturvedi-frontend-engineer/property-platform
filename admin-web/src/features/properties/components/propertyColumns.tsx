@@ -2,7 +2,6 @@ import CheckCircleOutline from '@mui/icons-material/CheckCircleOutline';
 import DeleteOutline from '@mui/icons-material/DeleteOutline';
 import EditOutlined from '@mui/icons-material/EditOutlined';
 import HighlightOff from '@mui/icons-material/HighlightOff';
-import LocationOnOutlined from '@mui/icons-material/LocationOnOutlined';
 import PublicOutlined from '@mui/icons-material/PublicOutlined';
 import RestoreFromTrash from '@mui/icons-material/RestoreFromTrash';
 import VisibilityOutlined from '@mui/icons-material/VisibilityOutlined';
@@ -10,24 +9,21 @@ import Typography from '@mui/material/Typography';
 import type { ReactNode } from 'react';
 
 import type { DataTableColumn } from '@/components/common/DataTable/DataTable';
-import { formatDateTime } from '@/utils/formatters';
 
 import type {
   PropertySortField,
   PropertySummary,
   PublicationAction,
 } from '../types/property.types';
-import {
-  APARTMENT_TYPE_LABELS,
-  formatDate,
-  formatPlace,
-  formatPrice,
-  isEditable,
-  PROPERTY_TYPE_LABELS,
-} from '../utils/propertyDisplay';
+import { isEditable } from '../utils/propertyDisplay';
 
-import { LegalStatusChip, PublicationStatusChip } from './PropertyStatusChips';
-import { PropertyThumbnail } from './PropertyThumbnail';
+import {
+  LocationCell,
+  PriceCell,
+  PropertyInfoCell,
+  StatusCell,
+  SubmittedOnCell,
+} from './PropertyTableCells';
 import { RowActionButton as ActionButton } from './RowActionButton';
 
 export interface PropertyRowActions {
@@ -72,29 +68,14 @@ export function buildPropertyColumns({
   onAction,
   availableActions = () => [],
 }: PropertyRowActions): PropertyColumn[] {
+  // Columns hide on narrower screens instead of scrolling; their content then shows in the property cell
+  // (keep these breakpoints in step with `PropertyInfoCell`).
   const columns: PropertyColumn[] = [
     {
       id: 'property',
       header: 'Property',
       sortField: 'projectName',
-      cell: (p) => (
-        <div className="flex min-w-64 items-center gap-3">
-          <PropertyThumbnail url={p.coverUrl} alt={p.projectName} className="h-14 w-20 shrink-0" />
-          <div className="min-w-0">
-            <Typography variant="body2" fontWeight={600} className="line-clamp-2">
-              {p.projectName}
-            </Typography>
-            <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              <span className="rounded bg-primary-50 px-1.5 py-0.5 text-xs font-semibold text-primary-800 dark:bg-primary-500/15 dark:text-primary-300">
-                {PROPERTY_TYPE_LABELS[p.propertyType]}
-              </span>
-              <Typography variant="caption" color="text.secondary">
-                ID {p.id}
-              </Typography>
-            </div>
-          </div>
-        </div>
-      ),
+      cell: (p) => <PropertyInfoCell property={p} />,
     },
     {
       id: 'builder',
@@ -109,66 +90,27 @@ export function buildPropertyColumns({
       id: 'location',
       header: 'Location',
       sortField: 'city',
-      cell: (p) => (
-        <div className="flex min-w-36 items-start gap-1">
-          <LocationOnOutlined fontSize="small" className="mt-0.5 text-muted" aria-hidden />
-          <div>
-            <Typography variant="body2">{formatPlace([p.locality, p.city])}</Typography>
-            {p.state && (
-              <Typography variant="caption" color="text.secondary">
-                {p.state}
-              </Typography>
-            )}
-          </div>
-        </div>
-      ),
+      className: 'hidden xl:table-cell',
+      cell: (p) => <LocationCell property={p} />,
     },
     {
       id: 'price',
-      header: 'Starting price',
-      cell: (p) => (
-        <div className="min-w-28">
-          <Typography variant="body2" fontWeight={600}>
-            {formatPrice(p.startingPrice)}
-          </Typography>
-          {p.apartmentTypes && p.apartmentTypes.length > 0 && (
-            <Typography variant="caption" color="text.secondary">
-              {p.apartmentTypes.map((type) => APARTMENT_TYPE_LABELS[type]).join(', ')}
-            </Typography>
-          )}
-        </div>
-      ),
+      header: 'Price',
+      className: 'hidden sm:table-cell',
+      cell: (p) => <PriceCell property={p} />,
+    },
+    {
+      id: 'createdAt',
+      header: 'Submitted on',
+      sortField: 'createdAt',
+      className: 'hidden lg:table-cell',
+      cell: (p) => <SubmittedOnCell property={p} />,
     },
     {
       id: 'status',
       header: 'Status',
-      cell: (p) => (
-        <div className="flex min-w-32 flex-col items-start gap-1">
-          <PublicationStatusChip status={p.publicationStatus} />
-          <LegalStatusChip status={p.legalApprovalStatus} />
-          {p.deletedAt && (
-            <Typography variant="caption" color="error">
-              Deleted {formatDate(p.deletedAt)}
-            </Typography>
-          )}
-        </div>
-      ),
-    },
-    {
-      id: 'createdAt',
-      header: 'Created',
-      sortField: 'createdAt',
-      cell: (p) => (
-        <span title={formatDateTime(p.createdAt)} className="whitespace-nowrap">
-          {formatDate(p.createdAt)}
-        </span>
-      ),
-    },
-    {
-      id: 'updatedAt',
-      header: 'Updated',
-      sortField: 'updatedAt',
-      cell: (p) => <span className="whitespace-nowrap">{formatDateTime(p.updatedAt)}</span>,
+      className: 'hidden sm:table-cell',
+      cell: (p) => <StatusCell property={p} />,
     },
   ];
 
@@ -192,7 +134,7 @@ export function buildPropertyColumns({
           : [];
         const isDraft = p.publicationStatus === 'draft' && p.wizardStep < 7;
         return (
-          <div className="flex justify-end gap-0.5">
+          <div className="ml-auto flex max-w-[96px] flex-wrap justify-end gap-0.5 xl:max-w-none xl:flex-nowrap">
             {onView && (
               <ActionButton label={`View ${p.projectName}`} onClick={() => onView(p)}>
                 <VisibilityOutlined fontSize="small" />

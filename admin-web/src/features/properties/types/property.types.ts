@@ -101,6 +101,53 @@ export interface PropertySummary {
   apartmentTypes?: ApartmentType[];
   /** Admin content path of the cover photo (or an external URL); absent without photos. */
   coverUrl?: string;
+  /** Full name of the account that owns the listing. */
+  ownerName?: string;
+  reraNumber?: string;
+  projectAddress?: string;
+  /** Project media files of every type (photos, videos, brochures); 0 when none. */
+  mediaCount?: number;
+  /** `areaMin` of the configuration with the lowest starting price (same unit as below). */
+  startingArea?: Decimal;
+  startingAreaUnit?: ApartmentAreaUnit;
+  /** Fewest / most car parking spaces across the configurations. */
+  carParkingMin?: number;
+  carParkingMax?: number;
+  /** Latest submission for review. */
+  submittedAt?: IsoDateTime;
+  builderUserId?: EntityId;
+  builder?: BuilderAccount;
+}
+
+/** Status history actions (`StatusChangeAction` in the backend). */
+export type StatusChangeAction =
+  | 'created'
+  | 'submitted'
+  | 'approved'
+  | 'rejected'
+  | 'published'
+  | 'unpublished'
+  | 'suspended'
+  | 'resumed'
+  | 'archived'
+  | 'reverted_to_draft'
+  | 'deleted'
+  | 'restored'
+  | 'legal_status_changed';
+
+/** `GET /admin/properties/activity` item: one status change of any property, newest first. */
+export interface PropertyActivity {
+  id: EntityId;
+  propertyId: EntityId;
+  /** `null` if the property no longer exists. */
+  projectName: Nullable<string>;
+  action: StatusChangeAction;
+  /** Publication status, or legal approval status for `legal_status_changed`. */
+  fromStatus: Nullable<string>;
+  toStatus: Nullable<string>;
+  reason: Nullable<string>;
+  actorName: Nullable<string>;
+  createdAt: IsoDateTime;
 }
 
 export interface AmenityResponse {
@@ -185,7 +232,7 @@ export interface WizardProgress {
 }
 
 export interface StatusChange {
-  action: string;
+  action: StatusChangeAction;
   fromStatus: Nullable<string>;
   toStatus: Nullable<string>;
   reason: Nullable<string>;
@@ -200,14 +247,27 @@ export interface PropertyOwner {
   phone: Nullable<string>;
 }
 
+/** A builder's user account (`GET /admin/properties/builders`, `details.builder`, list `builder`). */
+export interface BuilderAccount {
+  id: EntityId;
+  fullName: string;
+  email: Nullable<string>;
+  phone: Nullable<string>;
+}
+
 export interface PropertyDetails {
   propertyType: PropertyType;
   projectName: string;
+  /** The linked builder's name, or a typed name when not linked. */
   builderCompanyName: string;
   reraNumber: Nullable<string>;
   gstNumber: Nullable<string>;
   projectEmail: string;
   projectPhone: string;
+  /** The linked builder account; absent when only the name is known. */
+  builderUserId?: EntityId;
+  /** Its current contact details; absent if that account was deleted. */
+  builder?: BuilderAccount;
 }
 
 export interface PropertyLocation {
@@ -265,6 +325,8 @@ export interface PropertyStats {
   byPublicationStatus: Record<PublicationStatus, number>;
   byLegalApprovalStatus: Record<LegalApprovalStatus, number>;
   deleted: number;
+  /** Distinct properties submitted for review in the last 7 days. */
+  submittedLast7Days: number;
 }
 
 export type PropertySortField = 'createdAt' | 'updatedAt' | 'projectName' | 'city' | 'publishedAt';
@@ -295,7 +357,9 @@ export interface PropertyFilters extends PageParams {
 export interface CreatePropertyRequest {
   propertyType: PropertyType;
   projectName: string;
-  builderCompanyName: string;
+  /** Required unless `builderUserId` is given (then the builder's name is used). */
+  builderCompanyName?: string;
+  builderUserId?: EntityId;
   reraNumber?: string;
   gstNumber?: string;
   projectEmail: string;
@@ -306,7 +370,10 @@ export interface CreatePropertyRequest {
 export type UpdateDetailsRequest = Partial<{
   propertyType: PropertyType;
   projectName: string;
+  /** A typed name; replaces a linked builder. */
   builderCompanyName: string;
+  /** Links a builder account (its name becomes `builderCompanyName`); `null` removes the link. */
+  builderUserId: Nullable<EntityId>;
   reraNumber: Nullable<string>;
   gstNumber: Nullable<string>;
   projectEmail: string;

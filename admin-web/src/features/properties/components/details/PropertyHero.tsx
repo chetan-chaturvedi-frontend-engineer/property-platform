@@ -64,7 +64,7 @@ export function PropertyHero({ property }: { property: Property }) {
           </span>
         </div>
         <div className="mt-4 grid grid-cols-1 gap-x-8 gap-y-2.5 lg:grid-cols-2">
-          <Fact label="Builder">{details.builderCompanyName}</Fact>
+          <Fact label="Builder">{details.builder?.fullName ?? details.builderCompanyName}</Fact>
           <Fact label="RERA number">{details.reraNumber ?? '—'}</Fact>
           <Fact label="Location">
             {formatPlace([location.locality, location.city, location.state])}

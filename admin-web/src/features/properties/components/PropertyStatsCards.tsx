@@ -1,10 +1,7 @@
 import ApartmentOutlined from '@mui/icons-material/ApartmentOutlined';
 import CancelOutlined from '@mui/icons-material/CancelOutlined';
-import DeleteSweepOutlined from '@mui/icons-material/DeleteSweepOutlined';
 import EditNoteOutlined from '@mui/icons-material/EditNoteOutlined';
-import GavelOutlined from '@mui/icons-material/GavelOutlined';
 import HourglassTopOutlined from '@mui/icons-material/HourglassTopOutlined';
-import PublicOutlined from '@mui/icons-material/PublicOutlined';
 import TaskAltOutlined from '@mui/icons-material/TaskAltOutlined';
 import Alert from '@mui/material/Alert';
 import type { ReactNode } from 'react';
@@ -25,8 +22,8 @@ interface CardDefinition {
 }
 
 /**
- * Publication statuses are exclusive, so these cards never count a property twice; legal review is a
- * separate dimension and says so. Deleted properties are outside every other card.
+ * Publication statuses are exclusive, so these cards never count a property twice. Deleted properties are
+ * outside every card. Published, suspended and archived counts stay in the status tabs below.
  */
 const CARDS: readonly CardDefinition[] = [
   {
@@ -51,13 +48,6 @@ const CARDS: readonly CardDefinition[] = [
     caption: 'Ready to publish',
   },
   {
-    label: 'Published',
-    icon: <PublicOutlined />,
-    tone: 'success',
-    value: (s) => s.byPublicationStatus.published,
-    caption: 'Live for users',
-  },
-  {
     label: 'Drafts',
     icon: <EditNoteOutlined />,
     tone: 'neutral',
@@ -70,20 +60,6 @@ const CARDS: readonly CardDefinition[] = [
     tone: 'error',
     value: (s) => s.byPublicationStatus.rejected,
     caption: 'Sent back to the owner',
-  },
-  {
-    label: 'Legal review pending',
-    icon: <GavelOutlined />,
-    tone: 'warning',
-    value: (s) => s.byLegalApprovalStatus.pending,
-    caption: 'Any publication status',
-  },
-  {
-    label: 'Inactive',
-    icon: <DeleteSweepOutlined />,
-    tone: 'neutral',
-    value: (s) => s.byPublicationStatus.suspended + s.byPublicationStatus.archived + s.deleted,
-    caption: 'Suspended, archived or deleted',
   },
 ];
 
@@ -109,7 +85,7 @@ export function PropertyStatsCards() {
   return (
     <section
       aria-label="Property statistics"
-      className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4"
+      className="grid grid-cols-1 gap-3 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-5"
     >
       {CARDS.map((card) => (
         <StatCard
@@ -120,6 +96,7 @@ export function PropertyStatsCards() {
           tone={card.tone}
           caption={card.caption}
           isLoading={isPending}
+          size="compact"
         />
       ))}
     </section>

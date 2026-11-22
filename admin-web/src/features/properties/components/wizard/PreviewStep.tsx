@@ -157,7 +157,13 @@ export function PreviewStep({ property, onEditStep, onSubmitted, onBack }: Previ
         <Block step={1} title="Property details" property={p} onEdit={onEditStep}>
           <Pairs
             rows={[
-              ['Builder', p.details.builderCompanyName],
+              ['Builder', p.details.builder?.fullName ?? p.details.builderCompanyName],
+              [
+                'Builder contact',
+                p.details.builder
+                  ? [p.details.builder.email, p.details.builder.phone].filter(Boolean).join(' · ')
+                  : null,
+              ],
               ['RERA', p.details.reraNumber],
               ['GST', p.details.gstNumber],
               ['Email', p.details.projectEmail],

@@ -31,13 +31,20 @@ describe('PropertyWizardPage', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Create draft and continue' }));
     expect(await screen.findByText('Enter project name')).toBeInTheDocument();
+    expect(screen.getByText('Select a builder')).toBeInTheDocument();
     expect(mockDb.properties()).toHaveLength(before);
 
     await user.type(screen.getByRole('textbox', { name: /Project name/ }), 'Lake Shore Homes');
-    await user.type(
-      screen.getByRole('textbox', { name: /Builder \/ company name/ }),
-      'Shore Builders',
-    );
+    // The builder is a user with the builder role, picked from the list; blocked builders are not offered.
+    await user.click(screen.getByRole('combobox', { name: /Builder/ }));
+    expect(await screen.findByRole('option', { name: /Dream Homes Pvt Ltd/ })).toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: /Blocked Builders/ })).not.toBeInTheDocument();
+    await user.type(screen.getByRole('combobox', { name: /Builder/ }), 'aurum');
+    await user.click(await screen.findByRole('option', { name: /Aurum Developers/ }));
+    // The chosen account's details are shown.
+    expect(screen.getByText('Builder account · User ID 505')).toBeInTheDocument();
+    expect(screen.getByText('aurum@example.com')).toBeInTheDocument();
+    expect(screen.getByText('+919811100005')).toBeInTheDocument();
     await user.type(screen.getByRole('textbox', { name: /GST number/ }), '27aapfu0939f1zv');
     await user.type(
       screen.getByRole('textbox', { name: /Project email/ }),
@@ -49,6 +56,8 @@ describe('PropertyWizardPage', () => {
     expect(await screen.findByRole('heading', { name: 'Location' })).toBeInTheDocument();
     const created = mockDb.properties()[0];
     expect(created?.details.projectName).toBe('Lake Shore Homes');
+    expect(created?.details.builderUserId).toBe(505);
+    expect(created?.details.builderCompanyName).toBe('Aurum Developers');
     expect(created?.details.gstNumber).toBe('27AAPFU0939F1ZV');
     expect(router.state.location.pathname).toBe(`/properties/${created?.id}/edit`);
     expect(router.state.location.search).toBe('?step=2');
@@ -59,10 +68,8 @@ describe('PropertyWizardPage', () => {
     const { user } = renderWizard('/properties/new');
 
     await user.type(await screen.findByRole('textbox', { name: /Project name/ }), 'Duplicate Name');
-    await user.type(
-      screen.getByRole('textbox', { name: /Builder \/ company name/ }),
-      'Shore Builders',
-    );
+    await user.click(screen.getByRole('combobox', { name: /Builder/ }));
+    await user.click(await screen.findByRole('option', { name: /Skyline Builders/ }));
     await user.type(
       screen.getByRole('textbox', { name: /Project email/ }),
       'sales@shore.example.com',
@@ -71,6 +78,41 @@ describe('PropertyWizardPage', () => {
     await user.click(screen.getByRole('button', { name: 'Create draft and continue' }));
 
     expect(await screen.findByText('is already used by another project')).toBeInTheDocument();
+  });
+
+  it('explains that choosing a builder needs permission to list users', async () => {
+    signInAs({
+      ...mockUsers.admin,
+      permissions: mockUsers.admin.permissions.filter((code) => code !== 'USER_LIST'),
+    });
+    renderWizard('/properties/new');
+
+    const picker = await screen.findByRole('combobox', { name: /Builder/ });
+    expect(picker).toBeDisabled();
+    expect(
+      screen.getByText(
+        'Choosing a builder needs permission to list users (USER_LIST). Ask an administrator.',
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it('shows the linked builder on edit and links another builder', async () => {
+    signInAs(mockUsers.admin);
+    const { user } = renderWizard('/properties/1/edit?step=1');
+
+    expect(await screen.findByText('Builder account · User ID 501')).toBeInTheDocument();
+    expect(screen.getByText('sales@dreamhomes.example.com')).toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: /Builder/ })).toHaveValue('Dream Homes Pvt Ltd');
+
+    await user.clear(screen.getByRole('combobox', { name: /Builder/ }));
+    await user.type(screen.getByRole('combobox', { name: /Builder/ }), 'urban');
+    await user.click(await screen.findByRole('option', { name: /Urban Infra/ }));
+    expect(screen.getByText('Builder account · User ID 504')).toBeInTheDocument();
+    expect(screen.getByText('No phone')).toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: 'Save and continue' }));
+
+    await waitFor(() => expect(mockDb.findProperty(1)?.details.builderUserId).toBe(504));
+    expect(mockDb.findProperty(1)?.details.builderCompanyName).toBe('Urban Infra');
   });
 
   it('opens the first incomplete step of a draft and saves only changed location fields', async () => {

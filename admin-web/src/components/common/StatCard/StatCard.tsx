@@ -26,6 +26,8 @@ interface StatCardProps {
   caption?: ReactNode;
   tone?: StatCardTone;
   isLoading?: boolean;
+  /** `compact`: less padding and a smaller icon and value, for a dense row of cards. */
+  size?: 'default' | 'compact';
 }
 
 export function StatCard({
@@ -35,17 +37,21 @@ export function StatCard({
   caption,
   tone = 'primary',
   isLoading = false,
+  size = 'default',
 }: StatCardProps) {
+  const compact = size === 'compact';
   return (
-    <Paper className="flex h-full items-start gap-4 p-5 transition-shadow hover:shadow-md">
+    <Paper
+      className={`flex h-full items-start transition-shadow hover:shadow-md ${compact ? 'gap-3 p-3.5' : 'gap-4 p-5'}`}
+    >
       <div
-        className={`flex size-12 shrink-0 items-center justify-center rounded-xl ${TONE_CLASSES[tone]}`}
+        className={`flex shrink-0 items-center justify-center ${compact ? 'size-10 rounded-lg [&_svg]:text-[20px]' : 'size-12 rounded-xl'} ${TONE_CLASSES[tone]}`}
         aria-hidden
       >
         {icon}
       </div>
       <div className="min-w-0">
-        <Typography variant="h5" component="p" noWrap fontWeight={700}>
+        <Typography variant={compact ? 'h6' : 'h5'} component="p" noWrap fontWeight={700}>
           {isLoading ? <Skeleton width={64} /> : value}
         </Typography>
         <Typography variant="body2" color="text.secondary">

@@ -1,4 +1,5 @@
 import Autocomplete, { type AutocompleteProps } from '@mui/material/Autocomplete';
+import CircularProgress from '@mui/material/CircularProgress';
 import TextField from '@mui/material/TextField';
 
 import type { EntityId } from '@/types/common.types';
@@ -92,6 +93,19 @@ export function SearchAutocomplete<TOption extends PickerOption>({
           required={required}
           error={error || Boolean(loadError)}
           helperText={loadError ?? helperText}
+          slotProps={{
+            input: {
+              ...params.InputProps,
+              endAdornment: (
+                <>
+                  {loading && (
+                    <CircularProgress size={16} color="inherit" aria-label="Loading options" />
+                  )}
+                  {params.InputProps.endAdornment}
+                </>
+              ),
+            },
+          }}
         />
       )}
     />
