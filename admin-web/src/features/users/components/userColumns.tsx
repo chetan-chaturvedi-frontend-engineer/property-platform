@@ -9,9 +9,9 @@ import type { DataTableColumn } from '@/components/common/DataTable/DataTable';
 import { formatDateTime } from '@/utils/formatters';
 
 import type { ManagedUser, UserSortField } from '../types/user.types';
-import { roleLabel } from '../utils/userDisplay';
 
 import { UserAvatar } from './UserAvatar';
+import { UserRoleBadge } from './UserRoleBadge';
 import { UserStatusChip } from './UserStatusChip';
 
 const dateFormatter = new Intl.DateTimeFormat(undefined, { dateStyle: 'medium' });
@@ -47,31 +47,16 @@ export function buildUserColumns({
       header: 'User',
       sortField: 'fullName',
       cell: (user) => (
-        <div className="flex min-w-48 items-center gap-3">
-          <UserAvatar name={user.fullName} />
+        <div className="flex min-w-44 items-center gap-3">
+          <UserAvatar name={user.fullName} size={36} />
           <div className="min-w-0">
-            <Typography variant="body2" fontWeight={600} noWrap>
+            <Typography variant="body2" fontWeight={600} noWrap title={user.fullName}>
               {user.fullName}
             </Typography>
-            <Typography variant="caption" color="text.secondary">
-              ID {user.id}
+            <Typography variant="caption" color="text.secondary" noWrap component="p">
+              {user.phone ?? 'No phone'}
             </Typography>
           </div>
-        </div>
-      ),
-    },
-    {
-      id: 'contact',
-      header: 'Email / Phone',
-      sortField: 'email',
-      cell: (user) => (
-        <div className="min-w-0">
-          <Typography variant="body2" className="break-all">
-            {user.email}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {user.phone ?? 'No phone'}
-          </Typography>
         </div>
       ),
     },
@@ -79,14 +64,16 @@ export function buildUserColumns({
       id: 'role',
       header: 'Role',
       sortField: 'userType',
+      cell: (user) => <UserRoleBadge user={user} />,
+    },
+    {
+      id: 'email',
+      header: 'Email',
+      sortField: 'email',
       cell: (user) => (
-        <span
-          className="inline-flex rounded-md bg-primary-50 px-2 py-0.5 text-xs font-semibold whitespace-nowrap text-primary-800 dark:bg-primary-500/15 dark:text-primary-300"
-          title={user.role ? undefined : 'No role has this slug, so the user has no permissions'}
-        >
-          {roleLabel(user)}
-          {(!user.role || !user.role.active) && ' (inactive)'}
-        </span>
+        <Typography variant="body2" noWrap title={user.email} className="max-w-56 xl:max-w-72">
+          {user.email}
+        </Typography>
       ),
     },
     {
@@ -107,7 +94,7 @@ export function buildUserColumns({
     },
     {
       id: 'updatedAt',
-      header: 'Last updated',
+      header: 'Last Active',
       sortField: 'updatedAt',
       cell: (user) => (
         <span className="whitespace-nowrap">

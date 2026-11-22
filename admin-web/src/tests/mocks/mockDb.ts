@@ -335,6 +335,9 @@ function buildRoles(): MockRole[] {
       description: 'Handles enquiries in the app.',
     }),
     role(8, 'legacy-partner', 'Legacy Partner', [], { active: false }),
+    role(9, 'builder', 'Builder', ['PROPERTY_CREATE', 'LEAD_LIST'], {
+      description: 'Builders and developers who list projects from the app.',
+    }),
   ];
 }
 
@@ -449,8 +452,35 @@ function buildManagedUsers(count: number): StoredUser[] {
       updatedAt: index % 3 === 0 ? null : new Date(start - index * 7 * 3_600_000).toISOString(),
     };
   });
-  return [...generated, ...staff];
+  // Builder-role accounts (the property form's Builder field). Older than the rest, so they sit on the last
+  // page of the default sort; the last one is blocked, so it is never offered.
+  const builders: StoredUser[] = BUILDER_USERS.map(
+    ([id, fullName, email, phone, status], index) => ({
+      id,
+      fullName,
+      email,
+      phone,
+      status,
+      userType: 'builder',
+      emailVerified: true,
+      phoneVerified: phone !== null,
+      notificationsEnabled: true,
+      createdAt: `2026-09-${String(10 + index).padStart(2, '0')}T10:00:00Z`,
+      updatedAt: null,
+    }),
+  );
+  return [...generated, ...staff, ...builders];
 }
+
+/** id, name, email, phone, status of the builder accounts; mock properties link to 501-504. */
+const BUILDER_USERS: ReadonlyArray<[number, string, string, string | null, UserStatus]> = [
+  [501, 'Dream Homes Pvt Ltd', 'sales@dreamhomes.example.com', '+919811100001', 'active'],
+  [502, 'Skyline Builders', 'hello@skyline.example.com', '+919811100002', 'active'],
+  [503, 'Green Valley Infra', 'contact@greenvalley.example.com', '+919811100003', 'active'],
+  [504, 'Urban Infra', 'info@urbaninfra.example.com', null, 'active'],
+  [505, 'Aurum Developers', 'aurum@example.com', '+919811100005', 'active'],
+  [506, 'Blocked Builders', 'blocked@example.com', null, 'suspended'],
+];
 
 /**
  * What the browser's HttpOnly cookies would hold. JavaScript (and so MSW) cannot read or set real

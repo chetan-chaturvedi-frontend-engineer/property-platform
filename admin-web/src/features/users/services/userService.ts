@@ -2,6 +2,7 @@ import { API_ENDPOINTS } from '@/services/api/apiEndpoints';
 import { apiClient } from '@/services/api/axiosInstance';
 import type { PageResponse } from '@/types/api.types';
 import type { EntityId } from '@/types/common.types';
+import { PAGINATION } from '@/utils/constants';
 
 import type {
   CreateUserRequest,
@@ -28,6 +29,27 @@ export const userService = {
       signal,
     });
     return data;
+  },
+
+  /** Every user matching the filters, up to `limit`, read page by page (there is no export endpoint). */
+  async listAll(
+    filters: Omit<UserFilters, 'page' | 'size'>,
+    { limit, signal }: { limit: number; signal?: AbortSignal },
+  ): Promise<{ rows: ManagedUser[]; total: number }> {
+    const rows: ManagedUser[] = [];
+    let page = 0;
+    let total = 0;
+    do {
+      const result = await userService.list(
+        { ...filters, page, size: PAGINATION.maxPageSize },
+        signal,
+      );
+      total = result.totalElements;
+      rows.push(...result.content);
+      page += 1;
+      if (page >= result.totalPages) break;
+    } while (rows.length < limit);
+    return { rows: rows.slice(0, limit), total };
   },
 
   async stats(signal?: AbortSignal): Promise<UserStats> {

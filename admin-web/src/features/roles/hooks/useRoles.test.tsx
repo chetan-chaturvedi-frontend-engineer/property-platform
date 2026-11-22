@@ -37,7 +37,7 @@ describe('role hooks', () => {
     }));
 
     await waitFor(() => expect(result.current.all.data).toBeDefined());
-    expect(result.current.all.data).toMatchObject({ totalElements: 8, totalPages: 3 });
+    expect(result.current.all.data).toMatchObject({ totalElements: 9, totalPages: 3 });
     const [admin] = result.current.all.data?.content ?? [];
     expect(admin).toMatchObject({
       slug: 'admin',
@@ -69,8 +69,8 @@ describe('role hooks', () => {
 
     await waitFor(() => expect(result.current.stats.data).toBeDefined());
     expect(result.current.stats.data).toMatchObject({
-      totalRoles: 8,
-      activeRoles: 7,
+      totalRoles: 9,
+      activeRoles: 8,
       defaultRoles: 3,
     });
     await waitFor(() => expect(result.current.catalog.data).toBeDefined());
@@ -98,7 +98,7 @@ describe('role hooks', () => {
       }),
       client,
     );
-    await waitFor(() => expect(result.current.stats.data?.totalRoles).toBe(8));
+    await waitFor(() => expect(result.current.stats.data?.totalRoles).toBe(9));
 
     let id = 0;
     await act(async () => {
@@ -110,7 +110,7 @@ describe('role hooks', () => {
       id = created.id;
     });
     expect(messages()).toContain('Role created.');
-    await waitFor(() => expect(result.current.stats.data?.totalRoles).toBe(9));
+    await waitFor(() => expect(result.current.stats.data?.totalRoles).toBe(10));
 
     await act(async () => {
       const updated = await result.current.update.mutateAsync({
@@ -125,7 +125,7 @@ describe('role hooks', () => {
       await result.current.remove.mutateAsync(id);
     });
     expect(messages()).toContain('Role deleted.');
-    await waitFor(() => expect(result.current.stats.data?.totalRoles).toBe(8));
+    await waitFor(() => expect(result.current.stats.data?.totalRoles).toBe(9));
     expect(mockDb.isRoleSlugTaken('content-team')).toBe(true);
   });
 

@@ -64,7 +64,7 @@ function UserDetails({ user }: { user: ManagedUser }) {
           <Typography variant="h5" component="p" className="break-words">
             {user.fullName}
           </Typography>
-          <div className="mt-1 flex flex-wrap items-center gap-2">
+          <div className="mt-1.5 flex flex-wrap items-center gap-2">
             <UserStatusChip status={user.status} />
             <Typography variant="body2" color="text.secondary">
               {roleLabel(user)} · ID {user.id}
@@ -90,16 +90,11 @@ function UserDetails({ user }: { user: ManagedUser }) {
           {!user.role && ' (no matching role: no permissions)'}
           {user.role && !user.role.active && ' (role inactive: no permissions)'}
         </Detail>
-        <Detail label="Role slug (user type)">{user.userType}</Detail>
-        <Detail label="Status">
-          <UserStatusChip status={user.status} />
-        </Detail>
         <Detail label="Notifications">{user.notificationsEnabled ? 'On' : 'Off'}</Detail>
-        <Detail label="User ID">{user.id}</Detail>
       </Section>
       <Divider />
       <Section title="Activity">
-        <Detail label="Created">{formatDateTime(user.createdAt)}</Detail>
+        <Detail label="Joined on">{formatDateTime(user.createdAt)}</Detail>
         <Detail label="Last updated">
           {user.updatedAt ? formatDateTime(user.updatedAt) : 'Never'}
         </Detail>

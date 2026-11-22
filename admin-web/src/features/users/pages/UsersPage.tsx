@@ -1,22 +1,13 @@
 import Add from '@mui/icons-material/Add';
-import FilterAltOff from '@mui/icons-material/FilterAltOff';
-import NavigateNext from '@mui/icons-material/NavigateNext';
-import Search from '@mui/icons-material/Search';
-import Breadcrumbs from '@mui/material/Breadcrumbs';
-import InputAdornment from '@mui/material/InputAdornment';
-import Link from '@mui/material/Link';
-import MenuItem from '@mui/material/MenuItem';
+import FileDownloadOutlined from '@mui/icons-material/FileDownloadOutlined';
 import Paper from '@mui/material/Paper';
-import Tab from '@mui/material/Tab';
-import Tabs from '@mui/material/Tabs';
-import TextField from '@mui/material/TextField';
 import Typography from '@mui/material/Typography';
 import { useMemo, useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
 
 import { Button } from '@/components/common/Button';
 import { DataTable, type SortDirection } from '@/components/common/DataTable/DataTable';
 import { ConfirmDialog } from '@/components/common/Modal';
+import { PageHeading } from '@/components/common/PageHeading';
 import { usePermissions } from '@/features/auth/hooks/usePermissions';
 import { useDebounce } from '@/hooks/useDebounce';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
@@ -29,22 +20,26 @@ import {
   SEARCH_DEBOUNCE_MS,
   STORAGE_KEYS,
 } from '@/utils/constants';
-import { formatNumber } from '@/utils/formatters';
 
 import { buildUserColumns } from '../components/userColumns';
 import { UserDetailsDrawer } from '../components/UserDetailsDrawer';
+import { UserFiltersBar } from '../components/UserFiltersBar';
 import { UserFormDialog } from '../components/UserFormDialog';
 import { UserStatsCards } from '../components/UserStatsCards';
+import { type UserExportFilters, useUserExport } from '../hooks/useUserExport';
 import { useDeleteUser, useUserRoles, useUsers, useUserStats } from '../hooks/useUsers';
 import type { ManagedUser, UserSortField, UserStatus } from '../types/user.types';
+import { USER_STATUS_META } from '../utils/userDisplay';
 
-type StatusTab = 'all' | Extract<UserStatus, 'active' | 'pending' | 'inactive'>;
+type StatusTab = 'all' | Extract<UserStatus, 'active' | 'pending' | 'inactive' | 'suspended'>;
 
 const STATUS_TABS: Array<{ value: StatusTab; label: string }> = [
   { value: 'all', label: 'All users' },
-  { value: 'active', label: 'Active' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'inactive', label: 'Inactive' },
+  { value: 'active', label: USER_STATUS_META.active.label },
+  { value: 'pending', label: USER_STATUS_META.pending.label },
+  { value: 'inactive', label: USER_STATUS_META.inactive.label },
+  // "Blocked" (suspended accounts).
+  { value: 'suspended', label: USER_STATUS_META.suspended.label },
 ];
 
 const SEARCH_MAX_LENGTH = 100;
@@ -86,20 +81,21 @@ export function UsersPage() {
 
   const stats = useUserStats();
   const roles = useUserRoles();
+  // Shared by the table and the CSV export, so the export holds exactly the filtered users.
+  const filters: UserExportFilters = {
+    sort: `${sort.field},${sort.direction}`,
+    search: search || undefined,
+    status: statusTab === 'all' ? undefined : statusTab,
+    userType: userType || undefined,
+    createdFrom: createdFrom || undefined,
+    createdTo: createdTo || undefined,
+  };
   const { data, isPending, isFetching, error, refetch } = useUsers(
-    {
-      page,
-      size: Math.min(pageSize, PAGINATION.maxPageSize),
-      sort: `${sort.field},${sort.direction}`,
-      search: search || undefined,
-      status: statusTab === 'all' ? undefined : statusTab,
-      userType: userType || undefined,
-      createdFrom: createdFrom || undefined,
-      createdTo: createdTo || undefined,
-    },
+    { ...filters, page, size: Math.min(pageSize, PAGINATION.maxPageSize) },
     { enabled: dateRangeIsValid },
   );
   const deleteUser = useDeleteUser();
+  const exporter = useUserExport();
 
   const columns = useMemo(() => {
     const roleBySlug = new Map((roles.data ?? []).map((role) => [role.slug, role]));
@@ -151,140 +147,78 @@ export function UsersPage() {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <Typography variant="h1">Users</Typography>
-          <Breadcrumbs
-            aria-label="Breadcrumb"
-            separator={<NavigateNext fontSize="small" />}
-            className="mt-1"
-          >
-            <Link component={RouterLink} to={ROUTES.dashboard} underline="hover">
-              Dashboard
-            </Link>
-            <Typography color="text.secondary" aria-current="page">
-              Users
-            </Typography>
-          </Breadcrumbs>
-        </div>
-        {canCreate && (
+        <PageHeading
+          title="Users"
+          crumbs={[{ label: 'Dashboard', to: ROUTES.dashboard }, { label: 'Users' }]}
+        />
+        <div className="flex flex-wrap gap-2 self-start sm:self-auto">
           <Button
-            startIcon={<Add />}
+            variant="outlined"
             size="large"
-            onClick={() => setFormState({ mode: 'create' })}
-            className="self-start sm:self-auto"
+            startIcon={<FileDownloadOutlined />}
+            loading={exporter.isExporting}
+            disabled={!dateRangeIsValid}
+            onClick={() => void exporter.exportMatching(filters)}
           >
-            Add new user
+            Export CSV
           </Button>
-        )}
+          {canCreate && (
+            <Button
+              startIcon={<Add />}
+              size="large"
+              onClick={() => setFormState({ mode: 'create' })}
+            >
+              Add new user
+            </Button>
+          )}
+        </div>
       </header>
 
       <UserStatsCards />
 
       <Paper className="overflow-hidden">
-        <div className="flex flex-col gap-3 border-b px-4 pt-2 lg:flex-row lg:items-center lg:justify-between">
-          <Tabs
-            value={statusTab}
-            onChange={(_, value: StatusTab) => {
-              setStatusTab(value);
-              setPage(0);
-            }}
-            variant="scrollable"
-            allowScrollButtonsMobile
-            aria-label="Filter users by status"
-            textColor="inherit"
-            sx={{
-              '& .MuiTab-root': { textTransform: 'none', fontWeight: 600, minHeight: 52 },
-              '& .Mui-selected': { color: 'var(--app-primary-strong)' },
-              '& .MuiTabs-indicator': { backgroundColor: 'var(--app-primary-strong)', height: 3 },
-            }}
-          >
-            {STATUS_TABS.map((tab) => {
-              const count = tabCount(tab.value);
-              return (
-                <Tab
-                  key={tab.value}
-                  value={tab.value}
-                  label={count === undefined ? tab.label : `${tab.label} (${formatNumber(count)})`}
-                />
-              );
-            })}
-          </Tabs>
-        </div>
-        <div className="flex flex-col gap-3 p-4 md:flex-row md:flex-wrap md:items-start">
-          <TextField
-            size="small"
-            type="search"
-            placeholder="Search by name, email or phone…"
-            value={searchInput}
-            onChange={(event) => {
-              setSearchInput(event.target.value);
-              setPage(0);
-            }}
-            className="md:max-w-xs"
-            slotProps={{
-              htmlInput: { maxLength: SEARCH_MAX_LENGTH, 'aria-label': 'Search users' },
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <Search fontSize="small" />
-                  </InputAdornment>
-                ),
-              },
-            }}
-          />
-          <TextField
-            select
-            size="small"
-            label="Role"
-            value={userType}
-            onChange={(event) => {
-              setUserType(event.target.value);
-              setPage(0);
-            }}
-            className="md:w-44"
-            helperText={roles.isError ? 'Could not load roles' : undefined}
-            error={roles.isError}
-          >
-            <MenuItem value="">All roles</MenuItem>
-            {(roles.data ?? []).map((role) => (
-              <MenuItem key={role.slug} value={role.slug}>
-                {role.active ? role.name : `${role.name} (inactive)`}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            size="small"
-            type="date"
-            label="Joined from"
-            value={createdFrom}
-            onChange={(event) => {
-              setCreatedFrom(event.target.value);
-              setPage(0);
-            }}
-            className="md:w-44"
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-          <TextField
-            size="small"
-            type="date"
-            label="Joined to"
-            value={createdTo}
-            onChange={(event) => {
-              setCreatedTo(event.target.value);
-              setPage(0);
-            }}
-            error={!dateRangeIsValid}
-            helperText={dateRangeIsValid ? undefined : 'Must not be before the start date'}
-            className="md:w-44"
-            slotProps={{ inputLabel: { shrink: true } }}
-          />
-          {(hasFilters || sort !== DEFAULT_SORT) && (
-            <Button variant="text" startIcon={<FilterAltOff />} onClick={resetFilters}>
-              Clear filters
-            </Button>
-          )}
-        </div>
-        <div className={isFetching && !isPending ? 'opacity-60 transition-opacity' : undefined}>
+        <UserFiltersBar
+          statusTabs={STATUS_TABS.map((tab) => ({ ...tab, count: tabCount(tab.value) }))}
+          status={statusTab}
+          onStatusChange={(value) => {
+            setStatusTab(value);
+            setPage(0);
+          }}
+          roles={(roles.data ?? []).map((role) => ({
+            value: role.slug,
+            label: role.active ? role.name : `${role.name} (inactive)`,
+          }))}
+          role={userType}
+          onRoleChange={(value) => {
+            setUserType(value);
+            setPage(0);
+          }}
+          rolesError={roles.isError}
+          joinedFrom={createdFrom}
+          joinedTo={createdTo}
+          onJoinedFromChange={(value) => {
+            setCreatedFrom(value);
+            setPage(0);
+          }}
+          onJoinedToChange={(value) => {
+            setCreatedTo(value);
+            setPage(0);
+          }}
+          search={searchInput}
+          onSearchChange={(value) => {
+            setSearchInput(value);
+            setPage(0);
+          }}
+          searchMaxLength={SEARCH_MAX_LENGTH}
+          canClear={hasFilters || sort !== DEFAULT_SORT}
+          onClear={resetFilters}
+        />
+        {/* Single-line headers and dates, and a visible divider between rows. */}
+        <div
+          className={`[&_tbody_td]:border-b [&_tbody_td]:border-line [&_tbody_tr:last-child>td]:border-b-0 [&_td]:whitespace-nowrap [&_th]:whitespace-nowrap ${
+            isFetching && !isPending ? 'opacity-60 transition-opacity' : ''
+          }`}
+        >
           <DataTable
             caption="Users"
             columns={columns}
@@ -296,7 +230,7 @@ export function UsersPage() {
             emptyMessage={
               hasFilters ? 'No users match these filters.' : 'No users have been added yet.'
             }
-            minWidth={960}
+            minWidth={1080}
             sort={{
               field: sort.field,
               direction: sort.direction,
@@ -310,6 +244,7 @@ export function UsersPage() {
               pageSize,
               totalElements: data?.totalElements ?? 0,
               pageSizeOptions: PAGINATION.pageSizeOptions,
+              variant: 'numbered',
               onPageChange: setPage,
               onPageSizeChange: (size) => {
                 setPageSize(size);
