@@ -173,6 +173,12 @@ app:
     user-management-write-user: { max-requests: 120, window: 1h }
     # Admin role management: create, update and delete.
     role-write-user: { max-requests: 120, window: 1h }
+  razorpay:
+    # Subscription payments stay unavailable (503) until key-id and key-secret are set. The secrets
+    # never go to the app; the webhook secret is the one set on the Razorpay webhook.
+    key-id: ${RAZORPAY_KEY_ID:}
+    key-secret: ${RAZORPAY_KEY_SECRET:}
+    webhook-secret: ${RAZORPAY_WEBHOOK_SECRET:}
   banner:
     # Accepted banner types and placements; adding one needs no migration (lowercase snake_case).
     types: promotion, announcement, offer

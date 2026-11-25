@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 
 import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_CREATE;
 import static com.propertypro.property_platform.security.Permissions.SUBSCRIPTION_VIEW;
@@ -87,6 +88,23 @@ public class UserSubscriptionService {
 		log.info("Subscription taken userId={} planId={} unpaid={}", actor.userId(), plan.getId(),
 				plan.getPrice().signum() > 0);
 		return UserSubscriptionResponse.from(subscription);
+	}
+
+	/**
+	 * Activates a plan the user has just paid for. Called only by payment handling after the gateway confirmed
+	 * the payment; empty when the user already has a subscription in force (the payment is then kept for a refund).
+	 */
+	@Transactional
+	public Optional<UserSubscriptionResponse> activateAfterPayment(Long userId, Long planId) {
+		if (subscriptionRepository.findInForce(userId, SubscriptionStatus.ACTIVE, clock.instant()).isPresent()) {
+			return Optional.empty();
+		}
+		SubscriptionPlan plan = planRepository.findById(planId).orElseThrow(SubscriptionPlanExceptions::notFound);
+		UserSubscription subscription = new UserSubscription(userId, plan, clock.instant());
+		subscription.activate();
+		subscriptionRepository.saveAndFlush(subscription);
+		log.info("Subscription taken after payment userId={} planId={}", userId, plan.getId());
+		return Optional.of(UserSubscriptionResponse.from(subscription));
 	}
 
 	private static void requirePermission(CurrentActor actor, String permission) {

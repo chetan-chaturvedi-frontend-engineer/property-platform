@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { ApiError } from '../../../services/api/apiClient';
+import { paymentService } from '../../../services/paymentService';
+import { PaymentCancelledError } from '../../../services/razorpayCheckout';
 import { subscriptionService } from '../../../services/subscriptionService';
 import { useAuth } from '../../auth/AuthProvider';
 
@@ -22,9 +24,22 @@ export function useSellerRegistration() {
     setSubmitting(true);
     setError(undefined);
     try {
-      await subscriptionService.subscribe(selected);
+      try {
+        await subscriptionService.subscribe(selected);
+      } catch (e) {
+        // Paid plan: the backend refuses a free activation, so collect the payment with Razorpay instead.
+        if (e instanceof ApiError && e.code === 'payment_required') {
+          await paymentService.payForPlan(selected);
+        } else {
+          throw e;
+        }
+      }
       return 'subscribed';
     } catch (e) {
+      if (e instanceof PaymentCancelledError) {
+        setError('Payment cancelled. You have not been charged.');
+        return 'failed';
+      }
       // Already subscribed: the user can go straight on.
       if (e instanceof ApiError && e.code === 'subscription_already_active') {
         return 'subscribed';

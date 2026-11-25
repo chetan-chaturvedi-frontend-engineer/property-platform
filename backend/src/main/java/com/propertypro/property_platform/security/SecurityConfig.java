@@ -61,6 +61,8 @@ public class SecurityConfig {
 			.authorizeHttpRequests(auth -> auth
 				.requestMatchers(HttpMethod.POST, PUBLIC_AUTH_ENDPOINTS).permitAll()
 				.requestMatchers(HttpMethod.GET, "/api/v1/public/**").permitAll()
+				// Razorpay calls this without a login; the controller checks the HMAC signature of the body.
+				.requestMatchers(HttpMethod.POST, "/api/v1/public/payments/razorpay/webhook").permitAll()
 				.requestMatchers("/actuator/health/**", "/actuator/info", "/error").permitAll()
 				// Only served when springdoc is enabled (dev profile).
 				.requestMatchers(HttpMethod.GET, "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()

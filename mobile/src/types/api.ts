@@ -221,6 +221,20 @@ export interface ApiUserSubscription {
   endsAt: string | null;
 }
 
+export interface ApiCheckout {
+  keyId: string;
+  orderId: string;
+  /** Paise (minor units). */
+  amount: number;
+  currency: string;
+  planTitle: string;
+}
+
+export interface ApiPaymentResult {
+  status: string;
+  subscription: ApiUserSubscription | null;
+}
+
 export interface ApiWizard {
   currentStep: number;
   completedSteps: number[];
