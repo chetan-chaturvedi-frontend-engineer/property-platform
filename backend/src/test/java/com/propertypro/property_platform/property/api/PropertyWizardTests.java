@@ -12,6 +12,7 @@ import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.empty;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.not;
+import static org.hamcrest.Matchers.nullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -383,6 +384,53 @@ class PropertyWizardTests extends PropertyApiTestSupport {
 
 		mvc.perform(delete(BASE + "/" + published).with(owner)).andExpect(status().isNoContent());
 		mvc.perform(get("/api/v1/public/properties")).andExpect(jsonPath("$.content", hasSize(0)));
+	}
+
+
+	@Test
+	void publicSearchReturnsCoordinatesAndFiltersByBoundingBox() throws Exception {
+		long published = publishedProperty(owner, admin);
+		String slug = column(published, "slug");
+
+		mvc.perform(get("/api/v1/public/properties"))
+			.andExpect(jsonPath("$.content[0].latitude").value(18.559))
+			.andExpect(jsonPath("$.content[0].longitude").value(73.7868));
+		mvc.perform(get("/api/v1/public/properties/" + slug))
+			.andExpect(jsonPath("$.location.latitude").value(18.559))
+			.andExpect(jsonPath("$.location.longitude").value(73.7868));
+
+		// Inside (edges included) and outside the box.
+		mvc.perform(get("/api/v1/public/properties?minLat=18.5&maxLat=18.559&minLng=73.7&maxLng=73.8"))
+			.andExpect(status().isOk()).andExpect(jsonPath("$.content", hasSize(1)));
+		mvc.perform(get("/api/v1/public/properties?minLat=19&maxLat=20&minLng=73.7&maxLng=73.8"))
+			.andExpect(jsonPath("$.content", hasSize(0)));
+		mvc.perform(get("/api/v1/public/properties?minLat=18.5&maxLat=18.6&minLng=74&maxLng=75"))
+			.andExpect(jsonPath("$.content", hasSize(0)));
+
+		// Properties without coordinates never match a box but still show without one.
+		jdbc.update("UPDATE property_projects SET latitude = NULL, longitude = NULL WHERE id = ?", published);
+		mvc.perform(get("/api/v1/public/properties?minLat=-90&maxLat=90&minLng=-180&maxLng=180"))
+			.andExpect(jsonPath("$.content", hasSize(0)));
+		mvc.perform(get("/api/v1/public/properties"))
+			.andExpect(jsonPath("$.content", hasSize(1)))
+			.andExpect(jsonPath("$.content[0].latitude").value(nullValue()));
+	}
+
+	@Test
+	void publicSearchRejectsInvalidBoundingBox() throws Exception {
+		// Partial box, reversed edges, out-of-range values and an oversized page.
+		mvc.perform(get("/api/v1/public/properties?minLat=18"))
+			.andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors.maxLat").exists());
+		mvc.perform(get("/api/v1/public/properties?minLat=19&maxLat=18&minLng=73&maxLng=74"))
+			.andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors.maxLat").exists());
+		mvc.perform(get("/api/v1/public/properties?minLat=18&maxLat=19&minLng=75&maxLng=74"))
+			.andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors.maxLng").exists());
+		mvc.perform(get("/api/v1/public/properties?minLat=-91&maxLat=19&minLng=73&maxLng=74"))
+			.andExpect(status().isBadRequest()).andExpect(jsonPath("$.errors.minLat").exists());
+		mvc.perform(get("/api/v1/public/properties?minLat=abc&maxLat=19&minLng=73&maxLng=74"))
+			.andExpect(status().isBadRequest());
+		mvc.perform(get("/api/v1/public/properties?minLat=18&maxLat=19&minLng=73&maxLng=74&size=5000"))
+			.andExpect(status().isOk()).andExpect(jsonPath("$.size").value(100));
 	}
 
 }

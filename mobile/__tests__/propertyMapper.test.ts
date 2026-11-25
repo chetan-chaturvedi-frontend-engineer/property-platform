@@ -1,4 +1,5 @@
-import { absoluteUrl, areaLabel, configLabel, toProperty, toPropertyFromSummary } from '../src/services/mappers/propertyMapper';
+import { absoluteUrl, areaLabel, configLabel, toCoordinate, toProperty, toPropertyFromSummary } from '../src/services/mappers/propertyMapper';
+import { formatCompactPrice } from '../src/utils/format';
 import { ApiPublicProperty, ApiPublicPropertySummary } from '../src/types/api';
 
 const summary: ApiPublicPropertySummary = {
@@ -15,6 +16,8 @@ const summary: ApiPublicPropertySummary = {
   apartmentTypes: ['2bhk', '3bhk', '4bhk'],
   coverUrl: '/api/v1/public/properties/skyline-heights/media/1/content',
   publishedAt: '2026-11-14T14:15:07Z',
+  latitude: 17.4616,
+  longitude: 78.3645,
 };
 
 describe('configLabel', () => {
@@ -62,7 +65,7 @@ describe('toProperty', () => {
       id: 4,
       slug: 'skyline-heights',
       projectName: 'Skyline Heights',
-      location: { city: 'Hyderabad', locality: 'Kondapur', state: 'Telangana' },
+      location: { city: 'Hyderabad', locality: 'Kondapur', state: 'Telangana', latitude: null, longitude: null },
       apartments: [
         { id: 1, apartmentName: '3 BHK', apartmentType: '3bhk', startingPrice: 16500000, areaMin: 1650, areaMax: 1900, areaUnit: 'sq_ft' },
         { id: 2, apartmentName: '2 BHK', apartmentType: '2bhk', startingPrice: 12500000, areaMin: 1200, areaMax: 1400, areaUnit: 'sq_ft' },
@@ -91,5 +94,24 @@ describe('absoluteUrl', () => {
   it('keeps external URLs and returns undefined for none', () => {
     expect(absoluteUrl('https://x.example/a.jpg')).toBe('https://x.example/a.jpg');
     expect(absoluteUrl(null)).toBeUndefined();
+  });
+});
+
+describe('map coordinates', () => {
+  it('maps coordinates and a short pin price from the summary', () => {
+    const p = toPropertyFromSummary(summary);
+    expect(p.coordinate).toEqual({ latitude: 17.4616, longitude: 78.3645 });
+    expect(p.pinLabel).toBe(formatCompactPrice(12500000));
+  });
+  it('leaves properties without a position off the map', () => {
+    const p = toPropertyFromSummary({ ...summary, latitude: null, longitude: null, startingPrice: null });
+    expect(p.coordinate).toBeUndefined();
+    expect(p.pinLabel).toBe('View');
+  });
+  it('ignores impossible or placeholder coordinates', () => {
+    expect(toCoordinate(95, 10)).toBeUndefined();
+    expect(toCoordinate(10, 200)).toBeUndefined();
+    expect(toCoordinate(0, 0)).toBeUndefined();
+    expect(toCoordinate(18.5, null)).toBeUndefined();
   });
 });

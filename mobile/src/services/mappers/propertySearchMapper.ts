@@ -1,4 +1,4 @@
-import { FilterState } from '../../types';
+import { FilterState, MapBounds } from '../../types';
 
 /** Filter labels shown in the UI -> backend query values. */
 export const PROPERTY_TYPES: Record<string, string> = {
@@ -24,7 +24,7 @@ export const POSSESSION_STATUS: Record<string, string> = {
 export const EMPTY_FILTERS: FilterState = { budget: null, propertyType: null, bhk: null, possession: null, city: '' };
 
 /** Query string for GET /public/properties, omitting every filter that is not set. */
-export function toSearchQuery(filters: FilterState, search: string, size: number): string {
+export function toSearchQuery(filters: FilterState, search: string, size: number, bounds?: MapBounds): string {
   const params: [string, string][] = [['size', String(size)]];
   const text = search.trim();
   if (text) {
@@ -44,6 +44,14 @@ export function toSearchQuery(filters: FilterState, search: string, size: number
   }
   if (filters.budget) {
     params.push(['minPrice', String(filters.budget[0])], ['maxPrice', String(filters.budget[1])]);
+  }
+  if (bounds) {
+    params.push(
+      ['minLat', String(bounds.minLat)],
+      ['maxLat', String(bounds.maxLat)],
+      ['minLng', String(bounds.minLng)],
+      ['maxLng', String(bounds.maxLng)],
+    );
   }
   return params.map(([k, v]) => `${k}=${encodeURIComponent(v)}`).join('&');
 }

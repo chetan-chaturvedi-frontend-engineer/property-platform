@@ -31,6 +31,9 @@ export interface ApiPublicPropertySummary {
   apartmentTypes: ApiApartmentType[];
   coverUrl: string | null;
   publishedAt: string;
+  /** Both null until the owner sets a map position. */
+  latitude: number | null;
+  longitude: number | null;
 }
 
 export interface ApiAmenity {
@@ -64,7 +67,13 @@ export interface ApiPublicProperty {
   id: number;
   slug: string;
   projectName: string;
-  location: { city: string | null; locality: string | null; state: string | null };
+  location: {
+    city: string | null;
+    locality: string | null;
+    state: string | null;
+    latitude: number | null;
+    longitude: number | null;
+  };
   apartments: ApiApartment[];
   projectStatus: ApiProjectStatus;
   possessionEndDate: string | null;

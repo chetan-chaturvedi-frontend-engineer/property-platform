@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ApiError } from '../../../services/api/apiClient';
+import { geocodingService } from '../../../services/geocodingService';
 import { sellerPropertyService } from '../../../services/sellerPropertyService';
 import { PropertyDraft } from '../../../types';
 import { isValidEmail, normalizeIndianPhone } from '../../../utils/validation';
@@ -117,9 +118,15 @@ export function useAddProperty() {
       case 2:
         await sellerPropertyService.saveApartments(propertyId as number, body);
         return propertyId;
-      case 3:
-        await sellerPropertyService.saveLocation(propertyId as number, body);
+      case 3: {
+        // No pin set by hand: try the address once so the listing still shows up on the map.
+        const pin = d.latitude === undefined ? await geocodingService.lookup(d) : undefined;
+        if (pin) {
+          setDraft(prev => ({ ...prev, latitude: pin.latitude, longitude: pin.longitude }));
+        }
+        await sellerPropertyService.saveLocation(propertyId as number, pin ? { ...body, ...pin } : body);
         return propertyId;
+      }
       case 4:
         await sellerPropertyService.saveInfo(propertyId as number, body);
         return propertyId;

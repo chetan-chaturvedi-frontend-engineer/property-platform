@@ -1,5 +1,5 @@
 import { env } from '../../config/env';
-import { Amenity, PossessionStatus, Property, Unit } from '../../types';
+import { Amenity, Coordinate, PossessionStatus, Property, Unit } from '../../types';
 import {
   ApiAmenity,
   ApiApartment,
@@ -84,6 +84,19 @@ function priceLabel(value: number | null): string {
   return value === null ? 'Price on request' : `${formatCompactPrice(value)}*`;
 }
 
+function pinLabelOf(value: number | null): string {
+  return value === null ? 'View' : formatCompactPrice(value);
+}
+
+/** Coordinates only count when both are valid numbers inside the world range. */
+export function toCoordinate(latitude: number | null | undefined, longitude: number | null | undefined): Coordinate | undefined {
+  if (typeof latitude !== 'number' || typeof longitude !== 'number') {
+    return undefined;
+  }
+  const valid = Math.abs(latitude) <= 90 && Math.abs(longitude) <= 180 && (latitude !== 0 || longitude !== 0);
+  return valid ? { latitude, longitude } : undefined;
+}
+
 export function toPropertyFromSummary(s: ApiPublicPropertySummary): Property {
   return {
     id: s.slug,
@@ -100,6 +113,8 @@ export function toPropertyFromSummary(s: ApiPublicPropertySummary): Property {
     possession: '',
     photos: s.coverUrl ? 1 : 0,
     tone: s.id % TONES,
+    coordinate: toCoordinate(s.latitude, s.longitude),
+    pinLabel: pinLabelOf(s.startingPrice),
   };
 }
 
@@ -121,6 +136,8 @@ export function toProperty(d: ApiPublicProperty): Property {
     possession: possessionLabel(d.possessionEndDate),
     photos: photos.length,
     tone: d.id % TONES,
+    coordinate: toCoordinate(d.location.latitude, d.location.longitude),
+    pinLabel: pinLabelOf(prices.length > 0 ? Math.min(...prices) : null),
   };
 }
 

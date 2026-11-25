@@ -64,6 +64,7 @@ public class PublicPropertyService {
 		if (filter.minPrice() != null && filter.maxPrice() != null && filter.maxPrice().compareTo(filter.minPrice()) < 0) {
 			throw new FieldValidationException("maxPrice", "must not be less than minPrice");
 		}
+		validateBounds(filter);
 		for (Sort.Order order : pageable.getSort()) {
 			if (!SORTABLE_FIELDS.contains(order.getProperty())) {
 				throw new FieldValidationException("sort", "must be one of " + String.join(", ", SORTABLE_FIELDS));
@@ -73,6 +74,28 @@ public class PublicPropertyService {
 				pageable.getSort().and(Sort.by(Sort.Direction.DESC, "id")));
 		Page<PropertyProjectSummary> found = summaryRepository.findAll(matching(filter), page);
 		return PageResponse.of(found, toSummaries(found.getContent()));
+	}
+
+	private static void validateBounds(PublicPropertyFilter filter) {
+		if (!filter.hasBounds()) {
+			return;
+		}
+		Map<String, Object> edges = new java.util.LinkedHashMap<>();
+		edges.put("minLat", filter.minLat());
+		edges.put("maxLat", filter.maxLat());
+		edges.put("minLng", filter.minLng());
+		edges.put("maxLng", filter.maxLng());
+		edges.forEach((name, value) -> {
+			if (value == null) {
+				throw new FieldValidationException(name, "is required when any of minLat, maxLat, minLng, maxLng is given");
+			}
+		});
+		if (filter.maxLat().compareTo(filter.minLat()) < 0) {
+			throw new FieldValidationException("maxLat", "must not be less than minLat");
+		}
+		if (filter.maxLng().compareTo(filter.minLng()) < 0) {
+			throw new FieldValidationException("maxLng", "must not be less than minLng");
+		}
 	}
 
 	/** Adds price, configuration types and cover photo to a page of results with two batch queries. */
@@ -164,6 +187,10 @@ public class PublicPropertyService {
 			}
 			if (filter.projectStatus() != null) {
 				predicates.add(cb.equal(root.get("projectStatus"), ProjectStatus.fromValue(filter.projectStatus())));
+			}
+			if (filter.hasBounds()) {
+				predicates.add(cb.between(root.<BigDecimal>get("latitude"), filter.minLat(), filter.maxLat()));
+				predicates.add(cb.between(root.<BigDecimal>get("longitude"), filter.minLng(), filter.maxLng()));
 			}
 			if (filter.apartmentType() != null || filter.minPrice() != null || filter.maxPrice() != null) {
 				// At least one (non-deleted) configuration matching type and price.

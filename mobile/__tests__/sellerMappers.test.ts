@@ -12,7 +12,8 @@ const draft: PropertyDraft = {
 describe('wizard payloads', () => {
   it('maps step 1 and location', () => {
     expect(toDetailsPayload(draft)).toEqual({ propertyType: 'villa', projectName: 'Sunrise Villas', builderCompanyName: 'Test Estates', projectEmail: 'sales@example.com', projectPhone: '+919876543210' });
-    expect(toLocationPayload(draft)).toEqual({ projectAddress: 'Plot 12', city: 'Hyderabad', locality: 'Madhapur', pincode: '500081', state: 'Telangana' });
+    expect(toLocationPayload(draft)).toEqual({ projectAddress: 'Plot 12', city: 'Hyderabad', locality: 'Madhapur', pincode: '500081', state: 'Telangana', latitude: null, longitude: null });
+    expect(toLocationPayload({ ...draft, latitude: 17.45, longitude: 78.39 })).toMatchObject({ latitude: 17.45, longitude: 78.39 });
   });
   it('maps the single configuration', () => {
     expect(toApartmentsPayload(draft)).toEqual({ apartments: [{ apartmentName: '3 BHK', apartmentType: '3bhk', startingPrice: 7500000, bedrooms: 3, bathrooms: 2, areaMin: 1200, areaMax: 1200 }] });

@@ -9,6 +9,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.hibernate.annotations.Immutable;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 
 /**
@@ -56,6 +57,10 @@ public class PropertyProjectSummary {
 	private String state;
 
 	private String pincode;
+
+	private BigDecimal latitude;
+
+	private BigDecimal longitude;
 
 	@Column(name = "project_status")
 	private ProjectStatus projectStatus;
