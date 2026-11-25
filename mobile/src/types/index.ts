@@ -8,6 +8,8 @@ export interface Property {
   /** Cover photo URL; the tinted placeholder shows when absent. */
   coverUrl?: string;
   name: string;
+  /** Builder or company name; only the list/search endpoint returns it. */
+  builder?: string;
   area: string;
   config: string;
   price: string;

@@ -90,6 +90,7 @@ export function toPropertyFromSummary(s: ApiPublicPropertySummary): Property {
     propertyId: s.id,
     coverUrl: absoluteUrl(s.coverUrl),
     name: s.projectName,
+    builder: s.builderCompanyName,
     area: areaOf(s),
     config: configLabel(s.apartmentTypes),
     price: priceLabel(s.startingPrice),

@@ -2,7 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
-import { Card, EmptyState, PropertyPhoto, Screen, SectionTitle, Tag } from '../../../components';
+import { Card, EmptyState, PropertyPhoto, QuickActionTile, Screen, SectionTitle, Tag } from '../../../components';
 import { useStatusBarStyle } from '../../../hooks/useStatusBarStyle';
 import { SellerTabParamList } from '../../../navigation/types';
 import { useRootNavigation } from '../../../navigation/useRootNavigation';
@@ -12,7 +12,6 @@ import { useUnreadNotifications } from '../../buyer/UnreadNotificationsProvider'
 import { useUnreadMessages } from '../../chat/UnreadMessagesProvider';
 import { DashboardHero } from '../components/DashboardHero';
 import { MiniListingCard } from '../components/MiniListingCard';
-import { QuickActionTile } from '../components/QuickActionTile';
 import { StatStrip } from '../components/StatStrip';
 import { useMySubscription, useSellerEngagement, useSellerLeads, useSellerListings, useSiteVisitCount } from '../hooks/useSeller';
 
