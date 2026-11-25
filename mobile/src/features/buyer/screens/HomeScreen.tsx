@@ -8,7 +8,6 @@ import { BuyerTabParamList } from '../../../navigation/types';
 import { useRootNavigation } from '../../../navigation/useRootNavigation';
 import { colors, typography } from '../../../theme';
 import { useAuth } from '../../auth/AuthProvider';
-import { useUnreadMessages } from '../../chat/UnreadMessagesProvider';
 import { BannerStrip } from '../components/BannerStrip';
 import { FeaturedPropertyCard } from '../components/FeaturedPropertyCard';
 import { HomeHero } from '../components/HomeHero';
@@ -25,7 +24,6 @@ export function HomeScreen() {
   const tabs = useNavigation<BottomTabNavigationProp<BuyerTabParamList>>();
   const { user } = useAuth();
   const { unread: unreadNotifications } = useUnreadNotifications();
-  const { unread: unreadMessages } = useUnreadMessages();
   const { filters, activeCount, setFilters, setSearch } = usePropertyFilters();
   const { data: page, loading, error, reload } = usePropertySearch();
   useStatusBarStyle('light-content');
@@ -50,10 +48,8 @@ export function HomeScreen() {
       <HomeHero
         firstName={user?.fullName.split(' ')[0]}
         unreadNotifications={unreadNotifications}
-        unreadMessages={unreadMessages}
         filterCount={activeCount}
         onNotifications={() => nav.navigate('Notifications')}
-        onMessages={() => nav.navigate('Messages')}
         onProfile={() => tabs.navigate('Profile')}
         onFilters={() => nav.navigate('Filters')}
       />

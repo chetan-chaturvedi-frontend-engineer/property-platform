@@ -8,8 +8,7 @@ import { initialsOf } from '../../../utils/format';
 import { useAuth } from '../../auth/AuthProvider';
 import { useChatThreads } from '../hooks/useChat';
 
-/** `showBack` is for the buyer, who opens messages from the Home header; the seller has them as a tab. */
-export function ChatListScreen({ showBack = false }: { showBack?: boolean }) {
+export function ChatListScreen() {
   const nav = useRootNavigation();
   const { status } = useAuth();
   const { data, loading, error, reload } = useChatThreads();
@@ -20,7 +19,7 @@ export function ChatListScreen({ showBack = false }: { showBack?: boolean }) {
 
   return (
     <Screen>
-      <Header title="Messages" showBack={showBack} />
+      <Header title="Messages" showBack={false} />
       <View style={styles.pad}><TextField icon="search" placeholder="Search conversations" value={q} onChangeText={setQ} /></View>
       {status === 'signedOut' ? <EmptyState title="Sign in to see your messages" body="Enquire about a property to start a conversation." actionLabel="Sign In" onAction={() => nav.navigate('Login')} /> : null}
       {signedIn && error ? <EmptyState title="Could not load your messages" body={error.message} actionLabel="Retry" onAction={reload} /> : null}

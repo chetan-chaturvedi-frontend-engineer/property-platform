@@ -13,8 +13,7 @@ import { BookingStatus } from '../../../types';
 const tabs: ('All Bookings' | BookingStatus)[] = ['All Bookings', 'Upcoming', 'Completed', 'Cancelled'];
 const tone: Record<BookingStatus, TagTone> = { Upcoming: 'primary', Completed: 'success', Cancelled: 'danger' };
 
-/** `showBack` is false when it is the Site Visits tab. */
-export function BookingsScreen({ showBack = true }: { showBack?: boolean }) {
+export function BookingsScreen() {
   const nav = useRootNavigation();
   const { status } = useAuth();
   const signedIn = status === 'signedIn';
@@ -39,7 +38,7 @@ export function BookingsScreen({ showBack = true }: { showBack?: boolean }) {
 
   return (
     <Screen>
-      <Header title="My Bookings" showBack={showBack} right={<IconButton name="calendar-outline" accessibilityLabel="Calendar" />} />
+      <Header title="My Bookings" right={<IconButton name="calendar-outline" accessibilityLabel="Calendar" />} />
       <View style={styles.tabs}>
         {tabs.map(t => <Chip key={t} label={t} active={tab === t} onPress={() => setTab(t)} />)}
       </View>

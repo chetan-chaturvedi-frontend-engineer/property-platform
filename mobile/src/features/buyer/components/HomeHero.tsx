@@ -9,10 +9,8 @@ import { SearchBox } from './SearchBox';
 interface Props {
   firstName?: string;
   unreadNotifications: number;
-  unreadMessages: number;
   filterCount: number;
   onNotifications: () => void;
-  onMessages: () => void;
   onProfile: () => void;
   onFilters: () => void;
 }
@@ -27,7 +25,7 @@ function RoundButton({ icon, label, badge, onPress }: { icon: IconName; label: s
 }
 
 /** Dark navy header with the brand, greeting and a search bar that overlaps its bottom edge. */
-export function HomeHero({ firstName, unreadNotifications, unreadMessages, filterCount, onNotifications, onMessages, onProfile, onFilters }: Props) {
+export function HomeHero({ firstName, unreadNotifications, filterCount, onNotifications, onProfile, onFilters }: Props) {
   const insets = useSafeAreaInsets();
   return (
     <View>
@@ -38,7 +36,6 @@ export function HomeHero({ firstName, unreadNotifications, unreadMessages, filte
             <Text style={styles.wordmark}>Dwellery</Text>
           </View>
           <View style={styles.actions}>
-            <RoundButton icon="chatbubble-ellipses-outline" label="Messages" badge={unreadMessages} onPress={onMessages} />
             <RoundButton icon="notifications-outline" label="Notifications" badge={unreadNotifications} onPress={onNotifications} />
             <RoundButton icon="person-outline" label="Profile" onPress={onProfile} />
           </View>

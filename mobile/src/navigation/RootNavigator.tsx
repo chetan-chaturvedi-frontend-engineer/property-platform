@@ -23,7 +23,6 @@ import { ResetPasswordScreen } from '../features/auth/screens/ResetPasswordScree
 import { LoginScreen } from '../features/auth/screens/LoginScreen';
 import { RegisterScreen } from '../features/auth/screens/RegisterScreen';
 import { VerifyOtpScreen } from '../features/auth/screens/VerifyOtpScreen';
-import { ChatListScreen } from '../features/chat/screens/ChatListScreen';
 import { ChatScreen } from '../features/chat/screens/ChatScreen';
 import { AddPropertyScreen } from '../features/seller/screens/AddPropertyScreen';
 import { PublishedScreen } from '../features/seller/screens/PublishedScreen';
@@ -61,7 +60,6 @@ export function RootNavigator() {
         <Stack.Screen name="Settings" component={SettingsScreen} />
         <Stack.Screen name="Filters" component={FiltersScreen} options={{ presentation: 'modal' }} />
         <Stack.Screen name="EmiCalculator" component={EmiCalculatorScreen} />
-        <Stack.Screen name="Messages">{() => <ChatListScreen showBack />}</Stack.Screen>
         <Stack.Screen name="Chat" component={ChatScreen} />
         <Stack.Screen name="Legal" component={LegalScreen} />
         <Stack.Screen name="Faq" component={FaqScreen} />
