@@ -18,6 +18,8 @@ export type RootStackParamList = {
   SiteVisit: { id: string };
   VirtualTour: { id: string };
   Bookings: undefined;
+  /** The buyer's conversations (the seller has them as a tab). */
+  Messages: undefined;
   Compare: undefined;
   Notifications: undefined;
   RecentlyViewed: undefined;
@@ -40,8 +42,8 @@ export type RootStackParamList = {
 export type BuyerTabParamList = {
   Home: undefined;
   Search: undefined;
-  Chats: undefined;
   Saved: undefined;
+  SiteVisits: undefined;
   Profile: undefined;
 };
 

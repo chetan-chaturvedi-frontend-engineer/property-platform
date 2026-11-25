@@ -1,8 +1,8 @@
 import React from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
-import { Icon } from '../../../components';
-import type { IconName } from '../../../components';
-import { colors, radius, typography } from '../../../theme';
+import { colors, radius, typography } from '../theme';
+import { Icon } from './Icon';
+import type { IconName } from './Icon';
 
 interface Props {
   icon: IconName;
@@ -12,7 +12,7 @@ interface Props {
   badge?: number;
 }
 
-/** Rounded peach tile with a gold-brown icon, like the category tiles of the buyer Home. */
+/** Rounded peach tile with a gold-brown icon: the category tiles of the buyer Home and the seller quick actions. */
 export function QuickActionTile({ icon, label, onPress, badge }: Props) {
   return (
     <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={onPress} style={styles.tile}>

@@ -8,6 +8,7 @@ export type { IconName } from './Icon';
 export { IconButton } from './IconButton';
 export { ListRow } from './ListRow';
 export { PropertyPhoto } from './PropertyPhoto';
+export { QuickActionTile } from './QuickActionTile';
 export { Screen } from './Screen';
 export { SectionTitle } from './SectionTitle';
 export { StatTile } from './StatTile';

@@ -73,12 +73,13 @@
 		<string>UIInterfaceOrientationPortraitUpsideDown</string>
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
-	<true/>
+	<false/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose photos of your property to add to your listing.</string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>PlayfairDisplay-Bold.ttf</string>
+		<string>Ionicons.ttf</string>
 	</array>
 </dict>
 </plist>

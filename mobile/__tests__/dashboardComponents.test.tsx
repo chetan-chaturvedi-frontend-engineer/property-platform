@@ -1,7 +1,7 @@
 import React from 'react';
 import { fireEvent, render, screen } from '@testing-library/react-native';
 import { MiniListingCard } from '../src/features/seller/components/MiniListingCard';
-import { QuickActionTile } from '../src/features/seller/components/QuickActionTile';
+import { QuickActionTile } from '../src/components/QuickActionTile';
 import { StatStrip } from '../src/features/seller/components/StatStrip';
 
 describe('StatStrip', () => {
