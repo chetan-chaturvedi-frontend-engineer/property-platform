@@ -4,4 +4,5 @@ declare module '@env' {
   export const PRIVACY_POLICY_URL: string | undefined;
   export const TERMS_URL: string | undefined;
   export const SUPPORT_EMAIL: string | undefined;
+  export const MAPS_ANDROID_ENABLED: string | undefined;
 }

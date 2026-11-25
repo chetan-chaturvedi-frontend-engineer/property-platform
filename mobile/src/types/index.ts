@@ -1,5 +1,19 @@
 export type PossessionStatus = 'Ready to Move' | 'Under Construction' | 'New Launch';
 
+/** A point on the map, in decimal degrees. */
+export interface Coordinate {
+  latitude: number;
+  longitude: number;
+}
+
+/** Visible map area, sent to the backend as minLat/maxLat/minLng/maxLng. */
+export interface MapBounds {
+  minLat: number;
+  maxLat: number;
+  minLng: number;
+  maxLng: number;
+}
+
 export interface Property {
   /** Public slug: the route param and the key for the detail endpoint. */
   id: string;
@@ -21,6 +35,10 @@ export interface Property {
   rating?: number;
   photos: number;
   tone: number;
+  /** Map position; absent until the owner sets one. */
+  coordinate?: Coordinate;
+  /** Short price shown on the map pin, e.g. "₹1.2 Cr". */
+  pinLabel: string;
 }
 
 export interface Unit {
@@ -264,6 +282,9 @@ export interface PropertyDraft {
   city: string;
   state: string;
   pincode: string;
+  /** Map pin; both or neither. Optional, so listings without one just stay off the map. */
+  latitude?: number;
+  longitude?: number;
   description: string;
   projectStatus: PossessionStatus;
   amenityIds: number[];

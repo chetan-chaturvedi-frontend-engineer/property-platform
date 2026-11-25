@@ -1,10 +1,12 @@
-import { Amenity, FilterState, Property, PropertyPage, Unit } from '../types';
+import { Amenity, FilterState, MapBounds, Property, PropertyPage, Unit } from '../types';
 import { ApiPage, ApiPublicProperty, ApiPublicPropertySummary } from '../types/api';
 import { apiClient } from './api/apiClient';
 import { toAmenity, toProperty, toPropertyFromSummary, toUnit } from './mappers/propertyMapper';
 import { EMPTY_FILTERS, toSearchQuery } from './mappers/propertySearchMapper';
 
 const PAGE_SIZE = 50;
+/** The backend caps a page at 100; a map view never needs more pins than that. */
+const MAP_PAGE_SIZE = 100;
 const DETAIL_TTL_MS = 30_000;
 
 /** Detail, units and amenities of one screen share a single request. */
@@ -23,9 +25,9 @@ function detail(slug: string): Promise<ApiPublicProperty> {
 
 export const propertyService = {
   /** Server-side search: text, city, type, BHK, possession and budget are all applied by the backend. */
-  async search(filters: FilterState = EMPTY_FILTERS, search = ''): Promise<PropertyPage> {
+  async search(filters: FilterState = EMPTY_FILTERS, search = '', bounds?: MapBounds): Promise<PropertyPage> {
     const page = await apiClient.get<ApiPage<ApiPublicPropertySummary>>(
-      `/public/properties?${toSearchQuery(filters, search, PAGE_SIZE)}`,
+      `/public/properties?${toSearchQuery(filters, search, bounds ? MAP_PAGE_SIZE : PAGE_SIZE, bounds)}`,
     );
     return { items: page.content.map(toPropertyFromSummary), total: page.totalElements };
   },

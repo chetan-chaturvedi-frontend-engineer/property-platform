@@ -13,3 +13,19 @@ jest.mock('@react-native-vector-icons/ionicons', () => {
 jest.mock('react-native-image-picker', () => ({
   launchImageLibrary: jest.fn(() => Promise.resolve({ didCancel: true })),
 }));
+
+jest.mock('react-native-maps', () => {
+  const React = require('react');
+  const { View } = require('react-native');
+  const MapView = React.forwardRef((props, ref) => {
+    React.useImperativeHandle(ref, () => ({ animateToRegion: jest.fn() }));
+    return <View testID="map-view">{props.children}</View>;
+  });
+  return {
+    __esModule: true,
+    default: MapView,
+    Marker: ({ children }) => <View>{children}</View>,
+    PROVIDER_DEFAULT: null,
+    PROVIDER_GOOGLE: 'google',
+  };
+});

@@ -1,19 +1,43 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { Chip, Icon, IconButton, Screen, SectionTitle } from '../../../components';
+import { Chip, EmptyState, IconButton, Screen, SectionTitle } from '../../../components';
 import { useRootNavigation } from '../../../navigation/useRootNavigation';
 import { colors, radius, typography } from '../../../theme';
+import { Property } from '../../../types';
 import { PropertyListCard } from '../components/PropertyListCard';
+import { PropertyMap, mapAvailable } from '../components/PropertyMap';
 import { SearchBox } from '../components/SearchBox';
-import { usePropertySearch } from '../hooks/useProperties';
+import { useMapSearch } from '../hooks/useMapSearch';
 import { usePropertyFilters } from '../PropertyFiltersProvider';
-
 
 export function MapSearchScreen() {
   const nav = useRootNavigation();
   const { filters, activeCount } = usePropertyFilters();
-  const { data: page } = usePropertySearch();
-  const data = page?.items;
+  const { all, visible, unplaced, refreshing, setBounds } = useMapSearch();
+  const [selected, setSelected] = useState<Property>();
+
+  const allItems = all.data?.items;
+  const framing = useMemo(() => allItems ?? [], [allItems]);
+  // Pins from the whole result set plus the visible area, so panning does not make pins blink away.
+  const pins = useMemo(() => {
+    const byId = new Map<string, Property>();
+    [...(allItems ?? []), ...visible].forEach(p => p.coordinate && byId.set(p.id, p));
+    return [...byId.values()];
+  }, [allItems, visible]);
+
+  const loaded = all.data !== undefined;
+  const nothingOnMap = loaded && pins.length === 0;
+  const emptyMessage = !mapAvailable || !loaded
+    ? undefined
+    : nothingOnMap
+      ? allItems && allItems.length > 0
+        ? 'These properties have no map position yet.'
+        : 'No properties match your search.'
+      : !refreshing && visible.length === 0
+        ? 'No properties in this area.'
+        : undefined;
+
+  const total = all.data?.total;
   return (
     <Screen scroll={false}>
       <View style={styles.top}>
@@ -30,15 +54,35 @@ export function MapSearchScreen() {
         </View>
       </View>
 
-      <View style={styles.map} accessibilityLabel="Map placeholder">
-        <Icon name="map" size={64} color={colors.border} />
-        <Text style={typography.tiny}>Interactive map needs a map SDK and API key.</Text>
-      </View>
+      <PropertyMap
+        properties={pins}
+        framing={framing}
+        selectedId={selected?.id}
+        onSelect={setSelected}
+        onBoundsChange={setBounds}
+        emptyMessage={emptyMessage}>
+        {selected ? <PropertyListCard property={selected} /> : null}
+      </PropertyMap>
 
       <View style={styles.sheet}>
-        <SectionTitle title={page ? `${page.total} ${page.total === 1 ? 'Property' : 'Properties'}` : 'Properties'} />
-        <Screen scroll>
-          {(data ?? []).map(p => <PropertyListCard key={p.id} property={p} />)}
+        <SectionTitle
+          title={
+            mapAvailable
+              ? `${visible.length} in this area${total !== undefined ? ` · ${total} total` : ''}`
+              : total !== undefined
+                ? `${total} ${total === 1 ? 'Property' : 'Properties'}`
+                : 'Properties'
+          }
+        />
+        <Screen scroll edges={[]}>
+          {(mapAvailable ? visible : allItems ?? []).map(p => <PropertyListCard key={p.id} property={p} />)}
+          {all.error ? <EmptyState title="Could not load properties" body="Check your connection and try again." actionLabel="Retry" onAction={all.reload} /> : null}
+          {mapAvailable && unplaced.length > 0 ? (
+            <>
+              <SectionTitle title="Not on the map yet" />
+              {unplaced.map(p => <PropertyListCard key={p.id} property={p} />)}
+            </>
+          ) : null}
         </Screen>
       </View>
     </Screen>
@@ -50,6 +94,5 @@ const styles = StyleSheet.create({
   top: { paddingHorizontal: 16, paddingTop: 12, gap: 8 },
   search: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   chips: { flexDirection: 'row', gap: 8 },
-  map: { height: 220, marginTop: 8, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  sheet: { flex: 1, borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, backgroundColor: colors.background, marginTop: -16 },
+  sheet: { height: '38%', borderTopLeftRadius: radius.xl, borderTopRightRadius: radius.xl, backgroundColor: colors.background, marginTop: -16 },
 });

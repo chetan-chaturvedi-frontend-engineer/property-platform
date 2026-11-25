@@ -41,6 +41,9 @@ export function toLocationPayload(d: PropertyDraft) {
     locality: d.locality.trim(),
     pincode: d.pincode.trim(),
     state: d.state.trim(),
+    // Both or neither; an explicit null clears a pin that was removed again.
+    latitude: d.latitude ?? null,
+    longitude: d.longitude ?? null,
   };
 }
 

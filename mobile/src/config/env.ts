@@ -2,6 +2,7 @@ import {
   API_BASE_URL,
   PRIVACY_POLICY_URL,
   REQUEST_TIMEOUT_MS,
+  MAPS_ANDROID_ENABLED,
   SUPPORT_EMAIL,
   TERMS_URL,
 } from '@env';
@@ -20,4 +21,6 @@ export const env = {
   privacyPolicyUrl: PRIVACY_POLICY_URL ?? 'https://example.com/privacy',
   termsUrl: TERMS_URL ?? 'https://example.com/terms',
   supportEmail: SUPPORT_EMAIL ?? 'support@example.com',
+  /** Android only: true when the build was given a Google Maps API key (see android/README.md). */
+  mapsAndroidEnabled: MAPS_ANDROID_ENABLED === 'true',
 } as const;

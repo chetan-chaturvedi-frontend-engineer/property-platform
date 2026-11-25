@@ -72,6 +72,16 @@ def enableProguardInReleaseBuilds = true
  */
 def jscFlavor = 'io.github.react-native-community:jsc-android:2026004.+'
 
+// Google Maps API key (Android only; iOS uses Apple Maps and needs none). Never committed: read from the
+// GOOGLE_MAPS_API_KEY environment variable or from android/local.properties (git-ignored). Without it the
+// app still builds and runs; the Search tab then shows a message instead of the map.
+def mapsKeyProps = new Properties()
+def localPropsFile = rootProject.file("local.properties")
+if (localPropsFile.exists()) {
+    localPropsFile.withInputStream { mapsKeyProps.load(it) }
+}
+def googleMapsApiKey = System.getenv("GOOGLE_MAPS_API_KEY") ?: mapsKeyProps.getProperty("GOOGLE_MAPS_API_KEY", "")
+
 android {
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
@@ -84,6 +94,7 @@ android {
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1
         versionName "1.0"
+        manifestPlaceholders = [googleMapsApiKey: googleMapsApiKey]
     }
     // Release signing comes from android/keystore.properties (git-ignored; see STORE_READINESS.md).
     // If it is missing the release build is left UNSIGNED instead of silently using the debug key.

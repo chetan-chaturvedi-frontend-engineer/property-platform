@@ -315,12 +315,20 @@ do not change a status are not part of the history.
 
 | Method | Path | Description |
 |---|---|---|
-| GET | `/public/properties` | published properties; `search`, `propertyType`, `city`, `state`, `locality`, `projectStatus`, `apartmentType`, `minPrice`, `maxPrice`; sort `publishedAt` (default), `projectName`, `city` |
+| GET | `/public/properties` | published properties; `search`, `propertyType`, `city`, `state`, `locality`, `projectStatus`, `apartmentType`, `minPrice`, `maxPrice`, bounding box `minLat`, `maxLat`, `minLng`, `maxLng`; sort `publishedAt` (default), `projectName`, `city` |
 | GET | `/public/properties/{slug}` | published property (no owner, GST, email or phone; no workflow data) |
 | GET | `/public/properties/{slug}/media/{mediaId}/content` | public file download |
 | GET | `/public/properties/{slug}/apartments/{apartmentId}/media/{mediaId}/content` | |
 
 Each result carries `id` (use it as `propertyId` when booking a site visit), `startingPrice` (lowest apartment starting price, `null` if none), `apartmentTypes` (distinct types, display order) and `coverUrl` (primary photo, else the first photo; a public content path or an external URL, `null` if no photo). The detail response also carries `id`.
+
+**Map position.** Each result also carries `latitude` and `longitude` (decimal degrees, `null` for both when the owner has not set a position); the detail response has them in `location.latitude` / `location.longitude`.
+
+**Bounding box (map search).** `minLat`, `maxLat` (−90..90) and `minLng`, `maxLng` (−180..180) keep properties whose coordinates lie inside the box, edges included, and combine with every other filter. Give all four or none; a missing edge, `max < min` or an out-of-range value is 400 `validation_failed` (with the field in `errors`). Properties without coordinates never match a box. Boxes crossing the antimeridian are not supported. `size` is capped at 100 like every list; a partial index (`idx_property_projects_public_coordinates`) serves the lookup.
+
+```
+GET /api/v1/public/properties?minLat=18.4&maxLat=18.7&minLng=73.7&maxLng=74.0&size=100
+```
 
 Drafts, pending, approved-but-unpublished, rejected, suspended, archived and deleted properties are 404.
 

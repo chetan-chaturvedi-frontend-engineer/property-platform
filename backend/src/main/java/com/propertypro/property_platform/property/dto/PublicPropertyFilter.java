@@ -3,6 +3,7 @@ package com.propertypro.property_platform.property.dto;
 import com.propertypro.property_platform.property.domain.ApartmentType;
 import com.propertypro.property_platform.property.domain.ProjectStatus;
 import com.propertypro.property_platform.property.domain.PropertyType;
+import jakarta.validation.constraints.DecimalMax;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.Digits;
 import jakarta.validation.constraints.Pattern;
@@ -12,7 +13,9 @@ import java.math.BigDecimal;
 
 /**
  * Public search over published properties. Price bounds match properties with at least one apartment
- * configuration whose starting price is in range (and of {@code apartmentType}, when given).
+ * configuration whose starting price is in range (and of {@code apartmentType}, when given). The bounding box
+ * ({@code minLat, maxLat, minLng, maxLng}, all four or none) keeps properties whose coordinates lie inside it
+ * (edges included); properties without coordinates never match. Boxes crossing the antimeridian are not supported.
  */
 public record PublicPropertyFilter(
 		@Size(max = 100) String search,
@@ -23,5 +26,14 @@ public record PublicPropertyFilter(
 		@Pattern(regexp = ProjectStatus.VALUES, message = "must be a construction status") String projectStatus,
 		@Pattern(regexp = ApartmentType.VALUES, message = "must be 1bhk, 2bhk, 3bhk, 4bhk or penthouse") String apartmentType,
 		@DecimalMin("0") @Digits(integer = 12, fraction = 2) BigDecimal minPrice,
-		@DecimalMin("0") @Digits(integer = 12, fraction = 2) BigDecimal maxPrice) {
+		@DecimalMin("0") @Digits(integer = 12, fraction = 2) BigDecimal maxPrice,
+		@DecimalMin("-90") @DecimalMax("90") @Digits(integer = 2, fraction = 6) BigDecimal minLat,
+		@DecimalMin("-90") @DecimalMax("90") @Digits(integer = 2, fraction = 6) BigDecimal maxLat,
+		@DecimalMin("-180") @DecimalMax("180") @Digits(integer = 3, fraction = 6) BigDecimal minLng,
+		@DecimalMin("-180") @DecimalMax("180") @Digits(integer = 3, fraction = 6) BigDecimal maxLng) {
+
+	/** True when any bounding-box edge is given; then all four are required. */
+	public boolean hasBounds() {
+		return minLat != null || maxLat != null || minLng != null || maxLng != null;
+	}
 }
